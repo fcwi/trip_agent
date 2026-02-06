@@ -265,7 +265,7 @@ const ItineraryApp = () => {
 
   // 優先從快取讀取天氣資訊，若無則顯示啟動畫面進行定位
   const [isAppReady, setIsAppReady] = useState(() => {
-    const cached = localStorage.getItem("cached_user_weather");
+    const cached = localStorage.getItem("trip_agent_cached_user_weather");
     return !!cached;
   });
 
@@ -366,7 +366,9 @@ const ItineraryApp = () => {
         window.navigator.standalone === true;
 
       // 檢查用戶是否已關閉過提示
-      const hasClosedPrompt = localStorage.getItem("ios_install_prompt_closed");
+      const hasClosedPrompt = localStorage.getItem(
+        "trip_agent_ios_install_prompt_closed",
+      );
 
       // 只在非獨立模式且未關閉過提示時顯示
       if (!isStandalone && !hasClosedPrompt) {
@@ -666,7 +668,7 @@ const ItineraryApp = () => {
 
   useEffect(() => {
     const checkSavedPassword = async () => {
-      const savedPwd = localStorage.getItem("trip_password");
+      const savedPwd = localStorage.getItem("trip_agent_password");
       if (savedPwd && ENCRYPTED_API_KEY_PAYLOAD) {
         await attemptUnlock(savedPwd, true);
       } else if (!ENCRYPTED_API_KEY_PAYLOAD) {
@@ -734,10 +736,10 @@ const ItineraryApp = () => {
       }
 
       setIsVerified(true);
-      localStorage.setItem("trip_password", inputPwd);
+      localStorage.setItem("trip_agent_password", inputPwd);
     } catch {
       if (!isAuto) setAuthError("密碼錯誤，請再試一次");
-      if (isAuto) localStorage.removeItem("trip_password");
+      if (isAuto) localStorage.removeItem("trip_agent_password");
     } finally {
       setIsAuthLoading(false);
     }

@@ -9,7 +9,7 @@
 
 const DB_CONFIG = {
   aiChat: {
-    name: "aiChatDB",
+    name: "trip_agent_aiChatDB",
     version: 1,
     stores: {
       messages: { keyPath: "id", indexes: ["mode", "timestamp"] },
@@ -17,7 +17,7 @@ const DB_CONFIG = {
     },
   },
   finance: {
-    name: "financeDB",
+    name: "trip_agent_financeDB",
     version: 1,
     stores: {
       records: { keyPath: "id", indexes: ["type", "date", "timestamp"] },
@@ -729,7 +729,7 @@ export const migrationTools = {
 
     for (const mode of modes) {
       try {
-        const key = `trip_chat_history_${mode}`;
+        const key = `trip_agent_chat_history_${mode}`;
         const data = localStorage.getItem(key);
         if (data) {
           const messages = JSON.parse(data);
@@ -752,8 +752,8 @@ export const migrationTools = {
    */
   async migrateFinance() {
     try {
-      const recordsData = localStorage.getItem("finance_records");
-      const userData = localStorage.getItem("finance_user");
+      const recordsData = localStorage.getItem("trip_agent_finance_records");
+      const userData = localStorage.getItem("trip_agent_finance_user");
 
       const results = { recordsMigrated: 0, userMigrated: false, failed: false };
 

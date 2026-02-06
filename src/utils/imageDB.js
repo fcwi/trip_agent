@@ -1,7 +1,7 @@
 // src/utils/imageDB.js
 // IndexedDB 圖片縮圖儲存模組
 
-const DB_NAME = 'TokyoTripDB';
+const DB_NAME = 'trip_agent_TokyoTripDB';
 const STORE_NAME = 'imageThumbnails';
 const DB_VERSION = 1;
 
