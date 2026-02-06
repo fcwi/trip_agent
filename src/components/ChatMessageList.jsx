@@ -1,0 +1,195 @@
+import React from "react";
+import { Bot, User, Loader, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+
+const ChatMessageList = ({
+  messages,
+  isDarkMode,
+  theme,
+  currentTheme, // 當前主題配置
+  renderMessage,
+  handleSpeak,
+  isLoading,
+  loadingText,
+  chatEndRef,
+  setFullPreviewImage,
+  expandedMessages = {},
+  toggleMessageExpand,
+  messageRefs = { current: [] },
+}) => {
+  // 根據主題配置定義聊天氣泡顏色
+  const chatColors = currentTheme?.chatColors || {
+    userBubble: {
+      light: "bg-[#5D737E]/90 backdrop-blur-md text-white border-[#4A606A]/60 ring-1 ring-[#4A606A]/30",
+      dark: "bg-sky-800/85 backdrop-blur-md text-white border-sky-700/60 ring-1 ring-sky-600/30"
+    },
+    modelBubble: {
+      light: "bg-white/85 backdrop-blur-lg text-stone-700 border-white/40 ring-1 ring-black/5",
+      dark: "bg-neutral-800/80 backdrop-blur-lg text-neutral-200 border-white/10 ring-1 ring-white/5"
+    },
+    bg: {
+      light: "bg-[#F9F9F6]/50",
+      dark: "bg-black/20"
+    }
+  };
+
+  return (
+    <div
+      className={`flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 ${
+        isDarkMode ? chatColors.bg.dark : chatColors.bg.light
+      }`}
+    >
+      {messages.map((msg, idx) => (
+        <div
+          key={idx}
+          className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+        >
+          {/* 頭像欄位：區分使用者與 AI */}
+          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+            <div
+              className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm border
+                ${
+                  msg.role === "user"
+                    ? isDarkMode
+                      ? "bg-sky-800 text-white border-sky-700"
+                      : "bg-[#5D737E] text-white border-[#4A606A]"
+                    : isDarkMode
+                      ? "bg-neutral-800 text-sky-300 border-neutral-700"
+                      : "bg-white text-[#5D737E] border-stone-200"
+                }`}
+            >
+              {msg.role === "user" ? (
+                <User className="w-5 h-5" />
+              ) : (
+                <Bot className="w-5 h-5" />
+              )}
+            </div>
+
+            {/* 朗讀按鈕：僅在 AI 回覆時顯示 */}
+            {msg.role === "model" && (
+              <button
+                onClick={() => handleSpeak(msg.text)}
+                className={`p-1 rounded-full transition-all ${
+                  isDarkMode
+                    ? "text-sky-300 hover:bg-neutral-700"
+                    : "text-[#5D737E] hover:bg-stone-200"
+                }`}
+                title="朗讀訊息"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* 訊息氣泡：包含圖片預覽與文字內容 */}
+          <div
+            ref={(el) => messageRefs.current[idx] = el}
+            className={`max-w-[75%] group relative transition-all duration-300`}
+          >
+            <div
+              className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-md border transition-all duration-300
+                ${
+                  msg.role === "user"
+                    ? isDarkMode
+                      ? chatColors.userBubble.dark + " rounded-tr-none"
+                      : chatColors.userBubble.light + " rounded-tr-none"
+                    : isDarkMode
+                      ? chatColors.modelBubble.dark + " rounded-tl-none hover:shadow-lg"
+                      : chatColors.modelBubble.light + " rounded-tl-none hover:shadow-lg"
+                }`}
+            >
+              {/* 圖片附件預覽 */}
+              {msg.image && (() => {
+                // 處理圖片可能是字串或物件的情況
+                const imageSrc = typeof msg.image === "string" 
+                  ? msg.image 
+                  : (msg.image.data || null);
+                
+                return imageSrc ? (
+                  <img
+                    src={imageSrc}
+                    alt="Sent Image"
+                    onClick={() => setFullPreviewImage(imageSrc)}
+                    className="mb-2 max-w-full h-auto rounded-lg border border-white/20 shadow-sm object-cover cursor-zoom-in active:scale-95 transition-transform"
+                  />
+                ) : null;
+              })()}
+              {/* 渲染文字內容 (支援 Markdown 或特殊格式) */}
+              {(() => {
+                const textLength = msg.text?.length || 0;
+                const isLongMessage = textLength > 150;
+                const isExpanded = expandedMessages[idx];
+                const shouldCollapse = isLongMessage && !isExpanded;
+                
+                return (
+                  <div>
+                    <div className={shouldCollapse ? "line-clamp-4" : ""}>
+                      {renderMessage(msg.text)}
+                    </div>
+                    {isLongMessage && (
+                      <button
+                        onClick={() => toggleMessageExpand(idx)}
+                        className={`mt-2 flex items-center gap-1 text-xs font-medium transition-all hover:opacity-80 ${
+                          msg.role === "user"
+                            ? "text-white/90"
+                            : isDarkMode
+                              ? "text-sky-400"
+                              : "text-[#5D737E]"
+                        }`}
+                      >
+                        {isExpanded ? (
+                          <>
+                            <ChevronUp className="w-3.5 h-3.5" />
+                            收起
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3.5 h-3.5" />
+                            展開完整內容 ({textLength} 字)
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* 載入中狀態指示器 */}
+      {isLoading && (
+        <div className="flex gap-3">
+          <div
+            className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm border ${
+              isDarkMode
+                ? "bg-neutral-800 border-neutral-700"
+                : "bg-white border-stone-200"
+            }`}
+          >
+            <Bot
+              className={`w-5 h-5 ${isDarkMode ? "text-sky-300" : "text-[#5D737E]"}`}
+            />
+          </div>
+          <div
+            className={`p-3 rounded-2xl rounded-tl-none border shadow-sm flex items-center gap-2 ${
+              isDarkMode
+                ? "bg-neutral-800/60 border-neutral-700"
+                : "bg-white/80 border-stone-200"
+            }`}
+          >
+            <Loader
+              className={`w-4 h-4 animate-spin ${isDarkMode ? "text-sky-300" : "text-[#5D737E]"}`}
+            />
+            <span className={`text-xs ${theme.textSec}`}>
+              {loadingText || "正在翻閱您的行程表..."}
+            </span>
+          </div>
+        </div>
+      )}
+      <div ref={chatEndRef} />
+    </div>
+  );
+};
+
+export default React.memo(ChatMessageList);

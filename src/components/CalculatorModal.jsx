@@ -1,0 +1,322 @@
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import "./CalculatorModal.css";
+
+/**
+ * CalculatorModal Component
+ *
+ * A functional calculator with real-time currency conversion capabilities.
+ * Features:
+ * 1. Basic arithmetic (+, -, *, /).
+ * 2. Currency conversion based on provided exchange rates.
+ * 3. Theme-aware styling (Light/Dark mode).
+ * 4. Responsive design for mobile use.
+ */
+const CalculatorModal = ({
+  isOpen,
+  onClose,
+  isDarkMode,
+  rateData, // { current: number, loading: boolean, error: string }
+  currencyCode, // Base currency (e.g., 'JPY')
+  currencyTarget, // Target currency (e.g., 'TWD')
+}) => {
+  const base = (currencyCode || "").toUpperCase();
+  const target = (currencyTarget || "").toUpperCase();
+
+  // State for calculator logic
+  const [displayValue, setDisplayValue] = useState("0");
+  const [storedValue, setStoredValue] = useState(null);
+  const [pendingOperator, setPendingOperator] = useState(null);
+  const [isNewEntry, setIsNewEntry] = useState(true);
+
+  // State for currency conversion logic
+  const [fxDirection, setFxDirection] = useState("baseToTarget");
+  const [fxHint, setFxHint] = useState("");
+  const [currentUnit, setCurrentUnit] = useState(base);
+
+  const rateReady =
+    rateData && !rateData.loading && !rateData.error && rateData.current;
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    // Schedule state updates in a microtask to avoid cascading renders
+    Promise.resolve().then(() => {
+      setDisplayValue("0");
+      setStoredValue(null);
+      setPendingOperator(null);
+      setIsNewEntry(true);
+      setFxDirection("baseToTarget");
+      setCurrentUnit(base);
+      // 初始化匯率提示：當前貨幣是base(JPY)，顯示1 JPY = X TWD
+      if (rateReady) {
+        setFxHint(`1 ${base} = ${rateData.current.toFixed(4)} ${target}`);
+      } else if (rateData?.error) {
+        setFxHint("匯率連線失敗，稍後再試");
+      } else {
+        setFxHint("匯率更新中...");
+      }
+    });
+  }, [isOpen, base, target, rateReady, rateData]);
+
+  // if (!isOpen) return null; // Keep Alive optimization
+
+  /**
+   * Clamps the length of the display string to prevent overflow.
+   */
+  const clampLength = (val) => {
+    const str = val.toString();
+    if (str.length <= 14) return str;
+    if (!Number.isFinite(val)) return "Error";
+    return parseFloat(val.toFixed(8)).toString();
+  };
+
+  const parseDisplay = () => parseFloat(displayValue.replace(/,/g, "")) || 0;
+
+  // --- Input Handlers ---
+
+  const inputDigit = (digit) => {
+    setDisplayValue((prev) => {
+      if (isNewEntry || prev === "0") {
+        setIsNewEntry(false);
+        return digit;
+      }
+      return clampLength(`${prev}${digit}`);
+    });
+  };
+
+  const inputDot = () => {
+    setDisplayValue((prev) => {
+      if (isNewEntry) {
+        setIsNewEntry(false);
+        return "0.";
+      }
+      if (prev.includes(".")) return prev;
+      return `${prev}.`;
+    });
+  };
+
+  const clearAll = () => {
+    setDisplayValue("0");
+    setStoredValue(null);
+    setPendingOperator(null);
+    setIsNewEntry(true);
+    setCurrentUnit(base);
+    setFxDirection("baseToTarget");
+    // 重置為初始匯率提示：當前貨幣是base(JPY)，顯示1 JPY = X TWD
+    if (rateReady) {
+      setFxHint(`1 ${base} = ${rateData.current.toFixed(4)} ${target}`);
+    }
+  };
+
+  const toggleSign = () => {
+    const value = parseDisplay();
+    setDisplayValue(clampLength(value * -1));
+  };
+
+  // --- Calculation Logic ---
+
+  const performCalc = (prev, next, op) => {
+    switch (op) {
+      case "+":
+        return prev + next;
+      case "-":
+        return prev - next;
+      case "*":
+        return prev * next;
+      case "/":
+        return next === 0 ? NaN : prev / next;
+      default:
+        return next;
+    }
+  };
+
+  const handleOperator = (op) => {
+    const current = parseDisplay();
+    if (storedValue === null) {
+      setStoredValue(current);
+    } else if (!isNewEntry && pendingOperator) {
+      const result = performCalc(storedValue, current, pendingOperator);
+      setStoredValue(result);
+      setDisplayValue(clampLength(result));
+    }
+    setPendingOperator(op);
+    setIsNewEntry(true);
+  };
+
+  const handleEqual = () => {
+    if (pendingOperator === null || storedValue === null) return;
+    const current = parseDisplay();
+    const result = performCalc(storedValue, current, pendingOperator);
+    setDisplayValue(clampLength(result));
+    setStoredValue(null);
+    setPendingOperator(null);
+    setIsNewEntry(true);
+  };
+
+  /**
+   * Handles currency conversion based on the current display value.
+   */
+  const handleFxConvert = () => {
+    if (!rateReady) {
+      setFxHint(rateData?.error ? "匯率連線失敗，稍後再試" : "匯率更新中");
+      return;
+    }
+    const current = parseDisplay();
+    const rate = rateData.current;
+    let result = current;
+    if (fxDirection === "baseToTarget") {
+      // 從 JPY 轉到 TWD，轉換後當前貨幣是 TWD
+      result = current * rate;
+      setFxDirection("targetToBase");
+      setCurrentUnit(target);
+      setFxHint(`1 ${target} = ${(1 / rate).toFixed(4)} ${base}`);
+    } else {
+      // 從 TWD 轉回 JPY，轉換後當前貨幣是 JPY
+      result = rate === 0 ? NaN : current / rate;
+      setFxDirection("baseToTarget");
+      setCurrentUnit(base);
+      setFxHint(`1 ${base} = ${rate.toFixed(4)} ${target}`);
+    }
+    setDisplayValue(clampLength(result));
+    setStoredValue(null);
+    setPendingOperator(null);
+    setIsNewEntry(true);
+  };
+
+  const fxLabel = fxDirection === "baseToTarget" ? target : base;
+  const themeClass = isDarkMode ? "theme-dark" : "theme-light";
+
+  return (
+    <div
+      className={`fixed inset-0 z-[70] flex items-center justify-center px-4 transition-opacity duration-200 ${isOpen ? "visible opacity-100 pointer-events-auto" : "invisible opacity-0 pointer-events-none"}`}
+    >
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div
+        className={`calc-modal ${themeClass}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="計算機"
+      >
+        {/* Header */}
+        <div className="calc-header">
+          <div className="calc-header-title">
+            <p className="calc-title-label">Calculator</p>
+            <p className="calc-title-main">當前貨幣：{currentUnit}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="calc-close-btn"
+            aria-label="關閉計算機"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="calc-content">
+          {/* Display */}
+          <div className="calc-display" aria-live="polite">
+            {displayValue}
+          </div>
+
+          {/* Hint Message */}
+          {fxHint && (
+            <div className="calc-hint" role="status" aria-live="polite">
+              {fxHint}
+            </div>
+          )}
+
+          {/* Keypad */}
+          <div className="calc-keypad">
+            <button className="calc-btn calc-btn-muted" onClick={clearAll}>
+              AC
+            </button>
+            <button className="calc-btn calc-btn-muted" onClick={toggleSign}>
+              +/-
+            </button>
+            <button
+              className="calc-btn calc-btn-muted calc-btn-fx"
+              onClick={handleFxConvert}
+            >
+              轉{fxLabel}
+            </button>
+            <button
+              className="calc-btn calc-btn-operator"
+              onClick={() => handleOperator("/")}
+            >
+              ÷
+            </button>
+
+            <button className="calc-btn" onClick={() => inputDigit("7")}>
+              7
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("8")}>
+              8
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("9")}>
+              9
+            </button>
+            <button
+              className="calc-btn calc-btn-operator"
+              onClick={() => handleOperator("*")}
+            >
+              ×
+            </button>
+
+            <button className="calc-btn" onClick={() => inputDigit("4")}>
+              4
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("5")}>
+              5
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("6")}>
+              6
+            </button>
+            <button
+              className="calc-btn calc-btn-operator"
+              onClick={() => handleOperator("-")}
+            >
+              -
+            </button>
+
+            <button className="calc-btn" onClick={() => inputDigit("1")}>
+              1
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("2")}>
+              2
+            </button>
+            <button className="calc-btn" onClick={() => inputDigit("3")}>
+              3
+            </button>
+            <button
+              className="calc-btn calc-btn-operator"
+              onClick={() => handleOperator("+")}
+            >
+              +
+            </button>
+
+            <button
+              className="calc-btn calc-btn-wide"
+              onClick={() => inputDigit("0")}
+            >
+              0
+            </button>
+            <button className="calc-btn" onClick={inputDot}>
+              .
+            </button>
+            <button className="calc-btn calc-btn-accent" onClick={handleEqual}>
+              =
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CalculatorModal;

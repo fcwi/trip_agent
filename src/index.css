@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family:
+      system-ui,
+      -apple-system,
+      "PingFang TC",
+      /* Mac/iOS 原生 */ "Microsoft JhengHei",
+      /* Windows 原生 */ "Noto Sans TC",
+      /* 這是網路字型，沒找到才會下載 */ sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    @apply text-slate-900 bg-white dark:text-slate-50 dark:bg-slate-950;
+  }
+}
+
+/* 🆕 iOS 安全區域支援 - 防止內容被瀏海/Home Indicator 遮擋 */
+:root {
+  /* iOS 安全區域變數 */
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* iOS 專用全域設定 */
+@supports (-webkit-touch-callout: none) {
+  /* 僅針對 iOS Safari */
+  body {
+    /* 防止橡皮筋效果，但允許內容擴充 */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    /* 讓背景色延伸到狀態列 (瀏海) */
+    background-attachment: fixed;
+  }
+
+  #root {
+    /* 使用 100dvh 確保填滿實際可視高度 */
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    /* 關鍵：使用 Padding 避開瀏海與底部橫條，但保留背景色延伸 */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 🆕 iOS 觸控優化 */
+* {
+  /* 移除 iOS 點擊高亮效果 */
+  -webkit-tap-highlight-color: transparent;
+  /* 防止長按選單彈出 */
+  -webkit-touch-callout: none;
+  /* 平滑滾動 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 允許特定元素的文字選擇 */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* 🆕 毛玻璃效果優化 - 解決滑動/切換時的視覺閃爍 */
+
+/* 全局 backdrop-filter 優化 */
+[class*="backdrop-blur"] {
+  /* 強制啟用硬體加速，避免重繪閃爍 */
+  -webkit-font-smoothing: antialiased;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* 確保 GPU 合成層的穩定性 */
+  will-change: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+/* 優化動畫過渡中的毛玻璃卡片 */
+[class*="backdrop-blur-md"],
+[class*="backdrop-blur-lg"],
+[class*="backdrop-blur-xl"],
+[class*="backdrop-blur-2xl"] {
+  /* 減少重繪：使用 transition 而不是複雜的 animation */
+  transition:
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 確保 GPU 層穩定 */
+  contain: layout style paint;
+}
+
+/* 頁面切換時的容器優化 */
+[class*="motion-div"],
+.motion-div {
+  /* 在頁面轉場時保持 GPU 層穩定 */
+  will-change: transform, opacity;
+}
+
+/* Framer Motion 動畫容器優化 */
+[style*="position: relative"],
+[style*="position: absolute"] {
+  /* 確保定位不影響硬體加速 */
+  contain: layout;
+}
+
+/* 毛玻璃卡片在淺色/深色模式的優化過渡 */
+.dark [class*="backdrop-blur"],
+[class*="backdrop-blur"] {
+  /* 防止背景色變化時的閃爍 */
+  background-clip: padding-box;
+}
+
+/* 優化 fadeIn 動畫 */
+@keyframes optimizedFadeIn {
+  from {
+    opacity: 0;
+    /* 避免縮放導致的卡頓 */
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-fadeIn {
+  animation: optimizedFadeIn 0.3s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* 防止 iOS Safari 在輸入時自動縮放 (字體小於 16px 會觸發) */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* 🆕 滑動提示箭頭動畫 - 左右水平彈跳 */
+@keyframes bounceHorizontalLeft {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-6px);
+  }
+}
+
+@keyframes bounceHorizontalRight {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+.animate-bounce-horizontal-left {
+  animation: bounceHorizontalLeft 1.5s ease-in-out infinite;
+}
+
+.animate-bounce-horizontal-right {
+  animation: bounceHorizontalRight 1.5s ease-in-out infinite;
+}
