@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@fontsource/noto-sans-tc": "^5.2.8",
+    "agentation": "^2.2.0",
     "framer-motion": "^12.23.26",
     "heic2any": "^0.0.4",
     "leaflet": "^1.9.4",

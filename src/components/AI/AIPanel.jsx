@@ -69,7 +69,7 @@ const AIPanel = ({
 
   return (
     <div
-      className="flex-1 px-4 pb-32 space-y-5 flex flex-col h-[calc(100vh-130px)] animate-fadeIn relative"
+      className="flex-1 px-4 pb-24 flex flex-col h-[calc(100vh-85px)] animate-fadeIn relative"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -122,7 +122,7 @@ const AIPanel = ({
       >
         {/* 對話視窗標題與模式切換 */}
         <div
-          className={`p-4 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
+          className={`p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

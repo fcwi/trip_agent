@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa"; // 🆕 引入 PWA 套件
 
 // 🆕 生成構建版本號（使用當前時間）
+// 🆕 Agentation 工具列開關 (true: 開啟, false: 關閉)
+const ENABLE_AGENTATION = true;
+
 const generateBuildVersion = () => {
   const now = new Date();
   const year = now.getFullYear();
@@ -20,6 +23,7 @@ export default defineConfig({
     "import.meta.env.VITE_BUILD_VERSION": JSON.stringify(
       generateBuildVersion(),
     ),
+    __ENABLE_AGENTATION__: JSON.stringify(ENABLE_AGENTATION),
   },
 
   // 🆕 在 plugins 陣列中加入 VitePWA

@@ -6,6 +6,7 @@
   Suspense,
   useTransition,
 } from "react";
+import { Agentation } from "agentation";
 import {
   Sun,
   CloudSnow,
@@ -3644,7 +3645,7 @@ const ItineraryApp = () => {
 
         {/* --- 頁籤：實用指南 (Guides Tab) --- */}
         {activeTab === "guides" && (
-          <div className="flex-1 px-4 pb-32 space-y-5 animate-fadeIn">
+          <div className="flex-1 px-4 pb-24 space-y-5 animate-fadeIn">
             <div
               className={`backdrop-blur-2xl border rounded-[2rem] p-5 ${theme.cardShadow} min-h-[auto] transition-colors duration-300 ${componentStyles.itineraryCard}`}
               style={theme.ambientStyle}
@@ -3900,7 +3901,7 @@ const ItineraryApp = () => {
 
         {/* --- 頁籤：商家導覽 (Shops Tab) --- */}
         {activeTab === "shops" && (
-          <div className="flex-1 px-4 pb-32 space-y-5 animate-fadeIn">
+          <div className="flex-1 px-4 pb-24 space-y-5 animate-fadeIn">
             <div
               className={`backdrop-blur-2xl border rounded-[2rem] p-5 ${theme.cardShadow} min-h-[auto] transition-colors duration-300 ${componentStyles.itineraryCard}`}
               style={theme.ambientStyle}
@@ -4622,6 +4623,7 @@ const ItineraryApp = () => {
             </>
           )}
         </div>
+        {__ENABLE_AGENTATION__ && <Agentation />}
       </div>
     </div>
   );

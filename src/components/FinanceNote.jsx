@@ -200,6 +200,8 @@ const FinanceScreen = ({
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptItems, setReceiptItems] = useState([]);
   const [receiptImages, setReceiptImages] = useState([]);
+  const [pendingImages, setPendingImages] = useState([]); // 🆕 待處理圖片佇列
+  const [processingCount, setProcessingCount] = useState(0); // 🆕 處理進度計數
 
   // --- 4. 編輯功能狀態 ---
   const [editingRecord, setEditingRecord] = useState(null);
@@ -771,12 +773,25 @@ const FinanceScreen = ({
     }
 
     if (apiKey) {
-      setIsScanning(true);
-      setIsScanning(true);
-      setShowReceiptModal(true);
-      setReceiptItems([]);
-      setReceiptImages([]);
-      await processImagesForScanning(files, true);
+      // 🆕 批次模式：先處理成 base64 並加入待處理區，不立即辨識
+      const base64Promises = files.map(async (file) => {
+        const processedFile = await processFileForHeic(file, () =>
+          showToast("正在轉換 HEIC 圖片，請稍候...", "info"),
+        );
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target.result);
+          reader.readAsDataURL(processedFile);
+        });
+      });
+
+      try {
+        const newImages = await Promise.all(base64Promises);
+        setPendingImages((prev) => [...prev, ...newImages]);
+        setShowReceiptModal(true);
+      } catch (err) {
+        console.error("Image read error", err);
+      }
     } else {
       const file = files[0];
       const processedFile = await processFileForHeic(file, () =>
@@ -798,80 +813,87 @@ const FinanceScreen = ({
   const handleAppendImage = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    setIsScanning(true);
-    await processImagesForScanning(files, false);
+
+    // 與 handleImageSelect 邏輯類似，加入 pending
+    const base64Promises = files.map(async (file) => {
+      const processedFile = await processFileForHeic(file, () =>
+        showToast("正在轉換 HEIC 圖片，請稍候...", "info"),
+      );
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.readAsDataURL(processedFile);
+      });
+    });
+
+    try {
+      const newImages = await Promise.all(base64Promises);
+      setPendingImages((prev) => [...prev, ...newImages]);
+    } catch (err) {
+      console.error("Image append error", err);
+    }
     e.target.value = "";
   };
 
-  const processImagesForScanning = async (files, isReset = false) => {
+  // 🆕 執行批次辨識
+  const handleStartBatchAnalysis = async () => {
+    if (pendingImages.length === 0) return;
+
+    setIsScanning(true);
+    setProcessingCount(0);
+
+    // 將待處理圖片移入已處理列表 (視覺上保留在 Modal 中)
+    const imagesToProcess = [...pendingImages];
+    // 清空 pending，轉移到 receiptImages
+    setPendingImages([]);
+    setReceiptImages((prev) => [...prev, ...imagesToProcess]);
+
+    const startIdx = receiptImages.length; // 這些新圖片在 receiptImages 中的起始索引
+
     try {
-      const base64Promises = files.map(async (file) => {
-        const processedFile = await processFileForHeic(file, () =>
-          showToast("正在轉換 HEIC 圖片，請稍候...", "info"),
-        );
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (evt) => resolve(evt.target.result);
-          reader.readAsDataURL(processedFile);
-        });
-      });
-      const newImages = await Promise.all(base64Promises);
-      setReceiptImages((prev) =>
-        isReset ? newImages : [...prev, ...newImages],
-      );
+      // 逐張辨識以更新進度，避免畫面停頓太久
+      for (let i = 0; i < imagesToProcess.length; i++) {
+        const img = imagesToProcess[i];
+        try {
+          // 更新進度
+          setProcessingCount(i + 1);
 
-      const aiPromises = newImages.map((img) =>
-        parseReceiptWithGemini(img, apiKey),
-      );
-      const results = await Promise.all(aiPromises);
+          const result = await parseReceiptWithGemini(img, apiKey);
+          const globalImgIndex = startIdx + i;
 
-      let newItems = [];
-      const currentImgCount = isReset ? 0 : receiptImages.length;
-
-      results.forEach((result, idx) => {
-        const globalImgIndex = currentImgCount + idx;
-        let isFirstItemOfImage = true;
-
-        if (result && result.items && Array.isArray(result.items)) {
-          const mapped = result.items.map((item, itemIdx) => {
-            const itemObj = {
+          let newItems = [];
+          if (result && result.items && Array.isArray(result.items)) {
+            newItems = result.items.map((item, itemIdx) => ({
               id: Date.now() + globalImgIndex * 1000 + itemIdx,
               name: item.name || "未知品項",
               amount: item.amount || 0,
               selected: true,
-              sourceImage: isFirstItemOfImage ? newImages[idx] : null,
-            };
-            isFirstItemOfImage = false;
-            return itemObj;
-          });
-          newItems = [...newItems, ...mapped];
-        } else {
-          newItems.push({
-            id: Date.now() + globalImgIndex * 1000,
-            name: result.store ? `${result.store} 消費` : "消費總額",
-            amount: result.amount || 0,
-            selected: true,
-            sourceImage: newImages[idx],
-          });
-        }
-      });
+              sourceImage: img,
+            }));
+          } else {
+            newItems.push({
+              id: Date.now() + globalImgIndex * 1000,
+              name: result.store ? `${result.store} 消費` : "消費總額",
+              amount: result.amount || 0,
+              selected: true,
+              sourceImage: img,
+            });
+          }
 
-      setReceiptItems((prev) => (isReset ? newItems : [...prev, ...newItems]));
-      showToast(
-        isReset
-          ? `辨識完成！共 ${newImages.length} 張`
-          : `已追加 ${newImages.length} 張並完成辨識`,
-      );
+          // 實時追加結果到列表
+          setReceiptItems((prev) => [...prev, ...newItems]);
+        } catch (err) {
+          console.error(`Image ${i} analysis failed`, err);
+        }
+      }
+
+      showToast(`已完成 ${imagesToProcess.length} 張發票辨識`);
     } catch (error) {
       console.error("Scanning error:", error);
       showToast("部分發票辨識失敗", "error");
-      if (isReset && receiptItems.length === 0) {
-        setReceiptItems([
-          { id: Date.now(), name: "", amount: "", selected: true },
-        ]);
-      }
     } finally {
       setIsScanning(false);
+      setProcessingCount(0);
     }
   };
 
@@ -1019,6 +1041,7 @@ const FinanceScreen = ({
       () => {
         setShowReceiptModal(false);
         setReceiptImages([]);
+        setPendingImages([]); // 清除
         setReceiptItems([]);
         setIsUploading(false);
 
@@ -1198,7 +1221,7 @@ const FinanceScreen = ({
   // 3. 內容多時會撐開卡片，捲動行為在外層 window。
   return (
     <div
-      className={`px-4 pb-28 animate-fadeIn flex flex-col min-h-[calc(100vh-130px)] relative`}
+      className={`px-4 pb-24 animate-fadeIn flex flex-col min-h-[calc(100vh-85px)] relative`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -1930,6 +1953,7 @@ const FinanceScreen = ({
                     onClick={() => {
                       setShowReceiptModal(false);
                       setReceiptImages([]);
+                      setPendingImages([]);
                     }}
                     className={`p-2 rounded-full transition-colors ${
                       isDarkMode
@@ -1945,9 +1969,10 @@ const FinanceScreen = ({
               {/* Modal Body */}
               <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
                 <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide min-h-[96px]">
+                  {/* 1. 已辨識/處理中的圖片 */}
                   {receiptImages.map((img, idx) => (
                     <div
-                      key={idx}
+                      key={`processed-${idx}`}
                       className="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border shadow-sm group"
                     >
                       <img
@@ -1956,23 +1981,59 @@ const FinanceScreen = ({
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         decoding="async"
                       />
-                      <div className="absolute top-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-lg ring-1 ring-white/10">
-                        {idx + 1}
+                      <div className="absolute top-1 right-1 bg-green-500/80 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-lg">
+                        OK
                       </div>
-                      {/* 🆕 刪除按鈕 */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveReceiptImage(idx);
-                        }}
-                        className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
-                        title="移除此圖片"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                      {/* 刪除按鈕 (僅在非掃描時可用) */}
+                      {!isScanning && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveReceiptImage(idx);
+                          }}
+                          className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
 
+                  {/* 2. 待掃描圖片 (Pending) */}
+                  {pendingImages.map((img, idx) => (
+                    <div
+                      key={`pending-${idx}`}
+                      className="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 border-dashed border-sky-400 shadow-sm group animate-pulse-slow"
+                    >
+                      <img
+                        src={img}
+                        alt={`Pending ${idx}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-1 right-1 bg-orange-500/80 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-lg">
+                        待辨識
+                      </div>
+                      {!isScanning && (
+                        <button
+                          onClick={() => {
+                            setPendingImages((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                          }}
+                          className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white shadow-sm"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* 如果正在掃描且這張正在處理中 (示意，實際上 pendingImages 在掃描開始時會清空轉移)
+                          但為了視覺效果，我們可以在 handleStartBatchAnalysis 中保留 pendingImages 這裡的邏輯 
+                          (目前實作是 pending -> receiptImages，所以這裡只會顯示還沒按開始的)
+                      */}
+                    </div>
+                  ))}
+
+                  {/* 加拍按鈕 */}
                   {!isScanning && (
                     <button
                       onClick={() => appendInputRef.current?.click()}
@@ -1982,6 +2043,7 @@ const FinanceScreen = ({
                       <span className="text-[10px] font-bold">加拍一張</span>
                     </button>
                   )}
+                  {/* 輸入Input (共用) */}
                   <input
                     type="file"
                     id="appendReceiptImage"
@@ -1994,8 +2056,13 @@ const FinanceScreen = ({
                   />
 
                   {isScanning && (
-                    <div className="flex-shrink-0 w-24 h-24 rounded-xl bg-gray-500/10 animate-pulse flex items-center justify-center border border-transparent">
+                    <div className="flex-shrink-0 w-24 h-24 rounded-xl bg-gray-500/10 flex flex-col items-center justify-center border border-transparent gap-2">
                       <Loader className="w-6 h-6 opacity-30 animate-spin" />
+                      <span className="text-[10px] opacity-50">
+                        {processingCount > 0
+                          ? `處理中 ${processingCount}...`
+                          : "準備中..."}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -2092,17 +2159,26 @@ const FinanceScreen = ({
               {/* Modal Footer */}
               <div className="p-4 pb-8 border-t bg-opacity-50 backdrop-blur-lg shrink-0">
                 <button
-                  onClick={handleBatchConfirm}
+                  onClick={() => {
+                    if (pendingImages.length > 0) {
+                      handleStartBatchAnalysis();
+                    } else {
+                      handleBatchConfirm();
+                    }
+                  }}
                   disabled={
                     isScanning ||
-                    receiptItems.filter((i) => i.selected).length === 0
+                    (receiptItems.filter((i) => i.selected).length === 0 &&
+                      pendingImages.length === 0)
                   }
                   className={`w-full py-3.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2
-                        ${isScanning || receiptItems.filter((i) => i.selected).length === 0 ? "bg-stone-400 opacity-50 cursor-not-allowed" : isDarkMode ? "bg-sky-600 hover:bg-sky-700" : "bg-[#5D737E] hover:bg-[#4A606A]"}`}
+                        ${isScanning || (receiptItems.filter((i) => i.selected).length === 0 && pendingImages.length === 0) ? "bg-stone-400 opacity-50 cursor-not-allowed" : isDarkMode ? "bg-sky-600 hover:bg-sky-700" : "bg-[#5D737E] hover:bg-[#4A606A]"}`}
                 >
                   {isScanning
-                    ? "分析中..."
-                    : `確認匯入 ${receiptItems.filter((i) => i.selected).length} 筆項目`}
+                    ? `正在分析 ${processingCount}...`
+                    : pendingImages.length > 0
+                      ? `✨ 開始辨識 (${pendingImages.length} 張)`
+                      : `確認匯入 ${receiptItems.filter((i) => i.selected).length} 筆項目`}
                 </button>
               </div>
             </div>

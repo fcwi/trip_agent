@@ -124,7 +124,7 @@ const ItineraryTab = ({
 
   return (
     <div
-      className="flex-1 space-y-5 px-4 pb-32 overflow-x-hidden relative"
+      className="flex-1 space-y-5 px-4 pb-24 overflow-x-hidden relative"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
