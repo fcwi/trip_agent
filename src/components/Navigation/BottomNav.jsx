@@ -27,11 +27,11 @@ const BottomNav = ({
   return (
     <div className="fixed bottom-3 left-1/2 transform -translate-x-1/2 z-50 w-auto pb-[env(safe-area-inset-bottom)]">
       <div
-        className={`flex items-center gap-2 px-4 py-1.5 rounded-full backdrop-blur-2xl border transition-all duration-300 shadow-2xl
+        className={`flex items-center gap-1 px-3 h-[60px] rounded-full backdrop-blur-2xl border transition-all duration-300 shadow-xl
         ${
           isDarkMode
-            ? `bg-${cBase}-900/80 border-white/10 ring-1 ring-white/5 shadow-black/40`
-            : "bg-white/80 border-white/40 ring-1 ring-black/5 shadow-black/10"
+            ? `bg-${cBase}-900/90 border-white/10 ring-1 ring-white/5 shadow-black/40`
+            : "bg-white/90 border-white/40 ring-1 ring-black/5 shadow-black/10"
         }`}
       >
         {/* 1. 行程 (Itinerary) */}
@@ -40,23 +40,36 @@ const BottomNav = ({
             handleInterruptClick();
             handleTabChange("itinerary");
           }}
-          className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group
+          className="relative flex flex-col items-center justify-center min-w-[50px] transition-all duration-300 group"
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
             ${
               activeTab === "itinerary"
                 ? isDarkMode
-                  ? `bg-${cBase}-800 text-${cAccent}-400 shadow-lg shadow-${cAccent}-500/10`
-                  : `bg-white text-${cBase}-800 shadow-lg shadow-black/5`
+                  ? `bg-${cBase}-800 text-${cAccent}-400`
+                  : `bg-${cBase}-100 text-${cBase}-900`
                 : isDarkMode
-                  ? `text-${cBase}-400 hover:text-${cBase}-200 hover:bg-white/5`
-                  : `text-${cBase}-400 hover:text-${cBase}-700 hover:bg-black/5`
+                  ? `text-${cBase}-400 group-hover:bg-white/5`
+                  : `text-${cBase}-400 group-hover:bg-black/5`
             }`}
-        >
-          <Home
-            className={`w-4.5 h-4.5 transition-all ${activeTab === "itinerary" ? "stroke-[2.5px]" : "stroke-2"}`}
-          />
-          {activeTab === "itinerary" && (
-            <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-current"></span>
-          )}
+          >
+            <Home
+              className={`w-5 h-5 transition-all ${activeTab === "itinerary" ? "stroke-[2.5px]" : "stroke-2"}`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium leading-none mt-1 transition-colors duration-300
+            ${
+              activeTab === "itinerary"
+                ? isDarkMode
+                  ? `text-${cAccent}-400`
+                  : `text-${cBase}-900`
+                : `text-${cBase}-500`
+            }`}
+          >
+            行程
+          </span>
         </button>
 
         {/* 2. 記帳記事 (Finance) */}
@@ -65,104 +78,159 @@ const BottomNav = ({
             handleInterruptClick();
             handleTabChange("finance");
           }}
-          className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group
+          className="relative flex flex-col items-center justify-center min-w-[50px] transition-all duration-300 group"
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
             ${
               activeTab === "finance"
                 ? isDarkMode
-                  ? `bg-${cBase}-800 text-${cAccent}-400 shadow-lg shadow-${cAccent}-500/10`
-                  : `bg-white text-${cBase}-800 shadow-lg shadow-black/5`
+                  ? `bg-${cBase}-800 text-${cAccent}-400`
+                  : `bg-${cBase}-100 text-${cBase}-900`
                 : isDarkMode
-                  ? `text-${cBase}-400 hover:text-${cBase}-200 hover:bg-white/5`
-                  : `text-${cBase}-400 hover:text-${cBase}-700 hover:bg-black/5`
+                  ? `text-${cBase}-400 group-hover:bg-white/5`
+                  : `text-${cBase}-400 group-hover:bg-black/5`
             }`}
-        >
-          <DollarSign
-            className={`w-4.5 h-4.5 transition-all ${activeTab === "finance" ? "stroke-[2.5px]" : "stroke-2"}`}
-          />
-          {activeTab === "finance" && (
-            <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-current"></span>
-          )}
+          >
+            <DollarSign
+              className={`w-5 h-5 transition-all ${activeTab === "finance" ? "stroke-[2.5px]" : "stroke-2"}`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium leading-none mt-1 transition-colors duration-300
+            ${
+              activeTab === "finance"
+                ? isDarkMode
+                  ? `text-${cAccent}-400`
+                  : `text-${cBase}-900`
+                : `text-${cBase}-500`
+            }`}
+          >
+            記錄
+          </span>
         </button>
 
-        {/* 3. AI 核心按鈕 */}
+        {/* 3. AI 核心按鈕 (導遊) - 特殊樣式區塊 */}
         <button
           onClick={() => {
             handleInterruptClick();
             handleTabChange("ai");
           }}
-          className={`mx-1 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl backdrop-blur-md active:scale-95 border
+          className="relative flex flex-col items-center justify-center min-w-[50px] group"
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm border
             ${
               activeTab === "ai"
-                ? "scale-110 -translate-y-2 ring-4 ring-opacity-20"
-                : "hover:scale-105 -translate-y-1"
+                ? "ring-2 ring-offset-1 ring-offset-transparent transform scale-105"
+                : "opacity-90 group-hover:opacity-100"
             }
             ${(() => {
               const styles = {
                 amber: isDarkMode
-                  ? "bg-gradient-to-tr from-amber-600 to-amber-500 ring-amber-500/40 border-amber-400/20 shadow-amber-500/30"
-                  : "bg-gradient-to-tr from-amber-400 to-amber-500 ring-amber-400/40 border-amber-300/40 shadow-amber-500/40",
+                  ? "bg-amber-500 border-amber-400/30 text-white shadow-amber-500/20"
+                  : "bg-amber-400 border-amber-300/30 text-white shadow-amber-400/30",
                 sky: isDarkMode
-                  ? "bg-gradient-to-tr from-sky-600 to-sky-500 ring-sky-500/40 border-sky-400/20 shadow-sky-500/30"
-                  : "bg-gradient-to-tr from-sky-400 to-sky-500 ring-sky-400/40 border-sky-300/40 shadow-sky-500/40",
+                  ? "bg-sky-500 border-sky-400/30 text-white shadow-sky-500/20"
+                  : "bg-sky-400 border-sky-300/30 text-white shadow-sky-400/30",
                 default: isDarkMode
-                  ? "bg-gradient-to-tr from-stone-600 to-stone-500 ring-stone-500/40 border-stone-400/20"
-                  : "bg-gradient-to-tr from-stone-400 to-stone-500 ring-stone-400/40 border-stone-300/40",
+                  ? "bg-stone-600 border-stone-500/30 text-white"
+                  : "bg-stone-500 border-stone-400/30 text-white",
               };
               return styles[cAccent] || styles.default;
             })()}
           `}
-        >
-          <MessageSquare className="w-5 h-5 text-white drop-shadow-md" />
+          >
+            <MessageSquare className="w-4 h-4 fill-current drop-shadow-sm" />
+          </div>
+          <span
+            className={`text-[10px] font-bold leading-none mt-1 transition-colors duration-300
+            ${
+              activeTab === "ai"
+                ? isDarkMode
+                  ? `text-${cAccent}-400`
+                  : `text-${cBase}-900`
+                : `text-${cBase}-500`
+            }`}
+          >
+            導遊
+          </span>
         </button>
 
-        {/* 4. 商家 (Shops) */}
+        {/* 4. 商家 (Shops) - 商店 */}
         <button
           onClick={() => {
             handleInterruptClick();
             handleTabChange("shops");
           }}
-          className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group
+          className="relative flex flex-col items-center justify-center min-w-[50px] transition-all duration-300 group"
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
             ${
               activeTab === "shops"
                 ? isDarkMode
-                  ? `bg-${cBase}-800 text-${cAccent}-400 shadow-lg shadow-${cAccent}-500/10`
-                  : `bg-white text-${cBase}-800 shadow-lg shadow-black/5`
+                  ? `bg-${cBase}-800 text-${cAccent}-400`
+                  : `bg-${cBase}-100 text-${cBase}-900`
                 : isDarkMode
-                  ? `text-${cBase}-400 hover:text-${cBase}-200 hover:bg-white/5`
-                  : `text-${cBase}-400 hover:text-${cBase}-700 hover:bg-black/5`
+                  ? `text-${cBase}-400 group-hover:bg-white/5`
+                  : `text-${cBase}-400 group-hover:bg-black/5`
             }`}
-        >
-          <Store
-            className={`w-4.5 h-4.5 transition-all ${activeTab === "shops" ? "stroke-[2.5px]" : "stroke-2"}`}
-          />
-          {activeTab === "shops" && (
-            <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-current"></span>
-          )}
+          >
+            <Store
+              className={`w-5 h-5 transition-all ${activeTab === "shops" ? "stroke-[2.5px]" : "stroke-2"}`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium leading-none mt-1 transition-colors duration-300
+            ${
+              activeTab === "shops"
+                ? isDarkMode
+                  ? `text-${cAccent}-400`
+                  : `text-${cBase}-900`
+                : `text-${cBase}-500`
+            }`}
+          >
+            商店
+          </span>
         </button>
 
-        {/* 5. 指南與連結 (Guides) */}
+        {/* 5. 指南與連結 (Guides) - 指南 */}
         <button
           onClick={() => {
             handleInterruptClick();
             handleTabChange("guides");
           }}
-          className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group
+          className="relative flex flex-col items-center justify-center min-w-[50px] transition-all duration-300 group"
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300
             ${
               activeTab === "guides"
                 ? isDarkMode
-                  ? `bg-${cBase}-800 text-${cAccent}-400 shadow-lg shadow-${cAccent}-500/10`
-                  : `bg-white text-${cBase}-800 shadow-lg shadow-black/5`
+                  ? `bg-${cBase}-800 text-${cAccent}-400`
+                  : `bg-${cBase}-100 text-${cBase}-900`
                 : isDarkMode
-                  ? `text-${cBase}-400 hover:text-${cBase}-200 hover:bg-white/5`
-                  : `text-${cBase}-400 hover:text-${cBase}-700 hover:bg-black/5`
+                  ? `text-${cBase}-400 group-hover:bg-white/5`
+                  : `text-${cBase}-400 group-hover:bg-black/5`
             }`}
-        >
-          <BookOpen
-            className={`w-4.5 h-4.5 transition-all ${activeTab === "guides" ? "stroke-[2.5px]" : "stroke-2"}`}
-          />
-          {activeTab === "guides" && (
-            <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-current"></span>
-          )}
+          >
+            <BookOpen
+              className={`w-5 h-5 transition-all ${activeTab === "guides" ? "stroke-[2.5px]" : "stroke-2"}`}
+            />
+          </div>
+          <span
+            className={`text-[10px] font-medium leading-none mt-1 transition-colors duration-300
+            ${
+              activeTab === "guides"
+                ? isDarkMode
+                  ? `text-${cAccent}-400`
+                  : `text-${cBase}-900`
+                : `text-${cBase}-500`
+            }`}
+          >
+            指南
+          </span>
         </button>
       </div>
     </div>
