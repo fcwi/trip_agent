@@ -32,6 +32,7 @@ import {
 } from "../utils/financeHelper";
 import { processFileForHeic } from "../utils/imageUtils";
 import { financeDB } from "../utils/indexedDBManager.js";
+import MarqueeText from "./MarqueeText.jsx";
 
 // 預設頭像列表
 const AVATARS = [
@@ -1014,55 +1015,157 @@ const FinanceScreen = ({
     }
   };
 
-  const handleBatchConfirm = () => {
+  const handleBatchConfirm = async () => {
     const itemsToImport = receiptItems.filter((i) => i.selected && i.name);
     if (itemsToImport.length === 0) {
       setShowReceiptModal(false);
       return;
     }
 
-    let firstRecordTimestamp = null;
-    let count = 0;
+    setIsUploading(true);
 
-    itemsToImport.forEach((item, index) => {
-      const img = item.sourceImage || null;
-      setTimeout(() => {
-        const recordId = addRecord(item.name, item.amount, img, "finance");
-        // 記住第一條記錄的 timestamp
-        if (index === 0 && recordId) {
-          firstRecordTimestamp = recordId;
+    try {
+      const currentRate = rateData?.current || 0.22;
+      const now = new Date();
+      const localDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+
+      const localItems = [];
+      const uploadItems = [];
+
+      // 用來追蹤哪些 sourceImage 已經被處理過（用於 Upload Payload 去重）
+      const processedImages = new Set();
+
+      let firstRecordTimestamp = null;
+      let globalImgIndex = 0;
+
+      for (const item of itemsToImport) {
+        const itemImg = item.sourceImage || null;
+        let imageForUpload = null;
+
+        // 圖片去重邏輯：只對第一次出現的圖檔做上傳
+        if (itemImg && !processedImages.has(itemImg)) {
+          imageForUpload = itemImg;
+          processedImages.add(itemImg);
         }
-      }, index * 100);
-      count++;
-    });
 
-    // 所有記錄添加完成後處理
-    setTimeout(
-      () => {
-        setShowReceiptModal(false);
-        setReceiptImages([]);
-        setPendingImages([]); // 清除
-        setReceiptItems([]);
-        setIsUploading(false);
+        const newItemId = Date.now() + Math.random() + globalImgIndex;
+        globalImgIndex++;
 
-        // 使用 requestAnimationFrame 確保 DOM 已更新，再進行滾動
-        requestAnimationFrame(() => {
-          if (firstRecordTimestamp) {
-            const element = document.getElementById(
-              `record-${firstRecordTimestamp}`,
-            );
-            if (element) {
-              setTimeout(() => {
-                element.scrollIntoView({ behavior: "smooth", block: "center" });
-              }, 100);
-            }
+        // 共用欄位
+        const commonFields = {
+          id: newItemId,
+          type: "finance",
+          date: localDate,
+          timestamp: new Date().toISOString(),
+          user: user,
+          content: item.name,
+          amount: parseFloat(item.amount) || 0,
+          twdAmount: Math.round((parseFloat(item.amount) || 0) * currentRate),
+          rate: currentRate,
+          synced: false,
+        };
+
+        // Local Item: 對於本地顯示，如果該項目所屬的圖片是第一張，則本地也顯示第一張
+        // 這樣列表上就不會每個項目都重複顯示圖片
+        let imageForLocal = null;
+        if (itemImg === imageForUpload) {
+          imageForLocal = itemImg;
+        }
+
+        const localItem = {
+          ...commonFields,
+          image: imageForLocal,
+          hasCloudImage: !!imageForLocal,
+        };
+
+        // Upload Item (傳給 GAS)
+        const uploadItem = {
+          ...commonFields,
+          imageBase64: imageForUpload, // 只有第一次出現時才有值
+          userName: user.name,
+          userAvatar: user.avatar,
+        };
+
+        localItems.push(localItem);
+        uploadItems.push(uploadItem);
+
+        if (!firstRecordTimestamp) firstRecordTimestamp = localItem.timestamp;
+      }
+
+      // 2. 更新 Local State & IndexedDB
+      // 先寫入 IndexedDB
+      for (const item of localItems) {
+        if (item.image) {
+          try {
+            await financeDB.saveImage(item.id, item.image);
+          } catch (err) {
+            console.error("IndexedDB 儲存失敗:", err);
           }
-        });
-      },
-      itemsToImport.length * 100 + 200,
-    );
+        }
+      }
 
-    showToast(`已匯入 ${count} 筆消費紀錄`);
+      // 更新 React State
+      setRecords((prev) => [...prev, ...localItems]);
+
+      // 3. 執行批次上傳
+      if (gasUrl && gasToken) {
+        uploadToGAS(
+          {
+            action: "addBatch",
+            items: uploadItems,
+            userName: user.name,
+            userAvatar: user.avatar,
+          },
+          gasUrl,
+          gasToken,
+        )
+          .then((res) => {
+            if (res.status === "success") {
+              setRecords((prev) =>
+                prev.map((r) => {
+                  const matched = localItems.find((l) => l.id === r.id);
+                  return matched ? { ...r, synced: true } : r;
+                }),
+              );
+              showToast(`雲端同步完成 (新增 ${itemsToImport.length} 筆)`);
+            } else {
+              console.error("Batch upload returned error:", res);
+              showToast("雲端同步部分失敗: " + res.message, "error");
+            }
+          })
+          .catch((err) => {
+            console.error("Batch upload failed", err);
+            showToast("雲端同步失敗，請檢查網路", "error");
+          });
+      }
+
+      // 4. 清理並關閉 Modal
+      setShowReceiptModal(false);
+      setReceiptImages([]);
+      setPendingImages([]);
+      setReceiptItems([]);
+
+      // 5. 滾動到第一筆新增的紀錄
+      showToast(`已匯入 ${itemsToImport.length} 筆消費紀錄 (批次處理)`);
+
+      requestAnimationFrame(() => {
+        if (firstRecordTimestamp) {
+          const element = document.getElementById(
+            `record-${firstRecordTimestamp}`,
+          );
+          if (element) {
+            setTimeout(() => {
+              element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Batch Confirm Error:", error);
+      showToast("批次匯入失敗", "error");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleDelete = async (id, type) => {
@@ -1668,11 +1771,10 @@ const FinanceScreen = ({
                               <div className="flex flex-col">
                                 <div className="flex justify-between items-start gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <div
-                                      className={`text-sm font-bold truncate leading-tight ${theme.text}`}
-                                    >
-                                      {record.content || "未製品項"}
-                                    </div>
+                                    <MarqueeText
+                                      text={record.content || "未製品項"}
+                                      className={`text-sm font-bold leading-tight ${theme.text}`}
+                                    />
                                     <div className="flex items-center gap-1.5 mt-1.5">
                                       <span
                                         className={`text-[10px] ${theme.textSec}`}

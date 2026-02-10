@@ -172,3 +172,18 @@ textarea,
 .animate-bounce-horizontal-right {
   animation: bounceHorizontalRight 1.5s ease-in-out infinite;
 }
+
+/* 🆕 跑馬燈動畫 */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee linear infinite;
+  will-change: transform;
+}
