@@ -82,9 +82,21 @@ import {
   guidesData,
   usefulLinks,
   shopGuideData,
-  tripConfig,
-  checklistData,
-} from "./tripdata_2026_karuizawa.jsx";
+  // } from "./tripdata_2026_karuizawa.jsx";
+} from "@trip-data";
+import { tripConfig, checklistData } from "@trip-data"; // 👈 從這裡切換不同行程資料
+
+// 🔧 Helper to update meta tags dynamically
+const updateMetaTag = (name, content, attribute = "name") => {
+  if (!content) return;
+  let element = document.querySelector(`meta[${attribute}="${name}"]`);
+  if (!element) {
+    element = document.createElement("meta");
+    element.setAttribute(attribute, name);
+    document.head.appendChild(element);
+  }
+  element.setAttribute("content", content);
+};
 import {
   flattenItinerary,
   flattenGuides,
@@ -196,8 +208,6 @@ const ItineraryApp = () => {
   useEffect(() => {
     gasTokenRef.current = gasToken;
   }, [gasToken]);
-  // const [gasUrl] = useState("https://script.google.com/macros/s/AKfycbzT2nqj-bq5OUoRT6M2j7V4rxa6bTE5DWCxCpey65C54AG_Mnzz1XMFIwxXlsro8whR/exec"); // 部署後的 URL (正式版建議加密)
-  // const [gasToken] = useState("GAS_TOKEN_FCWI");     // 設定的密碼 (正式版建議加密)
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [showEncryptTool, setShowEncryptTool] = useState(false);
@@ -801,6 +811,19 @@ const ItineraryApp = () => {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [isFlightInfoExpanded, setIsFlightInfoExpanded] = useState(false);
 
+  // 🆕 2026-02-11 Dynamic Metadata Update
+  useEffect(() => {
+    if (tripConfig.meta) {
+      document.title = tripConfig.meta.title;
+      updateMetaTag("description", tripConfig.meta.description);
+      updateMetaTag("og:title", tripConfig.meta.title, "property");
+      updateMetaTag("og:description", tripConfig.meta.description, "property");
+      updateMetaTag("og:image", tripConfig.meta.ogImage, "property");
+    } else if (tripConfig.title) {
+      document.title = tripConfig.title;
+    }
+  }, []);
+
   // 瀏覽器歷史記錄管理 - 處理返回鍵行為
   useEffect(() => {
     const handlePopState = (event) => {
@@ -1253,6 +1276,27 @@ const ItineraryApp = () => {
             messagesWithImages.length,
             "則訊息",
           );
+          // 2026-02-11 Fix: Ensure welcome message matches current language config
+          if (
+            messagesWithImages.length > 0 &&
+            messagesWithImages[0]?.id?.startsWith("welcome_")
+          ) {
+            try {
+              const currentWelcome = getAiWelcomeTemplate(aiMode, tripConfig);
+              // Check if the current cached message contains the correct language name (e.g. "韓文" vs "日文")
+              if (aiMode === "translate") {
+                const targetLangName = tripConfig.language.name;
+                if (!messagesWithImages[0].text.includes(targetLangName)) {
+                  console.log(
+                    `♻️ Welcome message outdated (Lang mismatch), refreshing to ${targetLangName}...`,
+                  );
+                  messagesWithImages[0] = currentWelcome;
+                }
+              }
+            } catch (e) {
+              console.warn("Failed to refresh welcome message", e);
+            }
+          }
           setMessages(messagesWithImages);
         } else {
           // IndexedDB 為空，檢查 localStorage 進行遷移
@@ -3847,9 +3891,9 @@ const ItineraryApp = () => {
 
             <CurrencyWidget
               isDarkMode={isDarkMode}
-              theme={theme}
               rateData={rateData}
               isOnline={isOnline}
+              tripConfig={tripConfig}
             />
           </div>
         </div>

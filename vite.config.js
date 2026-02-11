@@ -1,6 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa"; // 🆕 引入 PWA 套件
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 🔧 【重要】在此指定當前要使用的行程資料檔案 (Single Source of Truth)
+// 只要切換這裡，就會自動更新 App 標題、Meta、Manifest 與 alias
+const TRIP_FILE_PATH = "src/tripdata_2026_busan.jsx";
+// const TRIP_FILE_PATH = "src/tripdata_2026_karuizawa.jsx";
 
 // 🆕 生成構建版本號（使用當前時間）
 // 🆕 Agentation 工具列開關 (true: 開啟, false: 關閉)
@@ -16,6 +27,37 @@ const generateBuildVersion = () => {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 };
 
+// 🔧 從行程檔案讀取 Meta 設定 (不依賴 Node.js 執行環境轉譯 JSX)
+const loadTripMeta = (filePath) => {
+  try {
+    const content = fs.readFileSync(path.resolve(__dirname, filePath), "utf-8");
+    // 簡單 Regex 抓取 meta 物件內容 (假設格式固定)
+    const titleMatch = content.match(/title:\s*"([^"]+)"/);
+    const descMatch = content.match(/description:\s*"([^"]+)"/);
+    const shortMatch = content.match(/short_name:\s*"([^"]+)"/); // 如果有的話
+
+    // 預設值 (若 Regex 沒抓到)
+    const defaultTitle = "Trip Agent";
+    const defaultDesc = "Travel Itinerary Assistant";
+
+    return {
+      title: titleMatch ? titleMatch[1] : defaultTitle,
+      description: descMatch ? descMatch[1] : defaultDesc,
+      short_name: shortMatch ? shortMatch[1] : (titleMatch ? titleMatch[1].substring(0, 12) : "TripAgent"), // 抓不到 short_name 就用 title 前12字
+    };
+  } catch (error) {
+    console.warn("⚠️ 無法讀取行程 Meta，使用預設值:", error.message);
+    return {
+      title: "Trip Agent",
+      description: "Travel Assistant",
+      short_name: "TripAgent",
+    };
+  }
+};
+
+const tripMeta = loadTripMeta(TRIP_FILE_PATH);
+console.log("🛠️ Current Trip Config:", tripMeta);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   // 🆕 定義環境變數
@@ -26,18 +68,32 @@ export default defineConfig({
     __ENABLE_AGENTATION__: JSON.stringify(ENABLE_AGENTATION),
   },
 
+  resolve: {
+    alias: {
+      "@trip-data": path.resolve(__dirname, TRIP_FILE_PATH),
+    },
+  },
+
   // 🆕 在 plugins 陣列中加入 VitePWA
   plugins: [
     react(),
+    {
+      name: "html-transform",
+      transformIndexHtml(html) {
+        return html
+          .replace(/%TITLE%/g, tripMeta.title)
+          .replace(/%DESC%/g, tripMeta.description);
+      },
+    },
     VitePWA({
       registerType: "autoUpdate", // 自動更新模式：部署新版後，使用者重整即更新
       includeAssets: ["robots.txt"], // 只列出 public/ 內實際存在的靜態資源（圖示已由 manifest icons 處理）
 
       // Manifest 設定：這決定了安裝到手機桌面時的樣子
       manifest: {
-        name: "2026 東京輕井澤六日遊",
-        short_name: "日本旅遊",
-        description: "東京輕井澤家庭旅遊行程助手",
+        name: tripMeta.title,
+        short_name: tripMeta.short_name, // 可以再優化，目前可能用 title 代替
+        description: tripMeta.description,
         id: "/trip_agent/", // 唯一識別碼，確保安裝後不會被視為新 App
         start_url: "/trip_agent/", // 確保啟動時從正確路徑開始
         prefer_related_applications: false, // 明確告知 Chrome 不要偏好原生 App，優先安裝 WebAPK
@@ -151,18 +207,19 @@ export default defineConfig({
           {
             urlPattern:
               /^https:\/\/(router\.project-osrm\.org|nominatim\.openstreetmap\.org)\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "trip_agent_geo-api-cache",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 天
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
+              handler: "CacheFirst",
+              options: {
+                cacheName: "trip_agent_geo-api-cache",
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 30, // 30 天
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
               },
             },
-          },
+          
           // (E) 本地字體檔案 (Runtime Cache)：不預先下載，而是用到時才快取
           {
             urlPattern: /\.(?:woff|woff2)$/i,

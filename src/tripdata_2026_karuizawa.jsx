@@ -1117,7 +1117,15 @@ export const tripConfig = {
   },
   subTitle: "2026/1/24 - 1/29",
   startDate: "2026-01-24T00:00:00",
+
   endDate: "2026-01-29T23:59:59",
+
+  // ========== 網站 Meta 設定 (動態標題) ==========
+  meta: {
+    title: "2026 東京輕井澤六日遊",
+    description: "東京輕井澤家庭旅遊行程助手",
+    ogImage: "https://fcwi.github.io/trip_agent/icon-512.png",
+  },
 
   // ========== 航班資訊 ==========
   // 【如何修改】

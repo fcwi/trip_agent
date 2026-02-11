@@ -6,19 +6,7 @@ import {
   RefreshCw,
   WifiOff,
 } from "lucide-react";
-import { tripConfig } from "../tripdata_2026_karuizawa.jsx";
-
-/**
- * CurrencyWidget Component
- *
- * A compact widget that displays real-time exchange rates.
- * Features:
- * 1. Displays base currency to target currency rate.
- * 2. Shows trend (up/down/neutral) compared to previous data.
- * 3. Handles offline and loading states gracefully.
- * 4. Links to Google Search for detailed rate history when online.
- */
-const CurrencyWidget = ({ isDarkMode, rateData, isOnline }) => {
+const CurrencyWidget = ({ isDarkMode, rateData, isOnline, tripConfig }) => {
   const { code, target } = tripConfig.currency;
   const theme = tripConfig.theme || {};
   const cBase = theme.colorBase || "stone";
