@@ -31,7 +31,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate", // 自動更新模式：部署新版後，使用者重整即更新
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      includeAssets: ["robots.txt"], // 只列出 public/ 內實際存在的靜態資源（圖示已由 manifest icons 處理）
 
       // Manifest 設定：這決定了安裝到手機桌面時的樣子
       manifest: {
@@ -40,10 +40,10 @@ export default defineConfig({
         description: "東京輕井澤家庭旅遊行程助手",
         id: "/trip_agent/", // 唯一識別碼，確保安裝後不會被視為新 App
         start_url: "/trip_agent/", // 確保啟動時從正確路徑開始
+        prefer_related_applications: false, // 明確告知 Chrome 不要偏好原生 App，優先安裝 WebAPK
         background_color: "#FDFBF7", // 啟動畫面背景色（與 APP 背景一致）
         theme_color: "#FDFBF7", // 狀態列顏色（這是 PWA 模式的關鍵設定）
         display: "standalone",
-        display_override: ["window-controls-overlay", "minimal-ui"],
         orientation: "portrait", // 鎖定直向 (避免意外旋轉)
         categories: ["travel", "productivity", "utilities"],
         icons: [
@@ -51,28 +51,26 @@ export default defineConfig({
             src: "icon-192.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any maskable", // 支援 Android 圓形/適應性圖示
+            purpose: "any",
+          },
+          {
+            src: "icon-maskable-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
           },
           {
             src: "icon-512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
           },
-        ],
-        screenshots: [
-          // 如果有截圖可以放這裡，增加安裝提示出現的機率
-          // {
-          //   src: "screenshot-desktop.png",
-          //   sizes: "1280x800",
-          //   type: "image/png",
-          //   form_factor: "wide",
-          // },
-          // {
-          //   src: "screenshot-mobile.png",
-          //   sizes: "390x844",
-          //   type: "image/png",
-          // },
+          {
+            src: "icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
         ],
       },
 
@@ -82,6 +80,9 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg}"],
         // 自動清除舊版本快取
         cleanupOutdatedCaches: true,
+        // 離線導航 fallback：確保離線啟動時回傳預快取的 index.html
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/trip_agent\/api/],
 
         // 2. 執行時快取 (Runtime Caching)
         runtimeCaching: [
