@@ -70,6 +70,8 @@ const ItineraryTab = ({
   current,
   currentLocation,
   dayMapEvents,
+  otherUsersLocations,
+  currentUser,
 }) => {
   // 滑動方向追蹤狀態
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -848,6 +850,8 @@ const ItineraryTab = ({
                             isDarkMode={isDarkMode}
                             theme={theme}
                             onModalToggle={handleMapModalToggle}
+                            otherUsersLocations={otherUsersLocations}
+                            currentUser={currentUser}
                           />
                         </Suspense>
 

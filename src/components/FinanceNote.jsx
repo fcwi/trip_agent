@@ -12,6 +12,7 @@ import {
   Trash2,
   X,
   LogOut,
+  MapPin,
   Wallet,
   Plus,
   Check,
@@ -183,6 +184,25 @@ const FinanceScreen = ({
   const [showUserMenu, setShowUserMenu] = useState(false); // 🆕 頭像選單狀態
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // 🆕 選單位置
   const menuButtonRef = useRef(null); // 🆕 頭像按鈕 ref
+
+  // --- 1.5 位置追蹤狀態 ---
+  const [enableLocationTracking, setEnableLocationTracking] = useState(() => {
+    const saved = localStorage.getItem("trip_agent_location_tracking");
+    return saved !== "false"; // 預設為 true
+  });
+
+  const toggleLocationTracking = () => {
+    setEnableLocationTracking((prev) => {
+      const newState = !prev;
+      localStorage.setItem("trip_agent_location_tracking", newState);
+      if (newState) {
+        showToast("已開啟位置記錄", "success");
+      } else {
+        showToast("已關閉位置記錄", "info");
+      }
+      return newState;
+    });
+  };
 
   // --- 2. 輸入與 AI 狀態 ---
   const [inputText, setInputText] = useState("");
@@ -1422,6 +1442,30 @@ const FinanceScreen = ({
                             點擊登出或其他地方關閉
                           </div>
                         </div>
+                        <button
+                          onClick={() => {
+                            toggleLocationTracking();
+                            // setShowUserMenu(false); // 點擊開關不關閉選單，方便查看狀態
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors ${
+                            isDarkMode
+                              ? "text-neutral-300 hover:bg-neutral-800"
+                              : "text-stone-600 hover:bg-stone-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>記錄我的位置</span>
+                          </div>
+                          <div
+                            className={`w-9 h-5 rounded-full relative transition-colors ${enableLocationTracking ? "bg-green-500" : "bg-gray-300"}`}
+                          >
+                            <div
+                              className={`absolute top-1 left-1 bg-white w-3 h-3 rounded-full transition-transform ${enableLocationTracking ? "translate-x-4" : ""}`}
+                            />
+                          </div>
+                        </button>
+
                         <button
                           onClick={() => {
                             handleLogout();

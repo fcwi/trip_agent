@@ -96,6 +96,7 @@ import {
   getWeatherForecastIndex, // 新增
 } from "./utils/itineraryHelpers.js";
 import { processFileForHeic } from "./utils/imageUtils";
+import { financeDB } from "./utils/indexedDBManager.js";
 
 // 抑制 ESLint 對於 JSX 中 motion 未使用的誤判
 // eslint-disable-next-line no-unused-vars
@@ -182,6 +183,7 @@ const ItineraryApp = () => {
   const [mapsApiKey, setMapsApiKey] = useState("");
   const [gasUrl, setGasUrl] = useState("");
   const [gasToken, setGasToken] = useState("");
+  const [otherUsersLocations, setOtherUsersLocations] = useState([]);
   // const [gasUrl] = useState("https://script.google.com/macros/s/AKfycbzT2nqj-bq5OUoRT6M2j7V4rxa6bTE5DWCxCpey65C54AG_Mnzz1XMFIwxXlsro8whR/exec"); // 部署後的 URL (正式版建議加密)
   // const [gasToken] = useState("GAS_TOKEN_FCWI");     // 設定的密碼 (正式版建議加密)
   const [authError, setAuthError] = useState("");
@@ -683,13 +685,18 @@ const ItineraryApp = () => {
     setIsAuthLoading(true);
     setAuthError("");
     try {
+      let geminiKey = "";
+      let mapsKey = "";
+      let url = "";
+      let token = "";
+
       if (ENCRYPTED_API_KEY_PAYLOAD) {
         const decryptedGemini = await CryptoUtils.decrypt(
           ENCRYPTED_API_KEY_PAYLOAD,
           inputPwd,
         );
         if (decryptedGemini && decryptedGemini.length > 10) {
-          setApiKey(decryptedGemini);
+          geminiKey = decryptedGemini;
         } else {
           throw new Error("Gemini Key 解密失敗");
         }
@@ -702,12 +709,13 @@ const ItineraryApp = () => {
             inputPwd,
           );
           if (decryptedMaps && decryptedMaps.length > 5) {
-            setMapsApiKey(decryptedMaps);
+            mapsKey = decryptedMaps;
           }
         } catch (e) {
           console.warn("Maps Key 解密失敗", e);
         }
       }
+
       if (ENCRYPTED_GAS_URL_PAYLOAD) {
         try {
           const decryptedUrl = await CryptoUtils.decrypt(
@@ -715,7 +723,7 @@ const ItineraryApp = () => {
             inputPwd,
           );
           if (decryptedUrl && decryptedUrl.startsWith("http")) {
-            setGasUrl(decryptedUrl);
+            url = decryptedUrl;
           }
         } catch (e) {
           console.warn("GAS URL 解密失敗", e);
@@ -729,12 +737,18 @@ const ItineraryApp = () => {
             inputPwd,
           );
           if (decryptedToken) {
-            setGasToken(decryptedToken);
+            token = decryptedToken;
           }
         } catch (e) {
           console.warn("GAS Token 解密失敗", e);
         }
       }
+
+      // 批次更新狀態，減少 re-render 次數與副作用重複觸發
+      if (geminiKey) setApiKey(geminiKey);
+      if (mapsKey) setMapsApiKey(mapsKey);
+      if (url) setGasUrl(url);
+      if (token) setGasToken(token);
 
       setIsVerified(true);
       localStorage.setItem("trip_agent_password", inputPwd);
@@ -1556,6 +1570,150 @@ const ItineraryApp = () => {
       };
     }, [isTestMode, testDateTime, frozenTestDateTime]);
 
+  // 🆕 使用者狀態 (用於後台定位記錄)
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // 🆕 初始化時載入使用者 (Mimic FinanceNote logic)
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        // Assuming financeDB is initialized elsewhere or has an init method
+        // If financeDB is not yet initialized, this might fail.
+        // For now, assuming it's ready or init() handles it.
+        // await financeDB.init(); // This might be needed if financeDB isn't globally ready
+        const savedUser = await financeDB.loadUser();
+        if (savedUser) {
+          console.log("👤 [App] User loaded from DB:", savedUser);
+          setCurrentUser(savedUser);
+        } else {
+          // Fallback to localStorage logic
+          const localUserNew = localStorage.getItem("trip_agent_finance_user");
+          const localUserOld = localStorage.getItem("finance_user");
+          let fallbackUser = null;
+          if (localUserNew) fallbackUser = JSON.parse(localUserNew);
+          else if (localUserOld) fallbackUser = JSON.parse(localUserOld);
+
+          if (fallbackUser) {
+            console.log(
+              "👤 [App] User loaded from LocalStorage:",
+              fallbackUser,
+            );
+            setCurrentUser(fallbackUser);
+          } else {
+            console.log("👤 [App] No user found, default to Guest");
+          }
+        }
+      } catch (e) {
+        console.error("👤 [App] User load failed:", e);
+      }
+    };
+    loadUser();
+  }, []); // Empty dependency array to run only once on mount
+
+  // 🆕 位置記錄 Helper
+  const logLocationToSheet = React.useCallback(
+    async (weatherData, accuracy) => {
+      // 1. 檢查開關狀態
+      const isTrackingEnabled =
+        localStorage.getItem("trip_agent_location_tracking") !== "false";
+
+      console.log(
+        `📍 [LocationLog] Triggered. Enabled: ${isTrackingEnabled}, GAS_URL: ${gasUrl ? "Set" : "Missing"}, Accuracy: ${accuracy}`,
+      );
+
+      if (!isTrackingEnabled) return;
+
+      if (!gasUrl) {
+        console.warn("📍 [LocationLog] Skipped: GAS URL not set");
+        return;
+      }
+
+      if (!gasToken) {
+        console.warn("📍 [LocationLog] Skipped: GAS Token not set");
+        return;
+      }
+
+      // 2. 獲取用戶資訊 (優先使用 State，回退到即時讀取)
+      let user = currentUser;
+
+      // Double check if state is missing
+      if (!user) {
+        console.warn(
+          "📍 [LocationLog] User state missing, trying instant fetch...",
+        );
+        try {
+          const dbUser = await financeDB.loadUser();
+          if (dbUser) user = dbUser;
+          else {
+            const localUserNew = localStorage.getItem(
+              "trip_agent_finance_user",
+            );
+            const localUserOld = localStorage.getItem("finance_user");
+            if (localUserNew) user = JSON.parse(localUserNew);
+            else if (localUserOld) user = JSON.parse(localUserOld);
+          }
+        } catch (e) {
+          console.error("📍 [LocationLog] Instant fetch failed:", e);
+        }
+      }
+
+      // Final default
+      if (!user) user = { name: "訪客", avatar: "👤" };
+
+      console.log("📍 [LocationLog] Using User:", user);
+
+      // 3. 準備資料
+      const payload = {
+        type: "location",
+        token: gasToken, // 若沒設定 token (App.jsx state)，則可能無法寫入，需確保 user 已解鎖
+        id: crypto.randomUUID(),
+        userName: user.name,
+        userAvatar: user.avatar,
+        lat: weatherData.lat,
+        lon: weatherData.lon,
+        accuracy: accuracy, // High, Low, Cache
+      };
+
+      console.log("📍 [LocationLog] Sending payload:", payload);
+
+      // 4. 發送 (不等待回應，避免阻塞)
+      try {
+        fetch(gasUrl, {
+          method: "POST",
+          mode: "no-cors", // GAS 通常需要 no-cors 或 redirect: follow
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8", // Match financeHelper.js
+          },
+          body: JSON.stringify(payload),
+        })
+          .then(() => debugLog("📍 Location log sent"))
+          .catch((e) => console.error("Location log send failed", e));
+      } catch (e) {
+        console.error("Location log error", e);
+      }
+    },
+    [gasUrl, gasToken, currentUser], // Added currentUser dependency
+  );
+
+  // 🆕 獲取其他使用者的最新位置
+  const fetchOtherUsersLocations = React.useCallback(async () => {
+    if (!gasUrl || !gasToken) return;
+
+    debugLog("📍 [App] 正在獲取其他使用者位置...");
+    try {
+      const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getLocations`;
+      const response = await fetch(url);
+      const result = await response.json();
+
+      if (result.status === "success" && Array.isArray(result.data)) {
+        debugLog("✅ [App] 獲取其他使用者位置成功:", result.data.length);
+        setOtherUsersLocations(result.data);
+      }
+    } catch (e) {
+      console.error("📍 [App] 獲取其他使用者位置失敗:", e);
+    }
+  }, [gasUrl, gasToken]);
+
   const getUserLocationWeather = React.useCallback(
     async (options = {}) => {
       const {
@@ -1751,13 +1909,25 @@ const ItineraryApp = () => {
             // 測試模式下即便是低精度也視同提供有效座標，由呼叫端決定是否需再提升精確度
             setLocationSource("low");
           }
-          return await fetchLocalWeather(
+          const info = await fetchLocalWeather(
             effectiveCoords.latitude,
             effectiveCoords.longitude,
             effectiveCoords.name || null,
           );
+          if (info)
+            logLocationToSheet(
+              info,
+              isTestMode ? "Test" : highAccuracy ? "High" : "Low",
+            );
+          return info;
         } catch (e) {
           console.error("使用提供的座標抓取失敗", e);
+          // Restore missing fetchLocalWeather call
+          if (!cached && !isAppReady) {
+            const info = await fetchLocalWeather(25.033, 121.5654, "台北");
+            if (info) logLocationToSheet(info, "Default (Coords Fail)");
+            setLocationSource("low");
+          }
         }
       }
 
@@ -1770,7 +1940,7 @@ const ItineraryApp = () => {
         };
 
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             if (isTestModeRef.current) {
               debugLog("🚫 略過 GPS 回傳 (處於測試模式中)");
               return;
@@ -1782,16 +1952,19 @@ const ItineraryApp = () => {
             } else {
               setLocationSource("low");
             }
-            fetchLocalWeather(
+            const info = await fetchLocalWeather(
               position.coords.latitude,
               position.coords.longitude,
             );
+            if (info) {
+              logLocationToSheet(info, highAccuracy ? "High" : "Low");
+            }
             if (!highAccuracy) {
               isFetchingLocationRef.current = false;
               lastFetchAtRef.current = Date.now();
             }
           },
-          (err) => {
+          async (err) => {
             console.warn("GPS 定位未成功", err.code, err.message);
 
             if (err.code === 1) {
@@ -1801,8 +1974,17 @@ const ItineraryApp = () => {
               setHasLocationPermission(null);
             }
 
-            if (!cached && !isAppReady) {
-              fetchLocalWeather(25.033, 121.5654, "台北");
+            if (cached) {
+              try {
+                const parsed = JSON.parse(cached);
+                // 即使 GPS 失敗，若有快取資料且允許追蹤，則記錄最後已知位置
+                logLocationToSheet(parsed, "Last Known (GPS Fail)");
+              } catch (e) {
+                console.error("快取解析失敗 (Log)", e);
+              }
+            } else if (!isAppReady) {
+              const info = await fetchLocalWeather(25.033, 121.5654, "台北");
+              if (info) logLocationToSheet(info, "Default (GPS Fail)");
               setLocationSource("low");
             }
             isFetchingLocationRef.current = false;
@@ -1811,8 +1993,16 @@ const ItineraryApp = () => {
         );
       } else {
         setHasLocationPermission(false);
-        if (!cached && !isAppReady) {
-          fetchLocalWeather(25.033, 121.5654, "台北");
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            logLocationToSheet(parsed, "Last Known (No GPS)");
+          } catch (e) {
+            console.warn("快取解析失敗", e);
+          }
+        } else if (!isAppReady) {
+          const info = await fetchLocalWeather(25.033, 121.5654, "台北");
+          if (info) logLocationToSheet(info, "Default (No GPS)");
           setLocationSource("low");
         }
         isFetchingLocationRef.current = false;
@@ -1832,7 +2022,7 @@ const ItineraryApp = () => {
                   pos.coords.longitude,
                 );
                 if (newData) {
-                  lastHighPrecisionAtRef.current = Date.now();
+                  logLocationToSheet(newData, "High (Background)"); // 背景高精度更新
                   setLocationSource("high");
                   debugLog(
                     "Background high-precision update completed (silent)",
@@ -1854,7 +2044,14 @@ const ItineraryApp = () => {
         }
       }
     },
-    [showToast, isAppReady, isTestMode, testLatitude, testLongitude],
+    [
+      showToast,
+      isAppReady,
+      isTestMode,
+      testLatitude,
+      testLongitude,
+      logLocationToSheet,
+    ],
   );
 
   useEffect(() => {
@@ -1862,15 +2059,22 @@ const ItineraryApp = () => {
       userWeather.temp !== null && userWeather.locationName !== "定位中...";
 
     getUserLocationWeather({ isSilent: alreadyHasData, highAccuracy: false });
+    fetchOtherUsersLocations(); // 初始載入位置
 
-    // 每 10 分鐘自動更新一次天氣資訊，確保資料時效性
+    // 每 10 分鐘自動更新一次天氣資訊與位置，確保資料時效性
     const intervalId = setInterval(() => {
-      debugLog("⏰ 自動更新位置與天氣...");
+      debugLog("⏰ 自動更新位置、天氣與隊友位置...");
       getUserLocationWeather({ isSilent: true, highAccuracy: false });
+      fetchOtherUsersLocations();
     }, 600000);
 
     return () => clearInterval(intervalId);
-  }, [getUserLocationWeather, userWeather.locationName, userWeather.temp]);
+  }, [
+    getUserLocationWeather,
+    fetchOtherUsersLocations,
+    userWeather.temp,
+    userWeather.locationName,
+  ]);
 
   const handleShareLocation = async () => {
     // 測試模式優先處理：直接使用測試設定的位置分享，不觸發實際定位
@@ -3639,6 +3843,8 @@ const ItineraryApp = () => {
               current={current}
               currentLocation={currentLocation}
               dayMapEvents={dayMapEvents}
+              otherUsersLocations={otherUsersLocations}
+              currentUser={currentUser}
             />
           )}
         </div>

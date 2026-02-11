@@ -11,6 +11,21 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+// 輔助函式：計算相對時間
+const getRelativeTime = (timestamp) => {
+  if (!timestamp) return "未知時間";
+  const now = new Date();
+  const past = new Date(timestamp);
+  const diffMs = now - past;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+
+  if (diffMins < 1) return "剛剛";
+  if (diffMins < 60) return `${diffMins} 分鐘前`;
+  if (diffHours < 24) return `${diffHours} 小時前`;
+  return "超過 24 小時";
+};
+
 /**
  * MapController for Modal
  */
@@ -84,6 +99,8 @@ const MapModal = ({
   userLocation,
   routeCoords,
   theme,
+  otherUsersLocations = [],
+  currentUser,
 }) => {
   // 1. 鎖定初始中心點與縮放，避免 React 重繪時因 props 變動導致地圖「彈回」
   // 我們只在彈窗開啟時計算一次，之後在地圖生命週期內保持不變
@@ -163,17 +180,89 @@ const MapModal = ({
     });
   };
 
-  const userLocationIcon = new L.DivIcon({
-    className: "custom-user-icon",
-    html: `
-      <div style="position: relative; width: 20px; height: 20px; background-color: #10b981; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5), 0 2px 6px rgba(0,0,0,0.3); z-index: 1000;">
-        <div style="position: absolute; top: -10px; left: -10px; width: 40px; height: 40px; background-color: rgba(16, 185, 129, 0.25); border-radius: 50%; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-      </div>
-      <style> @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } } </style>
-    `,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
+  const createUserLocationIcon = (avatar) => {
+    return new L.DivIcon({
+      className: "custom-user-location-icon",
+      html: `
+        <div style="position: relative; width: 42px; height: 42px;">
+          <!-- Orange Glow & Ping -->
+          <div style="
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            width: 66px;
+            height: 66px;
+            background-color: rgba(251, 146, 60, 0.34);
+            border-radius: 50%;
+            animation: orange-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            z-index: -1;
+          "></div>
+          <div style="
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            width: 54px;
+            height: 54px;
+            background-color: rgba(251, 146, 60, 0.45);
+            border-radius: 50%;
+            filter: blur(10px);
+            z-index: -1;
+          "></div>
+          
+          <!-- Avatar with Orange Frame -->
+          <div style="
+            width: 42px;
+            height: 42px;
+            background: white;
+            border: 4px solid #fb923c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(251, 146, 60, 0.7), 0 5px 15px rgba(0,0,0,0.4);
+            z-index: 10;
+          ">
+            ${avatar || "👤"}
+          </div>
+        </div>
+        <style>
+          @keyframes orange-ping {
+            75%, 100% { transform: scale(1.9); opacity: 0; }
+          }
+        </style>
+      `,
+      iconSize: [42, 42],
+      iconAnchor: [21, 21],
+      popupAnchor: [0, -22],
+    });
+  };
+
+  const createOtherUserIcon = (avatar) => {
+    return new L.DivIcon({
+      className: "custom-other-user-icon",
+      html: `
+        <div style="
+          position: relative;
+          width: 42px;
+          height: 42px;
+          background: white;
+          border: 3px solid #3b82f6;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        ">
+          ${avatar || "👤"}
+        </div>
+      `,
+      iconSize: [42, 42],
+      iconAnchor: [21, 21],
+      popupAnchor: [0, -22],
+    });
+  };
 
   // 🚀 效能優化：使用 CSS 隱藏而非卸載組件，避免 Leaflet 重複初始化
   const visibilityClass = isOpen
@@ -334,7 +423,7 @@ const MapModal = ({
             {userLocation && userLocation.lat && userLocation.lon && (
               <Marker
                 position={[userLocation.lat, userLocation.lon]}
-                icon={userLocationIcon}
+                icon={createUserLocationIcon(currentUser?.avatar)}
                 zIndexOffset={1000}
               >
                 <Popup closeButton={false} className="custom-popup">
@@ -346,6 +435,45 @@ const MapModal = ({
                 </Popup>
               </Marker>
             )}
+
+            {/* 其他使用者位置 */}
+            {otherUsersLocations
+              .filter((loc) => {
+                const diff = new Date() - new Date(loc.timestamp);
+                return diff < 86400000;
+              })
+              .map((loc, idx) => (
+                <Marker
+                  key={`other-${idx}`}
+                  position={[loc.lat, loc.lon]}
+                  icon={createOtherUserIcon(loc.user?.avatar)}
+                  zIndexOffset={500}
+                >
+                  <Popup closeButton={false} className="custom-popup">
+                    <div
+                      className={`p-4 rounded-2xl shadow-xl border backdrop-blur-md -m-[13px] -mb-[14px] min-w-[150px] ${
+                        isDarkMode
+                          ? "bg-[#1a1a1a]/95 border-neutral-700 text-neutral-200"
+                          : "bg-white/95 border-stone-100 text-stone-800"
+                      }`}
+                    >
+                      <div className="font-bold text-base mb-2 flex items-center gap-2">
+                        <span className="text-xl">
+                          {loc.user?.avatar || "👤"}
+                        </span>
+                        {loc.user?.name}
+                      </div>
+                      <div
+                        className={`text-xs font-bold ${
+                          isDarkMode ? "text-blue-400" : "text-blue-600"
+                        }`}
+                      >
+                        🕙 {getRelativeTime(loc.timestamp)}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
           </MapContainer>
         </div>
 
