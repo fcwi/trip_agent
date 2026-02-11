@@ -4,7 +4,7 @@ import { VitePWA } from "vite-plugin-pwa"; // 🆕 引入 PWA 套件
 
 // 🆕 生成構建版本號（使用當前時間）
 // 🆕 Agentation 工具列開關 (true: 開啟, false: 關閉)
-const ENABLE_AGENTATION = true;
+const ENABLE_AGENTATION = false;
 
 const generateBuildVersion = () => {
   const now = new Date();
@@ -203,8 +203,8 @@ export default defineConfig({
     minify: "terser",
     terserOptions: {
       compress: {
-        drop_console: false, // 如果要保留 console.log以便除錯，請設為 false
-        drop_debugger: false, // 移除 debugger
+        drop_console: true, // 如果要保留 console.log以便除錯，請設為 false
+        drop_debugger: true, // 移除 debugger
       },
     },
     rollupOptions: {
