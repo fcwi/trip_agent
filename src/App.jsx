@@ -7,6 +7,7 @@
   useTransition,
 } from "react";
 import { Agentation } from "agentation";
+import { fetchGasWithRetry } from "./utils/api";
 import {
   Sun,
   CloudSnow,
@@ -202,6 +203,7 @@ const ItineraryApp = () => {
   const [showEncryptTool, setShowEncryptTool] = useState(false);
   const [fullPreviewImage, setFullPreviewImage] = useState(null);
   const scrollContainerRef = useRef(null);
+  const isFetchingLocationsRef = useRef(false); // 🆕 防止重複獲取其他使用者位置
   const [loadingText, setLoadingText] = useState("");
   const [autoTimeZone, setAutoTimeZone] = useState("Asia/Taipei");
   const [toast, setToast] = useState({
@@ -1697,10 +1699,8 @@ const ItineraryApp = () => {
 
       // 4. 發送 (優化 Fetch 設定)
       try {
-        // 移除 no-cors，改用預設 cors 模式並明確處理重新導向
-        // GAS 對 POST 請求會做 302 Found 重新導向至執行結果頁面
-        // 使用 redirect: "follow" 確保 POST Body 在導向過程中正確處理
-        fetch(currentGasUrl, {
+        // 使用 fetchGasWithRetry 處理 GAS 的 Busy 狀態與重試
+        fetchGasWithRetry(currentGasUrl, {
           method: "POST",
           redirect: "follow",
           headers: {
@@ -1708,8 +1708,12 @@ const ItineraryApp = () => {
           },
           body: JSON.stringify(payload),
         })
-          .then(() => debugLog("📍 Location log sent"))
-          .catch((e) => console.error("Location log send failed", e));
+          .then(() =>
+            debugLog("📍 Location log sent successfully (with retry)"),
+          )
+          .catch((e) =>
+            console.error("Location log send failed after retries", e),
+          );
       } catch (e) {
         console.error("Location log error", e);
       }
@@ -1721,11 +1725,18 @@ const ItineraryApp = () => {
   const fetchOtherUsersLocations = React.useCallback(async () => {
     if (!gasUrl || !gasToken) return;
 
-    debugLog("📍 [App] 正在獲取其他使用者位置...");
+    // 🔒 鎖定檢查：若正在獲取中，則直接跳過
+    if (isFetchingLocationsRef.current) {
+      debugLog("⏳ 正在獲取其他使用者位置，略過本次請求");
+      return;
+    }
+
     try {
+      isFetchingLocationsRef.current = true; // 上鎖
+      debugLog("📍 [App] 正在獲取其他使用者位置...");
+
       const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getLocations`;
-      const response = await fetch(url);
-      const result = await response.json();
+      const result = await fetchGasWithRetry(url);
 
       if (result.status === "success" && Array.isArray(result.data)) {
         debugLog("✅ [App] 獲取其他使用者位置成功:", result.data.length);
@@ -1733,6 +1744,8 @@ const ItineraryApp = () => {
       }
     } catch (e) {
       console.error("📍 [App] 獲取其他使用者位置失敗:", e);
+    } finally {
+      isFetchingLocationsRef.current = false; // 解鎖
     }
   }, [gasUrl, gasToken]);
 
@@ -2092,7 +2105,28 @@ const ItineraryApp = () => {
       fetchOtherUsersLocations();
     }, 600000);
 
-    return () => clearInterval(intervalId);
+    // 🆕 加入 visibilitychange 監聽：當 App 回到前景時主動更新，解決背景 setInterval 暫停問題
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        debugLog("👀 App 回到前景，檢查是否需要觸發位置更新...");
+        const now = Date.now();
+        // 確保冷卻時間至少 30 秒，避免頻繁切換視窗導致 API 請求過載
+        if (now - lastFetchAtRef.current > 30000) {
+          debugLog("🚀 冷卻時間已過，立即更新！");
+          getUserLocationWeather({ isSilent: true, highAccuracy: false });
+          fetchOtherUsersLocations();
+        } else {
+          debugLog("⏳ 冷卻時間未到 (30s)，略過更新");
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [
     getUserLocationWeather,
     fetchOtherUsersLocations,
