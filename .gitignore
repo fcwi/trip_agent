@@ -12,6 +12,7 @@ dist
 dist-ssr
 api.gs
 technical_manual.md
+.env
 *.local
 
 # Editor directories and files
