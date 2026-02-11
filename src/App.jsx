@@ -184,6 +184,17 @@ const ItineraryApp = () => {
   const [gasUrl, setGasUrl] = useState("");
   const [gasToken, setGasToken] = useState("");
   const [otherUsersLocations, setOtherUsersLocations] = useState([]);
+
+  // 🆕 使用 Ref 同步重要狀態，解決非同步 Callbacks (如 GPS) 抓取到過時 State 的問題
+  const gasUrlRef = useRef("");
+  const gasTokenRef = useRef("");
+
+  useEffect(() => {
+    gasUrlRef.current = gasUrl;
+  }, [gasUrl]);
+  useEffect(() => {
+    gasTokenRef.current = gasToken;
+  }, [gasToken]);
   // const [gasUrl] = useState("https://script.google.com/macros/s/AKfycbzT2nqj-bq5OUoRT6M2j7V4rxa6bTE5DWCxCpey65C54AG_Mnzz1XMFIwxXlsro8whR/exec"); // 部署後的 URL (正式版建議加密)
   // const [gasToken] = useState("GAS_TOKEN_FCWI");     // 設定的密碼 (正式版建議加密)
   const [authError, setAuthError] = useState("");
@@ -1572,6 +1583,10 @@ const ItineraryApp = () => {
 
   // 🆕 使用者狀態 (用於後台定位記錄)
   const [currentUser, setCurrentUser] = useState(null);
+  const currentUserRef = useRef(null);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
   // 🆕 初始化時載入使用者 (Mimic FinanceNote logic)
   useEffect(() => {
@@ -1617,26 +1632,30 @@ const ItineraryApp = () => {
       const isTrackingEnabled =
         localStorage.getItem("trip_agent_location_tracking") !== "false";
 
+      // 使用 Ref 獲取最新狀態，避免 Closure 陷阱
+      const currentGasUrl = gasUrlRef.current;
+      const currentGasToken = gasTokenRef.current;
+
       console.log(
-        `📍 [LocationLog] Triggered. Enabled: ${isTrackingEnabled}, GAS_URL: ${gasUrl ? "Set" : "Missing"}, Accuracy: ${accuracy}`,
+        `📍 [LocationLog] Triggered. Enabled: ${isTrackingEnabled}, GAS_URL: ${currentGasUrl ? "Set" : "Missing"}, Accuracy: ${accuracy}`,
       );
 
       if (!isTrackingEnabled) return;
 
-      if (!gasUrl) {
+      if (!currentGasUrl) {
         console.warn("📍 [LocationLog] Skipped: GAS URL not set");
         return;
       }
 
-      if (!gasToken) {
+      if (!currentGasToken) {
         console.warn("📍 [LocationLog] Skipped: GAS Token not set");
         return;
       }
 
-      // 2. 獲取用戶資訊 (優先使用 State，回退到即時讀取)
-      let user = currentUser;
+      // 2. 獲取用戶資訊 (優先使用 Ref)
+      let user = currentUserRef.current;
 
-      // Double check if state is missing
+      // Double check if ref is missing
       if (!user) {
         console.warn(
           "📍 [LocationLog] User state missing, trying instant fetch...",
@@ -1665,7 +1684,7 @@ const ItineraryApp = () => {
       // 3. 準備資料
       const payload = {
         type: "location",
-        token: gasToken, // 若沒設定 token (App.jsx state)，則可能無法寫入，需確保 user 已解鎖
+        token: currentGasToken,
         id: crypto.randomUUID(),
         userName: user.name,
         userAvatar: user.avatar,
@@ -1676,13 +1695,16 @@ const ItineraryApp = () => {
 
       console.log("📍 [LocationLog] Sending payload:", payload);
 
-      // 4. 發送 (不等待回應，避免阻塞)
+      // 4. 發送 (優化 Fetch 設定)
       try {
-        fetch(gasUrl, {
+        // 移除 no-cors，改用預設 cors 模式並明確處理重新導向
+        // GAS 對 POST 請求會做 302 Found 重新導向至執行結果頁面
+        // 使用 redirect: "follow" 確保 POST Body 在導向過程中正確處理
+        fetch(currentGasUrl, {
           method: "POST",
-          mode: "no-cors", // GAS 通常需要 no-cors 或 redirect: follow
+          redirect: "follow",
           headers: {
-            "Content-Type": "text/plain;charset=utf-8", // Match financeHelper.js
+            "Content-Type": "text/plain;charset=utf-8",
           },
           body: JSON.stringify(payload),
         })
@@ -1692,7 +1714,7 @@ const ItineraryApp = () => {
         console.error("Location log error", e);
       }
     },
-    [gasUrl, gasToken, currentUser], // Added currentUser dependency
+    [], // 不需要依賴項，因為內部都使用 Ref
   );
 
   // 🆕 獲取其他使用者的最新位置
@@ -1879,17 +1901,19 @@ const ItineraryApp = () => {
           const ipData = await ipRes.json();
           if (ipData.latitude) {
             debugLog("📡 IP 定位補位成功");
-            await fetchLocalWeather(
+            const info = await fetchLocalWeather(
               ipData.latitude,
               ipData.longitude,
               ipData.city,
             );
+            if (info) logLocationToSheet(info, "Low (IP)");
             setLocationSource("low");
           }
         } catch {
           console.warn("IP 定位失敗");
           if (!cached) {
-            await fetchLocalWeather(25.033, 121.5654, "台北");
+            const info = await fetchLocalWeather(25.033, 121.5654, "台北");
+            if (info) logLocationToSheet(info, "Low (Default)");
             setLocationSource("low");
           }
         }
