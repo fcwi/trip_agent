@@ -8,6 +8,7 @@
 } from "react";
 import { Agentation } from "agentation";
 import { fetchGasWithRetry } from "./utils/api";
+import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
 import {
   Sun,
   CloudSnow,
@@ -2809,8 +2810,9 @@ const ItineraryApp = () => {
 
     const maxRetries = 3;
     let attempt = 0;
-    // const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${currentKey}`;
+    // 🔧 使用 aiHelpers 統一管理的模型設定
+    const activeModel = getActiveModel();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
 
     while (attempt < maxRetries) {
       try {
@@ -3187,17 +3189,18 @@ const ItineraryApp = () => {
         【目前目的地當地時間】：${localTimeStr} (時區: ${tz})。
         【行程進度】：${dayStatus}
         ${locationInstruction}        
-        【行程資訊】：
+        【行程資訊與商家資料】：
         ${itineraryFlat}        
-        【推薦商家】：
         ${shopsFlat}        
-        【回答規則】：
-        1. 簡潔、親切、重點式回答。
-        2. 優先使用提供的資訊：若問題在【行程資訊】或【推薦商家】中有答案，請直接回答。
-        3. **【重要】善用 Google Search Tool**：使用者可能會詢問具体的「樓層」、「品牌列表」、「最新營業時間」或「天氣」。
-           - 請務必使用 Google Search Tool 查詢最新資訊，不要憑空猜測。
-           - 查詢後，請統整網路上的資訊回答，並確認資訊的時效性。
-        4. 誠實原則：若搜尋後仍無法確認，請回答「資料不足，請以現場導覽圖為準」。
+        【行為規範與決策路徑】：
+        1. 優先本地檢索：當使用者提問時，請先深思熟慮上述提供的「行程資訊」與「商家資料」。若資料足以回答，請直接回覆並嚴格禁止啟動 google_search。
+        2. 搜尋觸發門檻：只有在遇到以下情況，且本地資料完全無法提供事實時，才允許調用 google_search：
+           - 查詢具體的店家樓層、特定品牌有無、或是營業時間變動。
+           - 本地資料中未記載的新景點詳細介紹。
+        3. 誠實與透明：
+           - 若資料庫與搜尋後皆無法確認細節，請回答「資料不足，請以現場導覽圖或櫃檯資訊為準」，嚴禁編造（如虛構樓層或櫃位）。
+           - 使用搜尋獲得的答案，請在末尾加上「(🔍 來自即時搜尋)」。
+        4. 回答風格：簡潔、親切、重點條列式。
         5. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議。
         `;
 
@@ -3207,10 +3210,16 @@ const ItineraryApp = () => {
           .slice(-4)
           .map(formatToGeminiPart);
 
+        // 🔍 根據訊息內容與模型能力動態決定是否啟用 Google Search Grounding
+        const searchTools = getSearchTools(messageText);
+        console.log(
+          `🔍 [Search Filter] model=${getActiveModel().label}, hasTools=${!!searchTools.tools}, message="${messageText.slice(0, 30)}..."`,
+        );
+
         payload = {
           systemInstruction: { parts: [{ text: guideSystemContext }] },
           contents: [...history, formatToGeminiPart(userMsg)],
-          tools: [{ google_search: {} }], // 🆕 Enable Google Search Grounding
+          ...searchTools,
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 8000,

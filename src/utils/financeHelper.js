@@ -1,4 +1,5 @@
 // src/utils/financeHelper.js
+import { getActiveModel } from "./aiHelpers";
 
 /**
  * 通用的 Gemini API 呼叫函式 (包含 Retry 機制與錯誤處理)
@@ -10,8 +11,9 @@
 export const callGeminiAPI = async (payload, apiKey, signal = null) => {
   if (!apiKey) throw new Error("API Key 尚未設定或解密失敗");
 
-  const MODEL_NAME = "gemini-3-flash-preview"; 
+  const { id: MODEL_NAME } = getActiveModel();
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+
   
   const maxRetries = 3;
   let attempt = 0;
