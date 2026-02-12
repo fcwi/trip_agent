@@ -99,7 +99,6 @@ const updateMetaTag = (name, content, attribute = "name") => {
 };
 import {
   flattenItinerary,
-  flattenGuides,
   flattenShops,
   escapeRegex,
   getWeatherData,
@@ -1524,7 +1523,6 @@ const ItineraryApp = () => {
     () => flattenItinerary(itineraryData),
     [],
   );
-  const guidesFlat = React.useMemo(() => flattenGuides(guidesData), []);
   const shopsFlat = React.useMemo(() => flattenShops(shopGuideData), []);
 
   // ... existing map and weather helpers ...
@@ -3188,20 +3186,19 @@ const ItineraryApp = () => {
         const guideSystemContext = `你是這趟「${tripConfig.title}」的專屬 AI 導遊。
         【目前目的地當地時間】：${localTimeStr} (時區: ${tz})。
         【行程進度】：${dayStatus}
-        ${locationInstruction}
-        
+        ${locationInstruction}        
         【行程資訊】：
-        ${itineraryFlat}
-        
-        【參考指南】：
-        ${guidesFlat}
-        
+        ${itineraryFlat}        
         【推薦商家】：
-        ${shopsFlat}
-        
-        規則：
+        ${shopsFlat}        
+        【回答規則】：
         1. 簡潔、親切、重點式回答。
-        2. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議 (例如：這是什麼菜？這是在哪裡？)。
+        2. 優先使用提供的資訊：若問題在【行程資訊】或【推薦商家】中有答案，請直接回答。
+        3. **【重要】善用 Google Search Tool**：使用者可能會詢問具体的「樓層」、「品牌列表」、「最新營業時間」或「天氣」。
+           - 請務必使用 Google Search Tool 查詢最新資訊，不要憑空猜測。
+           - 查詢後，請統整網路上的資訊回答，並確認資訊的時效性。
+        4. 誠實原則：若搜尋後仍無法確認，請回答「資料不足，請以現場導覽圖為準」。
+        5. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議。
         `;
 
         const history = messages
@@ -3213,6 +3210,7 @@ const ItineraryApp = () => {
         payload = {
           systemInstruction: { parts: [{ text: guideSystemContext }] },
           contents: [...history, formatToGeminiPart(userMsg)],
+          tools: [{ google_search: {} }], // 🆕 Enable Google Search Grounding
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 8000,
