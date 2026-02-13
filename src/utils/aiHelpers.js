@@ -93,6 +93,7 @@ const SEARCH_TRIGGER_KEYWORDS = [
   "怎麼走",
   "附近",
   "周邊",
+  "哪邊",
   "附近推薦",
 
   // 品牌 / 購物

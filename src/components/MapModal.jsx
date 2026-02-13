@@ -6,6 +6,7 @@ import {
   Polyline,
   Marker,
   Popup,
+  Tooltip,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -29,7 +30,12 @@ const getRelativeTime = (timestamp) => {
 /**
  * MapController for Modal
  */
-const ModalMapController = ({ events, userLocation, routeCoords }) => {
+const ModalMapController = ({
+  events,
+  userLocation,
+  routeCoords,
+  otherUsersLocations = [],
+}) => {
   const map = useMap();
   const hasInitializedRef = useRef(false);
 
@@ -48,6 +54,13 @@ const ModalMapController = ({ events, userLocation, routeCoords }) => {
     if (userLocation && userLocation.lat && userLocation.lon) {
       points.push([userLocation.lat, userLocation.lon]);
     }
+
+    // 納入其他使用者位置 (僅 24 小時內)
+    otherUsersLocations
+      .filter((loc) => new Date() - new Date(loc.timestamp) < 86400000)
+      .forEach((loc) => {
+        if (loc.lat && loc.lon) points.push([loc.lat, loc.lon]);
+      });
 
     if (points.length > 0) {
       const bounds = L.latLngBounds(points);
@@ -133,9 +146,8 @@ const MapModal = ({
   // 移除條件返回 null，改用 CSS 控制顯示隱藏，以保留地圖實例 (Keep Alive)
   // if (!isOpen) return null;
 
-  // 始終使用日間模式地圖磚層，夜間模式僅調暗亮度
-  const tileLayerUrl =
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  // 使用 OSM 標準圖磚（支援中文標籤、景點名稱等豐富資訊）
+  const tileLayerUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   // 使用主題設定或回退預設值 - 統一與主卡片樣式
   const glassClass = isDarkMode
@@ -342,7 +354,7 @@ const MapModal = ({
             bounceAtZoomLimits={false}
           >
             <TileLayer
-              attribution="&copy; CARTO, &copy; OpenStreetMap"
+              attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>"
               url={tileLayerUrl}
               updateWhenIdle={false}
               keepBuffer={3}
@@ -352,6 +364,7 @@ const MapModal = ({
               events={validEvents}
               userLocation={userLocation}
               routeCoords={routeCoords}
+              otherUsersLocations={otherUsersLocations}
             />
 
             {/* Route Polyline */}
@@ -433,6 +446,20 @@ const MapModal = ({
                     </div>
                   </div>
                 </Popup>
+                <Tooltip
+                  permanent
+                  interactive
+                  direction="top"
+                  offset={[0, -14]}
+                  className="user-name-tooltip"
+                  eventHandlers={{
+                    click: (e) => {
+                      e.target._source.openPopup();
+                    },
+                  }}
+                >
+                  {currentUser?.name || "我"}
+                </Tooltip>
               </Marker>
             )}
 
@@ -449,6 +476,30 @@ const MapModal = ({
                   icon={createOtherUserIcon(loc.user?.avatar)}
                   zIndexOffset={500}
                 >
+                  <Tooltip
+                    permanent
+                    interactive
+                    direction={["right", "left", "top", "bottom"][idx % 4]}
+                    offset={
+                      ["right", "left"].includes(
+                        ["right", "left", "top", "bottom"][idx % 4],
+                      )
+                        ? [14, 0]
+                        : ["top"].includes(
+                              ["right", "left", "top", "bottom"][idx % 4],
+                            )
+                          ? [0, -14]
+                          : [0, 14]
+                    }
+                    className="user-name-tooltip"
+                    eventHandlers={{
+                      click: (e) => {
+                        e.target._source.openPopup();
+                      },
+                    }}
+                  >
+                    {loc.user?.name || "未知"}
+                  </Tooltip>
                   <Popup closeButton={false} className="custom-popup">
                     <div
                       className={`p-4 rounded-2xl shadow-xl border backdrop-blur-md -m-[13px] -mb-[14px] min-w-[150px] ${
@@ -470,6 +521,26 @@ const MapModal = ({
                       >
                         🕙 {getRelativeTime(loc.timestamp)}
                       </div>
+                      {loc.device && (
+                        <div
+                          className={`text-[10px] mt-0.5 ${
+                            isDarkMode ? "text-neutral-500" : "text-stone-400"
+                          }`}
+                        >
+                          📱 {loc.device}
+                        </div>
+                      )}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`}
+                        className={`mt-2.5 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                          isDarkMode
+                            ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                            : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        }`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        🧭 導航至此
+                      </a>
                     </div>
                   </Popup>
                 </Marker>
@@ -504,6 +575,21 @@ const MapModal = ({
         }
         .custom-popup .leaflet-popup-tip {
           display: none !important;
+        }
+        .user-name-tooltip {
+          background: rgba(0, 0, 0, 0.7) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          color: white !important;
+          font-size: 11px !important;
+          font-weight: 700 !important;
+          padding: 3px 10px !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+          white-space: nowrap !important;
+          cursor: pointer !important;
+        }
+        .user-name-tooltip::before {
+          border-bottom-color: rgba(0, 0, 0, 0.7) !important;
         }
       `}</style>
     </div>

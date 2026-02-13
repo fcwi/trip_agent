@@ -1726,7 +1726,41 @@ const ItineraryApp = () => {
 
       console.log("📍 [LocationLog] Using User:", user);
 
-      // 3. 準備資料
+      // 3. 偵測裝置資訊
+      const getDeviceInfo = () => {
+        try {
+          const ua = navigator.userAgent;
+          let os = "Unknown";
+          let browser = "Unknown";
+
+          // OS Detection
+          if (/iPhone/.test(ua)) os = "iPhone";
+          else if (/iPad/.test(ua)) os = "iPad";
+          else if (/Android/.test(ua)) {
+            const match = ua.match(/Android\s[\d.]+;\s*([^)]+)\)/);
+            os = match
+              ? `Android · ${match[1].split(" Build")[0].trim()}`
+              : "Android";
+          } else if (/Windows/.test(ua)) os = "Windows";
+          else if (/Mac OS/.test(ua)) os = "Mac";
+          else if (/Linux/.test(ua)) os = "Linux";
+
+          // Browser Detection
+          if (/CriOS/.test(ua)) browser = "Chrome";
+          else if (/FxiOS/.test(ua)) browser = "Firefox";
+          else if (/EdgA|Edg\//.test(ua)) browser = "Edge";
+          else if (/SamsungBrowser/.test(ua)) browser = "Samsung";
+          else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = "Safari";
+          else if (/Chrome/.test(ua)) browser = "Chrome";
+          else if (/Firefox/.test(ua)) browser = "Firefox";
+
+          return `${os} · ${browser}`;
+        } catch {
+          return "Unknown";
+        }
+      };
+
+      // 4. 準備資料
       const payload = {
         type: "location",
         token: currentGasToken,
@@ -1736,6 +1770,7 @@ const ItineraryApp = () => {
         lat: weatherData.lat,
         lon: weatherData.lon,
         accuracy: accuracy, // High, Low, Cache
+        device: getDeviceInfo(),
       };
 
       console.log("📍 [LocationLog] Sending payload:", payload);
@@ -1782,8 +1817,13 @@ const ItineraryApp = () => {
       const result = await fetchGasWithRetry(url);
 
       if (result.status === "success" && Array.isArray(result.data)) {
-        debugLog("✅ [App] 獲取其他使用者位置成功:", result.data.length);
-        setOtherUsersLocations(result.data);
+        // 過濾掉自己，避免自己同時出現在「使用者位置」和「其他使用者」
+        const me = currentUserRef.current?.name;
+        const others = me
+          ? result.data.filter((loc) => loc.user?.name !== me)
+          : result.data;
+        debugLog("✅ [App] 獲取其他使用者位置成功:", others.length);
+        setOtherUsersLocations(others);
       }
     } catch (e) {
       console.error("📍 [App] 獲取其他使用者位置失敗:", e);

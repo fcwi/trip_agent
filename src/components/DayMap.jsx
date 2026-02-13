@@ -5,6 +5,7 @@ import {
   TileLayer,
   Marker,
   Popup,
+  Tooltip,
   useMap,
   Polyline,
 } from "react-leaflet";
@@ -161,11 +162,16 @@ const createOtherUserIcon = (avatar) => {
 };
 
 // --- 2. 控制器組件 ---
-const MapController = ({ events, userLocation, routeCoords }) => {
+const MapController = ({
+  events,
+  userLocation,
+  routeCoords,
+  otherUsersLocations = [],
+}) => {
   const map = useMap();
 
   useEffect(() => {
-    // 收集所有需要顯示的點：活動點 + 路線點 + 使用者位置
+    // 收集所有需要顯示的點：活動點 + 路線點 + 使用者位置 + 其他使用者位置
     const points = [];
     events.forEach((e) => {
       if (e.lat && e.lon) points.push([e.lat, e.lon]);
@@ -183,11 +189,18 @@ const MapController = ({ events, userLocation, routeCoords }) => {
       points.push([userLocation.lat, userLocation.lon]);
     }
 
+    // 納入其他使用者位置 (僅 24 小時內)
+    otherUsersLocations
+      .filter((loc) => new Date() - new Date(loc.timestamp) < 86400000)
+      .forEach((loc) => {
+        if (loc.lat && loc.lon) points.push([loc.lat, loc.lon]);
+      });
+
     if (points.length > 0) {
       const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
-  }, [events, userLocation, routeCoords, map]);
+  }, [events, userLocation, routeCoords, otherUsersLocations, map]);
   return null;
 };
 
@@ -220,9 +233,8 @@ const DayMap = ({
   );
   const defaultCenter = [35.6895, 139.6917];
 
-  // 始終使用日間模式地圖磚層，夜間模式僅調暗亮度
-  const tileLayerUrl =
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  // 使用 OSM 標準圖磚（支援中文標籤、景點名稱等豐富資訊）
+  const tileLayerUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   // 🔥 核心邏輯：從 OSRM 獲取路線資料
   useEffect(() => {
@@ -324,7 +336,7 @@ const DayMap = ({
         boxZoom={false}
       >
         <TileLayer
-          attribution="&copy; CARTO, &copy; OpenStreetMap"
+          attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>"
           url={tileLayerUrl}
         />
 
@@ -332,6 +344,7 @@ const DayMap = ({
           events={validEvents}
           userLocation={userLocation}
           routeCoords={routeCoords}
+          otherUsersLocations={otherUsersLocations}
         />
 
         {/* 1. 繪製路線 (Polyline) */}
@@ -417,6 +430,20 @@ const DayMap = ({
                 </div>
               </div>
             </Popup>
+            <Tooltip
+              permanent
+              interactive
+              direction="top"
+              offset={[0, -12]}
+              className="user-name-tooltip"
+              eventHandlers={{
+                click: (e) => {
+                  e.target._source.openPopup();
+                },
+              }}
+            >
+              {currentUser?.name || "我"}
+            </Tooltip>
           </Marker>
         )}
         {/* 其他使用者位置 */}
@@ -433,6 +460,30 @@ const DayMap = ({
               icon={createOtherUserIcon(loc.user?.avatar)}
               zIndexOffset={500}
             >
+              <Tooltip
+                permanent
+                interactive
+                direction={["right", "left", "top", "bottom"][idx % 4]}
+                offset={
+                  ["right", "left"].includes(
+                    ["right", "left", "top", "bottom"][idx % 4],
+                  )
+                    ? [12, 0]
+                    : ["top"].includes(
+                          ["right", "left", "top", "bottom"][idx % 4],
+                        )
+                      ? [0, -12]
+                      : [0, 12]
+                }
+                className="user-name-tooltip"
+                eventHandlers={{
+                  click: (e) => {
+                    e.target._source.openPopup();
+                  },
+                }}
+              >
+                {loc.user?.name || "未知"}
+              </Tooltip>
               <Popup closeButton={false} className="custom-popup">
                 <div
                   className={`p-3 rounded-xl shadow-lg border backdrop-blur-md -m-[13px] -mb-[14px] min-w-[120px] ${
@@ -452,6 +503,26 @@ const DayMap = ({
                   >
                     🕙 {getRelativeTime(loc.timestamp)}
                   </div>
+                  {loc.device && (
+                    <div
+                      className={`text-[9px] mt-0.5 ${
+                        isDarkMode ? "text-neutral-500" : "text-stone-400"
+                      }`}
+                    >
+                      📱 {loc.device}
+                    </div>
+                  )}
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`}
+                    className={`mt-2 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
+                      isDarkMode
+                        ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    🧭 導航至此
+                  </a>
                 </div>
               </Popup>
             </Marker>
@@ -475,6 +546,21 @@ const DayMap = ({
         .custom-numbered-marker:hover {
           transform: scale(1.1);
           z-index: 1000 !important;
+        }
+        .user-name-tooltip {
+          background: rgba(0, 0, 0, 0.7) !important;
+          border: none !important;
+          border-radius: 8px !important;
+          color: white !important;
+          font-size: 10px !important;
+          font-weight: 700 !important;
+          padding: 2px 8px !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+          white-space: nowrap !important;
+          cursor: pointer !important;
+        }
+        .user-name-tooltip::before {
+          border-bottom-color: rgba(0, 0, 0, 0.7) !important;
         }
 
         @keyframes modal-in {
