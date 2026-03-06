@@ -149,6 +149,9 @@ const ENCRYPTED_GAS_URL_PAYLOAD = (
 const ENCRYPTED_GAS_TOKEN_PAYLOAD = (
   import.meta.env.VITE_ENCODED_GAS_TOKEN || ""
 ).trim();
+const ENCRYPTED_MAPTILER_KEY_PAYLOAD = (
+  import.meta.env.VITE_ENCODED_MAPTILER_KEY || ""
+).trim();
 
 //  FlightInfoCard 組件
 import FlightInfoCard from "./components/FlightInfoCard.jsx";
@@ -196,6 +199,7 @@ const ItineraryApp = () => {
   const [mapsApiKey, setMapsApiKey] = useState("");
   const [gasUrl, setGasUrl] = useState("");
   const [gasToken, setGasToken] = useState("");
+  const [maptilerKey, setMaptilerKey] = useState("");
   const [otherUsersLocations, setOtherUsersLocations] = useState([]);
 
   // 🆕 使用 Ref 同步重要狀態，解決非同步 Callbacks (如 GPS) 抓取到過時 State 的問題
@@ -772,6 +776,20 @@ const ItineraryApp = () => {
       if (mapsKey) setMapsApiKey(mapsKey);
       if (url) setGasUrl(url);
       if (token) setGasToken(token);
+
+      if (ENCRYPTED_MAPTILER_KEY_PAYLOAD) {
+        try {
+          const decryptedMt = await CryptoUtils.decrypt(
+            ENCRYPTED_MAPTILER_KEY_PAYLOAD,
+            inputPwd,
+          );
+          if (decryptedMt) {
+            setMaptilerKey(decryptedMt);
+          }
+        } catch (e) {
+          console.warn("MapTiler Key 解密失敗", e);
+        }
+      }
 
       setIsVerified(true);
       localStorage.setItem("trip_agent_password", inputPwd);
@@ -3994,6 +4012,7 @@ const ItineraryApp = () => {
               dayMapEvents={dayMapEvents}
               otherUsersLocations={otherUsersLocations}
               currentUser={currentUser}
+              maptilerKey={maptilerKey}
             />
           )}
         </div>
@@ -4663,6 +4682,7 @@ const ItineraryApp = () => {
           isFrozen={!!frozenTestDateTime || !!frozenTestWeatherOverride}
           onFreeze={freezeTestSettings}
           onUnfreeze={unfreezeTestSettings}
+          maptilerKey={maptilerKey}
         />
 
         {/* Toast 通知提示 */}

@@ -1,210 +1,20 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Tooltip,
-  useMap,
-  Polyline,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { Lock, Unlock, Loader2 } from "lucide-react";
 import MapModal from "./MapModal.jsx";
 
-// --- 0. 輔助函式：計算相對時間 ---
-const getRelativeTime = (timestamp) => {
-  if (!timestamp) return "未知時間";
-  const now = new Date();
-  const past = new Date(timestamp);
-  const diffMs = now - past;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-
-  if (diffMins < 1) return "剛剛";
-  if (diffMins < 60) return `${diffMins} 分鐘前`;
-  if (diffHours < 24) return `${diffHours} 小時前`;
-  return "超過 24 小時";
-};
-
 /**
- * DayMap Component with Route (OSRM)
- * Features:
- * 1. OSRM Routing: Fetches and displays driving route between events.
- * 2. Numbered Markers: Displays 1, 2, 3... sequence for itinerary.
- * 3. Polyline: Draws the path with gradient-like styling.
+ * DayMap Component with MapLibre GL JS & MapTiler
  */
 
-// --- 1. 動態建立數字標記 icon (Numbered Icons) ---
-const createNumberedIcon = (index, isDarkMode) => {
-  return new L.DivIcon({
-    className: "custom-numbered-marker",
-    html: `
-      <div style="position: relative; width: 32px; height: 32px;">
-        <div style="
-          position: absolute;
-          inset: 0;
-          background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"};
-          border-radius: 50%;
-          opacity: 0.2;
-          transform: scale(1.5);
-        "></div>
-        <div style="
-          position: relative;
-          width: 100%;
-          height: 100%;
-          background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"};
-          border: 3px solid white;
-          border-radius: 50%;
-          box-shadow: ${isDarkMode ? "0 0 16px rgba(96, 165, 250, 0.5), 0 3px 10px rgba(0, 0, 0, 0.4)" : "0 3px 10px rgba(0, 0, 0, 0.2)"};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 800;
-          font-size: 14px;
-          font-family: sans-serif;
-        ">
-          ${index + 1}
-        </div>
-      </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
-  });
-};
-
-const createUserLocationIcon = (avatar) => {
-  return new L.DivIcon({
-    className: "custom-user-location-icon",
-    html: `
-      <div style="position: relative; width: 38px; height: 38px;">
-        <!-- Orange Glow & Ping -->
-        <div style="
-          position: absolute;
-          top: -10px;
-          left: -10px;
-          width: 58px;
-          height: 58px;
-          background-color: rgba(251, 146, 60, 0.3);
-          border-radius: 50%;
-          animation: orange-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-          z-index: -1;
-        "></div>
-        <div style="
-          position: absolute;
-          top: -4px;
-          left: -4px;
-          width: 46px;
-          height: 46px;
-          background-color: rgba(251, 146, 60, 0.4);
-          border-radius: 50%;
-          filter: blur(8px);
-          z-index: -1;
-        "></div>
-        
-        <!-- Avatar with Orange Frame -->
-        <div style="
-          width: 38px;
-          height: 38px;
-          background: white;
-          border: 3px solid #fb923c;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          box-shadow: 0 0 15px rgba(251, 146, 60, 0.6), 0 4px 10px rgba(0,0,0,0.3);
-          z-index: 10;
-        ">
-          ${avatar || "👤"}
-        </div>
-      </div>
-      <style>
-        @keyframes orange-ping {
-          75%, 100% { transform: scale(1.8); opacity: 0; }
-        }
-      </style>
-    `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -20],
-  });
-};
-
-const createOtherUserIcon = (avatar) => {
-  return new L.DivIcon({
-    className: "custom-other-user-icon",
-    html: `
-      <div style="
-        position: relative;
-        width: 38px;
-        height: 38px;
-        background: white;
-        border: 2px solid #3b82f6;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      ">
-        ${avatar || "👤"}
-      </div>
-    `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -20],
-  });
-};
-
-// --- 2. 控制器組件 ---
-const MapController = ({
-  events,
-  userLocation,
-  routeCoords,
-  otherUsersLocations = [],
-}) => {
-  const map = useMap();
-
-  useEffect(() => {
-    // 收集所有需要顯示的點：活動點 + 路線點 + 使用者位置 + 其他使用者位置
-    const points = [];
-    events.forEach((e) => {
-      if (e.lat && e.lon) points.push([e.lat, e.lon]);
-    });
-
-    // 如果有路線，路線的轉折點也納入計算，確保整條路都在視野內
-    if (routeCoords && routeCoords.length > 0) {
-      // 為了效能，只取部分路線點來計算邊界 (例如每 10 個取 1 個)
-      routeCoords
-        .filter((_, i) => i % 10 === 0)
-        .forEach((pt) => points.push(pt));
-    }
-
-    if (userLocation && userLocation.lat && userLocation.lon) {
-      points.push([userLocation.lat, userLocation.lon]);
-    }
-
-    // 納入其他使用者位置 (僅 24 小時內)
-    otherUsersLocations
-      .filter((loc) => new Date() - new Date(loc.timestamp) < 86400000)
-      .forEach((loc) => {
-        if (loc.lat && loc.lon) points.push([loc.lat, loc.lon]);
-      });
-
-    if (points.length > 0) {
-      const bounds = L.latLngBounds(points);
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-    }
-  }, [events, userLocation, routeCoords, otherUsersLocations, map]);
-  return null;
-};
-
-// --- 3. 主組件 ---
 const DayMap = ({
   events,
   userLocation,
@@ -213,9 +23,20 @@ const DayMap = ({
   onModalToggle,
   otherUsersLocations = [],
   currentUser,
+  MAPTILER_KEY,
 }) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markers = useRef([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [isRouteLoading, setIsRouteLoading] = useState(false);
+
+  // 根據深色模式選擇樣式
+  const mapStyle = isDarkMode
+    ? `https://api.maptiler.com/maps/ch-swisstopo-lbm-dark/style.json?key=${MAPTILER_KEY}`
+    : `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`;
 
   // 當彈窗狀態改變時，通知父組件 (App.jsx)
   useEffect(() => {
@@ -223,20 +44,108 @@ const DayMap = ({
       onModalToggle(isModalOpen);
     }
   }, [isModalOpen, onModalToggle]);
-  const [routeCoords, setRouteCoords] = useState([]);
-  const [isRouteLoading, setIsRouteLoading] = useState(false);
 
   // 過濾出有效座標的事件
   const validEvents = useMemo(
     () => events.filter((e) => e.lat && e.lon),
     [events],
   );
-  const defaultCenter = [35.6895, 139.6917];
 
-  // 使用 OSM 標準圖磚（支援中文標籤、景點名稱等豐富資訊）
-  const tileLayerUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  // Set map language to Traditional Chinese with local language below
+  const setMapLanguage = useCallback(
+    (mapInstance) => {
+      if (!mapInstance) return;
+      const style = mapInstance.getStyle();
+      if (!style || !style.layers) return;
 
-  // 🔥 核心邏輯：從 OSRM 獲取路線資料
+      style.layers.forEach((layer) => {
+        if (
+          layer.type === "symbol" &&
+          layer.layout &&
+          layer.layout["text-field"]
+        ) {
+          const hasTranslation = [
+            "any",
+            ["has", "name:zh-Hant"],
+            ["has", "name:zh"],
+            ["has", "name:en"],
+          ];
+
+          const isLocalChinese = [
+            "any",
+            ["==", ["get", "name"], ["get", "name:zh-Hant"]],
+            ["==", ["get", "name"], ["get", "name:zh"]],
+            ["==", ["get", "name"], ["get", "name:zh-Hans"]],
+          ];
+
+          const showSecondary = ["all", hasTranslation, ["!", isLocalChinese]];
+
+          mapInstance.setLayoutProperty(layer.id, "text-field", [
+            "format",
+            [
+              "coalesce",
+              ["get", "name:zh-Hant"],
+              ["get", "name:zh"],
+              ["get", "name:en"],
+              ["get", "name"],
+              "",
+            ],
+            { "font-scale": 1.0 },
+            ["case", showSecondary, "\n", ""],
+            {},
+            ["case", showSecondary, ["coalesce", ["get", "name"], ""], ""],
+            {
+              "font-scale": 0.8,
+              "text-color": isDarkMode ? "#9ca3af" : "#6b7280",
+            },
+          ]);
+        }
+      });
+    },
+    [isDarkMode],
+  );
+
+  // 初始化地圖
+  useEffect(() => {
+    if (map.current) return; // 只初始化一次
+
+    map.current = new maplibregl.Map({
+      container: mapContainer.current,
+      style: mapStyle,
+      center: [139.6917, 35.6895], // [lon, lat]
+      zoom: 10,
+      interactive: false, // 預設禁用交互，由遮罩處理
+      attributionControl: false,
+    });
+
+    map.current.on("load", () => {
+      setMapLanguage(map.current);
+    });
+
+    map.current.on("styledata", () => {
+      setMapLanguage(map.current);
+    });
+
+    map.current.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+    );
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [mapStyle, setMapLanguage]);
+
+  // 切換主題樣式
+  useEffect(() => {
+    if (map.current) {
+      map.current.setStyle(mapStyle);
+    }
+  }, [isDarkMode, mapStyle]);
+
+  // 核心邏輯：從 OSRM 獲取路線資料
   useEffect(() => {
     if (validEvents.length < 2) {
       setRouteCoords([]);
@@ -246,20 +155,14 @@ const DayMap = ({
     const fetchRoute = async () => {
       setIsRouteLoading(true);
       try {
-        // 1. 組合座標字串 (OSRM 格式: lon,lat;lon,lat)
         const waypoints = validEvents.map((e) => `${e.lon},${e.lat}`).join(";");
-
-        // 2. 呼叫 API (使用 public OSRM server, 僅供開發測試)
         const url = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
 
         const response = await fetch(url);
         const data = await response.json();
 
         if (data.routes && data.routes[0]) {
-          // 3. 轉換座標：GeoJSON 是 [lon, lat]，Leaflet 需要 [lat, lon]
-          const coordinates = data.routes[0].geometry.coordinates.map(
-            (coord) => [coord[1], coord[0]],
-          );
+          const coordinates = data.routes[0].geometry.coordinates;
           setRouteCoords(coordinates);
         }
       } catch (error) {
@@ -272,6 +175,175 @@ const DayMap = ({
     fetchRoute();
   }, [validEvents]);
 
+  // 更新地圖內容 (標記、路線、視野)
+  useEffect(() => {
+    if (!map.current) return;
+
+    const currentMap = map.current;
+
+    // 1. 清除現有標記
+    markers.current.forEach((m) => m.remove());
+    markers.current = [];
+
+    const isValidLngLat = (lng, lat) => {
+      return (
+        typeof lng === "number" &&
+        typeof lat === "number" &&
+        !isNaN(lng) &&
+        !isNaN(lat) &&
+        lng >= -180 &&
+        lng <= 180 &&
+        lat >= -90 &&
+        lat <= 90
+      );
+    };
+
+    // 2. 準備邊界計算
+    const bounds = new maplibregl.LngLatBounds();
+    let hasPoints = false;
+
+    // 3. 繪製活動標記
+    validEvents.forEach((event, idx) => {
+      if (!isValidLngLat(event.lon, event.lat)) return;
+      const el = document.createElement("div");
+      el.className = "custom-numbered-marker";
+      el.innerHTML = `
+        <div style="position: relative; width: 32px; height: 32px;">
+          <div style="position: absolute; inset: 0; background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"}; border-radius: 50%; opacity: 0.2; transform: scale(1.5);"></div>
+          <div style="position: relative; width: 100%; height: 100%; background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"}; border: 3px solid white; border-radius: 50%; box-shadow: ${isDarkMode ? "0 0 16px rgba(96, 165, 250, 0.5), 0 3px 10px rgba(0, 0, 0, 0.4)" : "0 3px 10px rgba(0, 0, 0, 0.2)"}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; font-family: sans-serif;">
+            ${idx + 1}
+          </div>
+        </div>
+      `;
+
+      const popup = new maplibregl.Popup({
+        offset: 25,
+        closeButton: false,
+        className: "custom-maplibre-popup",
+      }).setHTML(`
+          <div class="p-3 rounded-xl ${isDarkMode ? "bg-[#1a1a1a] text-neutral-200" : "bg-white text-stone-800"}">
+            <div class="font-bold text-sm mb-1 flex items-center gap-2">
+              <span class="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold">${idx + 1}</span>
+              ${event.time} ${event.title}
+            </div>
+            <div class="text-xs leading-snug ${isDarkMode ? "text-neutral-400" : "text-stone-500"}">${event.desc}</div>
+          </div>
+        `);
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([event.lon, event.lat])
+        .setPopup(popup)
+        .addTo(currentMap);
+
+      markers.current.push(marker);
+      bounds.extend([event.lon, event.lat]);
+      hasPoints = true;
+    });
+
+    // 4. 繪製使用者位置
+    if (isValidLngLat(userLocation?.lon, userLocation?.lat)) {
+      const el = document.createElement("div");
+      el.className = "custom-user-location-icon";
+      el.innerHTML = `
+        <div style="position: relative; width: 38px; height: 38px;">
+          <div style="position: absolute; top: -10px; left: -10px; width: 58px; height: 58px; background-color: rgba(251, 146, 60, 0.3); border-radius: 50%; animation: orange-ping 2s infinite; z-index: -1;"></div>
+          <div style="width: 38px; height: 38px; background: white; border: 3px solid #fb923c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(251, 146, 60, 0.6);">${currentUser?.avatar || "👤"}</div>
+        </div>
+      `;
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([userLocation.lon, userLocation.lat])
+        .addTo(currentMap);
+      markers.current.push(marker);
+      bounds.extend([userLocation.lon, userLocation.lat]);
+      hasPoints = true;
+    }
+
+    // 5. 繪製其他使用者
+    otherUsersLocations
+      .filter((loc) => new Date() - new Date(loc.timestamp) < 86400000)
+      .forEach((loc) => {
+        if (!isValidLngLat(loc.lon, loc.lat)) return;
+        const el = document.createElement("div");
+        el.className = "custom-other-user-icon";
+        el.innerHTML = `
+          <div style="width: 38px; height: 38px; background: white; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">${loc.user?.avatar || "👤"}</div>
+        `;
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([loc.lon, loc.lat])
+          .addTo(currentMap);
+        markers.current.push(marker);
+        bounds.extend([loc.lon, loc.lat]);
+        hasPoints = true;
+      });
+
+    // 6. 路線圖層處理
+    const updateRouteLayer = () => {
+      const sourceId = "route-source";
+      if (currentMap.getSource(sourceId)) {
+        currentMap.getSource(sourceId).setData({
+          type: "Feature",
+          geometry: { type: "LineString", coordinates: routeCoords },
+        });
+      } else {
+        currentMap.addSource(sourceId, {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: routeCoords },
+          },
+        });
+
+        currentMap.addLayer({
+          id: "route-layer-glow",
+          type: "line",
+          source: sourceId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": isDarkMode ? "#00d4ff" : "#3b82f6",
+            "line-width": 8,
+            "line-opacity": 0.3,
+          },
+        });
+
+        currentMap.addLayer({
+          id: "route-layer",
+          type: "line",
+          source: sourceId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": isDarkMode ? "#00d4ff" : "#3b82f6",
+            "line-width": 4,
+          },
+        });
+      }
+
+      routeCoords.forEach((pt) => bounds.extend(pt));
+      if (routeCoords.length > 0) hasPoints = true;
+    };
+
+    if (currentMap.isStyleLoaded()) {
+      updateRouteLayer();
+    } else {
+      currentMap.once("style.load", updateRouteLayer);
+    }
+
+    // 7. 適應視野
+    if (hasPoints) {
+      currentMap.fitBounds(bounds, {
+        padding: 50,
+        maxZoom: 15,
+        duration: 1000,
+      });
+    }
+  }, [
+    validEvents,
+    userLocation,
+    routeCoords,
+    otherUsersLocations,
+    isDarkMode,
+    currentUser?.avatar,
+  ]);
+
   return (
     <div
       className={`relative w-full h-64 rounded-[2rem] overflow-hidden border z-0 group transition-all duration-300
@@ -281,14 +353,13 @@ const DayMap = ({
           : "border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-[#fdfdfd]"
       }`}
     >
-      {/* 鎖定按鈕 (改為啟動互動模式) */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           setIsModalOpen(true);
           setShowHint(false);
         }}
-        className={`absolute top-4 right-4 z-[1001] flex items-center gap-1.5 px-4 py-2 rounded-full backdrop-blur-md shadow-lg border transition-all duration-300 active:scale-95
+        className={`absolute top-4 right-4 z-[10] flex items-center gap-1.5 px-4 py-2 rounded-full backdrop-blur-md shadow-lg border transition-all duration-300 active:scale-95
           ${
             isDarkMode
               ? "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30"
@@ -302,283 +373,46 @@ const DayMap = ({
         </span>
       </button>
 
-      {/* 載入中動畫 (位於左上角) */}
       {isRouteLoading && (
-        <div className="absolute top-4 left-4 z-[1001] bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-2">
+        <div className="absolute top-4 left-4 z-[10] bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-2">
           <Loader2 className="w-3 h-3 animate-spin" />
           計算路線中...
         </div>
       )}
 
-      {/* 點擊遮罩 (點擊地圖任何地方皆可開啟彈窗) */}
       <div
-        className="absolute inset-0 z-[1000] flex items-center justify-center bg-transparent cursor-pointer"
+        className="absolute inset-0 z-[5] flex items-center justify-center bg-transparent cursor-pointer"
         onClick={() => setIsModalOpen(true)}
         onMouseEnter={() => setShowHint(true)}
         onMouseLeave={() => setShowHint(false)}
       >
         {showHint && (
-          <div className="bg-black/80 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-md shadow-2xl border border-white/10 animate-scale-in">
+          <div className="bg-black/80 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-md shadow-2xl border border-white/10">
             🔍 點擊開啟互動地圖
           </div>
         )}
       </div>
 
-      <MapContainer
-        center={defaultCenter}
-        zoom={10}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={false}
-        dragging={false}
-        zoomControl={false}
-        touchZoom={false}
-        doubleClickZoom={false}
-        boxZoom={false}
-      >
-        <TileLayer
-          attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a>"
-          url={tileLayerUrl}
-        />
+      <div ref={mapContainer} style={{ height: "100%", width: "100%" }} />
 
-        <MapController
-          events={validEvents}
-          userLocation={userLocation}
-          routeCoords={routeCoords}
-          otherUsersLocations={otherUsersLocations}
-        />
-
-        {/* 1. 繪製路線 (Polyline) */}
-        {routeCoords.length > 0 && (
-          <>
-            {/* 外框線 (製造邊框效果) */}
-            <Polyline
-              positions={routeCoords}
-              pathOptions={{
-                color: isDarkMode ? "rgba(0,0,0,0.4)" : "white",
-                weight: 8,
-                opacity: 0.6,
-              }}
-            />
-            {/* 主路線 */}
-            <Polyline
-              positions={routeCoords}
-              pathOptions={{
-                color: isDarkMode ? "#00d4ff" : "#3b82f6",
-                weight: isDarkMode ? 5 : 4,
-                opacity: isDarkMode ? 1 : 0.9,
-                lineCap: "round",
-                lineJoin: "round",
-              }}
-            />
-            {isDarkMode && (
-              <Polyline
-                positions={routeCoords}
-                pathOptions={{
-                  color: "#00d4ff",
-                  weight: 5,
-                  opacity: 0.3,
-                  lineCap: "round",
-                  lineJoin: "round",
-                }}
-              />
-            )}
-          </>
-        )}
-
-        {/* 2. 繪製編號標記 */}
-        {validEvents.map((event, idx) => (
-          <Marker
-            key={idx}
-            position={[event.lat, event.lon]}
-            icon={createNumberedIcon(idx, isDarkMode)}
-          >
-            <Popup
-              className="custom-popup"
-              closeButton={false}
-              autoPanPadding={[50, 50]}
-            >
-              <div
-                className={`p-3 rounded-xl shadow-lg border backdrop-blur-md -m-[13px] -mb-[14px] ${isDarkMode ? "bg-[#1a1a1a]/90 border-neutral-700 text-neutral-200" : "bg-white/90 border-stone-100 text-stone-800"}`}
-              >
-                <div className="font-bold text-sm mb-1 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold">
-                    {idx + 1}
-                  </span>
-                  {event.time} {event.title}
-                </div>
-                <div
-                  className={`text-xs leading-snug ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
-                >
-                  {event.desc}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* 使用者位置 */}
-        {userLocation && userLocation.lat && userLocation.lon && (
-          <Marker
-            position={[userLocation.lat, userLocation.lon]}
-            icon={createUserLocationIcon(currentUser?.avatar)}
-            zIndexOffset={1000}
-          >
-            <Popup closeButton={false} className="custom-popup">
-              <div className="p-2 px-3 rounded-full bg-emerald-500 shadow-lg -m-[13px] -mb-[14px]">
-                <div className="font-bold text-xs text-white text-center whitespace-nowrap">
-                  您的位置
-                </div>
-              </div>
-            </Popup>
-            <Tooltip
-              permanent
-              interactive
-              direction="top"
-              offset={[0, -12]}
-              className="user-name-tooltip"
-              eventHandlers={{
-                click: (e) => {
-                  e.target._source.openPopup();
-                },
-              }}
-            >
-              {currentUser?.name || "我"}
-            </Tooltip>
-          </Marker>
-        )}
-        {/* 其他使用者位置 */}
-        {otherUsersLocations
-          .filter((loc) => {
-            // 只顯示 24 小時內的
-            const diff = new Date() - new Date(loc.timestamp);
-            return diff < 86400000;
-          })
-          .map((loc, idx) => (
-            <Marker
-              key={`other-${idx}`}
-              position={[loc.lat, loc.lon]}
-              icon={createOtherUserIcon(loc.user?.avatar)}
-              zIndexOffset={500}
-            >
-              <Tooltip
-                permanent
-                interactive
-                direction={["right", "left", "top", "bottom"][idx % 4]}
-                offset={
-                  ["right", "left"].includes(
-                    ["right", "left", "top", "bottom"][idx % 4],
-                  )
-                    ? [12, 0]
-                    : ["top"].includes(
-                          ["right", "left", "top", "bottom"][idx % 4],
-                        )
-                      ? [0, -12]
-                      : [0, 12]
-                }
-                className="user-name-tooltip"
-                eventHandlers={{
-                  click: (e) => {
-                    e.target._source.openPopup();
-                  },
-                }}
-              >
-                {loc.user?.name || "未知"}
-              </Tooltip>
-              <Popup closeButton={false} className="custom-popup">
-                <div
-                  className={`p-3 rounded-xl shadow-lg border backdrop-blur-md -m-[13px] -mb-[14px] min-w-[120px] ${
-                    isDarkMode
-                      ? "bg-[#1a1a1a]/95 border-neutral-700 text-neutral-200"
-                      : "bg-white/95 border-stone-100 text-stone-800"
-                  }`}
-                >
-                  <div className="font-bold text-sm mb-1 flex items-center gap-2">
-                    <span className="text-lg">{loc.user?.avatar || "👤"}</span>
-                    {loc.user?.name}
-                  </div>
-                  <div
-                    className={`text-[10px] font-medium ${
-                      isDarkMode ? "text-blue-400" : "text-blue-600"
-                    }`}
-                  >
-                    🕙 {getRelativeTime(loc.timestamp)}
-                  </div>
-                  {loc.device && (
-                    <div
-                      className={`text-[9px] mt-0.5 ${
-                        isDarkMode ? "text-neutral-500" : "text-stone-400"
-                      }`}
-                    >
-                      📱 {loc.device}
-                    </div>
-                  )}
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`}
-                    className={`mt-2 flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-95 ${
-                      isDarkMode
-                        ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    🧭 導航至此
-                  </a>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-      </MapContainer>
-
-      {/* 樣式覆蓋 */}
       <style jsx global>{`
-        .custom-popup .leaflet-popup-content-wrapper {
+        @keyframes orange-ping {
+          75%,
+          100% {
+            transform: scale(1.8);
+            opacity: 0;
+          }
+        }
+        .custom-maplibre-popup .maplibregl-popup-content {
           background: transparent !important;
           box-shadow: none !important;
-          border-radius: 0 !important;
+          padding: 0 !important;
         }
-        .custom-popup .leaflet-popup-tip {
+        .custom-maplibre-popup .maplibregl-popup-tip {
           display: none !important;
-        }
-        /* 增加標記的淡入動畫 */
-        .custom-numbered-marker {
-          transition: transform 0.2s ease;
-        }
-        .custom-numbered-marker:hover {
-          transform: scale(1.1);
-          z-index: 1000 !important;
-        }
-        .user-name-tooltip {
-          background: rgba(0, 0, 0, 0.7) !important;
-          border: none !important;
-          border-radius: 8px !important;
-          color: white !important;
-          font-size: 10px !important;
-          font-weight: 700 !important;
-          padding: 2px 8px !important;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-          white-space: nowrap !important;
-          cursor: pointer !important;
-        }
-        .user-name-tooltip::before {
-          border-bottom-color: rgba(0, 0, 0, 0.7) !important;
-        }
-
-        @keyframes modal-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        .animate-modal-in {
-          animation: modal-in 0.3s ease-out forwards;
         }
       `}</style>
 
-      {/* 互動式地圖彈窗 (使用 Portal 確保在最上層) - 🚀 優化：始終渲染，內部用 CSS 控制顯示/隱藏 */}
       {createPortal(
         <MapModal
           isOpen={isModalOpen}
@@ -590,6 +424,7 @@ const DayMap = ({
           theme={theme}
           otherUsersLocations={otherUsersLocations}
           currentUser={currentUser}
+          MAPTILER_KEY={MAPTILER_KEY}
         />,
         document.body,
       )}

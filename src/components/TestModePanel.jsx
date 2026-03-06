@@ -41,6 +41,7 @@ const TestModePanel = ({
   isFrozen = false,
   onFreeze = () => {},
   onUnfreeze = () => {},
+  maptilerKey,
 }) => {
   const [expandedWeatherSection, setExpandedWeatherSection] =
     useState("overview");
@@ -275,6 +276,7 @@ const TestModePanel = ({
               onLocationChange={handleMapLocationChange}
               theme={theme}
               isDarkMode={isDarkMode}
+              maptilerKey={maptilerKey}
             />
           </div>
 

@@ -72,6 +72,7 @@ const ItineraryTab = ({
   dayMapEvents,
   otherUsersLocations,
   currentUser,
+  maptilerKey,
 }) => {
   // 滑動方向追蹤狀態
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -852,6 +853,7 @@ const ItineraryTab = ({
                             onModalToggle={handleMapModalToggle}
                             otherUsersLocations={otherUsersLocations}
                             currentUser={currentUser}
+                            MAPTILER_KEY={maptilerKey}
                           />
                         </Suspense>
 
