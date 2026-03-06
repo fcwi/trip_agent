@@ -6,8 +6,8 @@
 // =============================================
 // 🔧 模型切換設定 — 修改這裡即可一鍵切換
 // =============================================
-// 可選值："gemini3flash" | "gemini25lite"
-export const ACTIVE_MODEL = "gemini3flash";
+// 可選值："gemini3flash" | "gemini31lite" | "gemini25lite"
+export const ACTIVE_MODEL = "gemini31lite";
 
 /**
  * 模型定義表
@@ -21,6 +21,11 @@ export const MODELS = {
   gemini3flash: {
     id: "gemini-3-flash-preview",
     label: "Gemini 3 Flash",
+    searchToolType: "retrieval",
+  },
+  gemini31lite: {
+    id: "gemini-3.1-flash-lite-preview",
+    label: "Gemini 3.1 Flash Lite",
     searchToolType: "retrieval",
   },
   gemini25lite: {
