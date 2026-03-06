@@ -109,7 +109,7 @@ import {
   getWeatherForecastIndex, // 新增
 } from "./utils/itineraryHelpers.js";
 import { processFileForHeic } from "./utils/imageUtils";
-import { financeDB } from "./utils/indexedDBManager.js";
+// import { financeDB } from "./utils/indexedDBManager.js";
 
 // 抑制 ESLint 對於 JSX 中 motion 未使用的誤判
 // eslint-disable-next-line no-unused-vars
@@ -1655,10 +1655,7 @@ const ItineraryApp = () => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // Assuming financeDB is initialized elsewhere or has an init method
-        // If financeDB is not yet initialized, this might fail.
-        // For now, assuming it's ready or init() handles it.
-        // await financeDB.init(); // This might be needed if financeDB isn't globally ready
+        const { financeDB } = await import("./utils/indexedDBManager.js");
         const savedUser = await financeDB.loadUser();
         if (savedUser) {
           console.log("👤 [App] User loaded from DB:", savedUser);
@@ -1724,6 +1721,7 @@ const ItineraryApp = () => {
           "📍 [LocationLog] User state missing, trying instant fetch...",
         );
         try {
+          const { financeDB } = await import("./utils/indexedDBManager.js");
           const dbUser = await financeDB.loadUser();
           if (dbUser) user = dbUser;
           else {
