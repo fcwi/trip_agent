@@ -193,6 +193,7 @@ const MapModal = ({
 
     map.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
+      "bottom-right",
     );
     map.current.addControl(new maplibregl.NavigationControl(), "top-left");
 

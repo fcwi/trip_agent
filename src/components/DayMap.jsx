@@ -128,6 +128,7 @@ const DayMap = ({
 
     map.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
+      "bottom-right",
     );
 
     return () => {

@@ -187,3 +187,42 @@ textarea,
   animation: marquee linear infinite;
   will-change: transform;
 }
+
+/* 🆕 縮小地圖版權宣告，避免擋到使用者圖標 */
+.maplibregl-ctrl-attrib {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(2px);
+  border-radius: 6px !important;
+  font-size: 8px !important;
+  line-height: 1 !important;
+  padding: 2px 4px !important;
+  margin: 4px !important;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+  transform: scale(0.85);
+  transform-origin: bottom right;
+}
+
+.maplibregl-ctrl-attrib:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  transform: scale(1);
+}
+
+.dark .maplibregl-ctrl-attrib {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  color: #999 !important;
+}
+
+.maplibregl-ctrl-attrib-button {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* 針對小型預覽圖隱藏非必要的 Logo 或進一步縮小 */
+.maplibregl-ctrl-logo {
+  transform: scale(0.6);
+  transform-origin: bottom left;
+  opacity: 0.5;
+  margin-left: 4px !important;
+}

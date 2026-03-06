@@ -102,6 +102,8 @@ const MapPicker = ({
 
     mapInstanceRef.current = map;
 
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+
     // 清理
     return () => {
       map.remove();
