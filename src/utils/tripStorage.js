@@ -1,6 +1,6 @@
-import { tripConfig } from "@trip-data";
+const activeTripId = import.meta.env?.VITE_TRIP_ID || "default-trip";
 
-export const tripNamespaceId = String(tripConfig.id).replace(
+export const tripNamespaceId = String(activeTripId).replace(
   /[^a-z0-9_-]/gi,
   "_",
 );

@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test --test-isolation=none",
+    "test": "node tests/run-tests.js",
     "security:check": "node scripts/check-source-secrets.mjs",
     "check": "npm run lint && npm run security:check && npm test",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",

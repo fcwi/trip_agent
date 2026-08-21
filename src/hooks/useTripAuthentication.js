@@ -15,6 +15,7 @@ const ENCRYPTED_PAYLOADS = Object.freeze({
 });
 
 export const useTripAuthentication = () => {
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [password, setPassword] = useState("");
   const [credentials, setCredentials] = useState(EMPTY_CREDENTIALS);
@@ -52,25 +53,29 @@ export const useTripAuthentication = () => {
 
   useEffect(() => {
     const restoreAuthentication = async () => {
-      let savedPassword = tripSessionStorage.getItem("password");
+      try {
+        let savedPassword = tripSessionStorage.getItem("password");
 
-      if (!savedPassword) {
-        const legacyPassword = tripStorage.getItem("password", [
-          "trip_agent_password",
-        ]);
-        if (legacyPassword) {
-          savedPassword = legacyPassword;
-          tripSessionStorage.setItem("password", legacyPassword);
+        if (!savedPassword) {
+          const legacyPassword = tripStorage.getItem("password", [
+            "trip_agent_password",
+          ]);
+          if (legacyPassword) {
+            savedPassword = legacyPassword;
+            tripSessionStorage.setItem("password", legacyPassword);
+          }
         }
-      }
 
-      tripStorage.removeItem("password");
-      localStorage.removeItem("trip_agent_password");
+        tripStorage.removeItem("password");
+        localStorage.removeItem("trip_agent_password");
 
-      if (savedPassword && ENCRYPTED_PAYLOADS.apiKey) {
-        await attemptUnlock(savedPassword, true);
-      } else if (!ENCRYPTED_PAYLOADS.apiKey) {
-        setIsVerified(true);
+        if (savedPassword && ENCRYPTED_PAYLOADS.apiKey) {
+          await attemptUnlock(savedPassword, true);
+        } else if (!ENCRYPTED_PAYLOADS.apiKey) {
+          setIsVerified(true);
+        }
+      } finally {
+        setIsAuthReady(true);
       }
     };
 
@@ -106,6 +111,7 @@ export const useTripAuthentication = () => {
   }, []);
 
   return {
+    isAuthReady,
     isVerified,
     password,
     setPassword,

@@ -338,9 +338,9 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             "react-vendor": ["react", "react-dom"],
-            "motion-vendor": ["framer-motion"],
             "icons-vendor": ["lucide-react"],
-            // MapLibre 與 HEIC 轉換皆由功能元件動態載入，交由 Rollup 自動分包。
+            // Framer Motion、MapLibre 與 HEIC 皆由功能模組動態載入，
+            // 交由 Rollup 自動分包，避免鎖定畫面預載非必要功能。
           },
         },
       },
