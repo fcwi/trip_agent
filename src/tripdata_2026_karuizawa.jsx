@@ -1107,6 +1107,7 @@ export const itineraryData = [
 //
 export const tripConfig = {
   // ========== 基本資訊 ==========
+  id: "2026_karuizawa",
   title: "東京輕井澤親子之旅",
   timeZone: "Asia/Tokyo",
   currency: {
@@ -1123,6 +1124,7 @@ export const tripConfig = {
   // ========== 網站 Meta 設定 (動態標題) ==========
   meta: {
     title: "2026 東京輕井澤六日遊",
+    shortName: "東京輕井澤之旅",
     description: "東京輕井澤家庭旅遊行程助手",
     ogImage: "https://fcwi.github.io/trip_agent/icon-512.png",
   },

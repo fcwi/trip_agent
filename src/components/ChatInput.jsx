@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Camera, X, Mic, MicOff, Send } from "lucide-react";
+import { Camera, X, Mic, Send } from "lucide-react";
 
 const ChatInput = ({
   inputMessage,
@@ -17,7 +17,8 @@ const ChatInput = ({
   tripConfig,
 }) => {
   const [showActions, setShowActions] = useState(false);
-  const [sendAttempts, setSendAttempts] = useState(0);
+  const sendAttemptsRef = useRef(0);
+  const retryTimerRef = useRef(null);
   const [popupPosition, setPopupPosition] = useState({
     bottom: "80px",
     left: "16px",
@@ -35,18 +36,26 @@ const ChatInput = ({
     }
   }, [showActions]);
 
+  useEffect(
+    () => () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    },
+    [],
+  );
+
   // 🚀 智慧重試包裝器：如果發送失敗，可在此層級進行簡單重試或狀態管理
   const onSendMessage = async () => {
     try {
-      setSendAttempts((prev) => prev + 1);
       await handleSendMessage();
-      setSendAttempts(0); // 成功後重置
+      sendAttemptsRef.current = 0;
     } catch (error) {
       console.error("Message send failed:", error);
-      // 這裡可以實作自動重試邏輯，例如：
-      if (sendAttempts < 2) {
-        console.log(`自動重試中... 第 ${sendAttempts + 1} 次`);
-        setTimeout(onSendMessage, 1000 * (sendAttempts + 1));
+      if (sendAttemptsRef.current < 2) {
+        sendAttemptsRef.current += 1;
+        retryTimerRef.current = setTimeout(
+          onSendMessage,
+          1000 * sendAttemptsRef.current,
+        );
       }
     }
   };
@@ -67,11 +76,15 @@ const ChatInput = ({
             <div className="relative group">
               <img
                 src={selectedImage}
-                alt="Upload Preview"
+                alt="待傳送的圖片預覽"
+                width="56"
+                height="56"
                 className="h-14 w-auto rounded-xl border border-white/20 shadow-sm object-cover"
               />
               <button
+                type="button"
                 onClick={clearImage}
+                aria-label="移除待傳送圖片"
                 className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-all active:scale-90 z-10"
               >
                 <X className="w-2.5 h-2.5" />
@@ -95,7 +108,9 @@ const ChatInput = ({
         <div className="flex items-center gap-1.5">
           {/* 相機按鈕 */}
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
+            aria-label="上傳圖片"
             className={`p-2.5 rounded-2xl border transition-all flex-shrink-0 active:scale-95
               ${
                 isDarkMode
@@ -110,8 +125,12 @@ const ChatInput = ({
           {/* 功能選單按鈕 */}
           <div className="relative">
             <button
+              type="button"
               ref={micButtonRef}
-              onClick={() => setShowActions(!showActions)}
+              onClick={() => setShowActions((current) => !current)}
+              aria-label="選擇語音輸入語言"
+              aria-expanded={showActions}
+              aria-controls="voice-language-menu"
               className={`p-2.5 rounded-2xl border transition-all flex-shrink-0 active:scale-95 relative
                 ${
                   showActions
@@ -131,6 +150,9 @@ const ChatInput = ({
             {showActions &&
               createPortal(
                 <div
+                  id="voice-language-menu"
+                  role="group"
+                  aria-label="語音輸入語言"
                   style={popupPosition}
                   className={`fixed flex gap-1.5 animate-fadeInLeft p-1.5 rounded-2xl border shadow-2xl z-[9999] backdrop-blur-2xl
                 ${
@@ -140,6 +162,7 @@ const ChatInput = ({
                 }`}
                 >
                   <button
+                    type="button"
                     onClick={() => {
                       toggleListening("zh-TW");
                       setShowActions(false);
@@ -152,6 +175,8 @@ const ChatInput = ({
                           ? "bg-neutral-700 border-neutral-600 text-sky-400"
                           : "bg-white border-stone-200 text-sky-600 shadow-sm"
                     }`}
+                    aria-pressed={listeningLang === "zh-TW"}
+                    aria-label="使用繁體中文語音輸入"
                   >
                     <Mic className="w-3.5 h-3.5" />
                     <span className="font-bold text-xs">中</span>
@@ -159,6 +184,7 @@ const ChatInput = ({
 
                   {tripConfig?.language?.code && (
                     <button
+                      type="button"
                       onClick={() => {
                         toggleListening(tripConfig.language.code);
                         setShowActions(false);
@@ -171,6 +197,8 @@ const ChatInput = ({
                             ? "bg-neutral-700 border-neutral-600 text-rose-300"
                             : "bg-white border-stone-200 text-rose-500 shadow-sm"
                       }`}
+                      aria-pressed={listeningLang === tripConfig.language.code}
+                      aria-label={`使用${tripConfig.language.label}語音輸入`}
                     >
                       <Mic className="w-3.5 h-3.5" />
                       <span className="font-bold text-xs">
@@ -205,7 +233,9 @@ const ChatInput = ({
                 }
               }}
               rows={1}
-              placeholder={listeningLang ? "正在聽取聲音..." : "輸入問題..."}
+              placeholder={listeningLang ? "正在聽取聲音…" : "輸入問題…"}
+              aria-label="詢問 AI 導遊"
+              autoComplete="off"
               style={{ fontSize: "16px" }}
               className={`w-full bg-transparent px-3 py-2.5 focus:outline-none transition-all placeholder:text-opacity-50 resize-none max-h-[80px] leading-snug
                 ${
@@ -218,8 +248,10 @@ const ChatInput = ({
 
           {/* 發送按鈕：配色對標記帳頁面 */}
           <button
+            type="button"
             onClick={onSendMessage}
             disabled={isLoading || (!inputMessage.trim() && !selectedImage)}
+            aria-label={isLoading ? "正在傳送訊息" : "傳送訊息"}
             className={`p-2.5 rounded-2xl transition-all flex-shrink-0 active:scale-95 disabled:opacity-50 disabled:grayscale
               ${
                 isLoading || (!inputMessage.trim() && !selectedImage)
@@ -232,7 +264,10 @@ const ChatInput = ({
               }`}
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span
+                aria-hidden="true"
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+              />
             ) : (
               <Send className="w-5 h-5" />
             )}

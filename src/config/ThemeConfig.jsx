@@ -1,5 +1,5 @@
 import React from "react";
-import { tripConfig } from "../tripdata_2026_karuizawa.jsx";
+import { tripConfig } from "@trip-data";
 
 export const useThemeConfig = (isDarkMode) => {
   const currentTheme = React.useMemo(() => {

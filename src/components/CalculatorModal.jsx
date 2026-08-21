@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import "./CalculatorModal.css";
 
 /**
@@ -20,6 +21,7 @@ const CalculatorModal = ({
   currencyCode, // Base currency (e.g., 'JPY')
   currencyTarget, // Target currency (e.g., 'TWD')
 }) => {
+  const dialogRef = useModalAccessibility(isOpen, onClose);
   const base = (currencyCode || "").toUpperCase();
   const target = (currencyTarget || "").toUpperCase();
 
@@ -191,12 +193,15 @@ const CalculatorModal = ({
     <div
       className={`fixed inset-0 z-[70] flex items-center justify-center px-4 transition-opacity duration-200 ${isOpen ? "visible opacity-100 pointer-events-auto" : "invisible opacity-0 pointer-events-none"}`}
     >
-      <div
+      <button
+        type="button"
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
-        aria-hidden
+        aria-label="關閉計算機"
       />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`calc-modal ${themeClass}`}
         role="dialog"
         aria-modal="true"
@@ -209,11 +214,12 @@ const CalculatorModal = ({
             <p className="calc-title-main">當前貨幣：{currentUnit}</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="calc-close-btn"
             aria-label="關閉計算機"
           >
-            <X className="w-4 h-4" />
+            <X aria-hidden="true" className="w-4 h-4" />
           </button>
         </div>
 

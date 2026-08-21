@@ -2,6 +2,7 @@
 import { X, RotateCcw, LocateFixed } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 
 // 輔助函式：計算相對時間
 const getRelativeTime = (timestamp) => {
@@ -33,6 +34,7 @@ const MapModal = ({
   currentUser,
   MAPTILER_KEY,
 }) => {
+  const dialogRef = useModalAccessibility(isOpen, onClose);
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markers = useRef([]);
@@ -45,17 +47,6 @@ const MapModal = ({
     () => events.filter((e) => e.lat && e.lon),
     [events],
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
 
   const isValidLngLat = (lng, lat) => {
     return (
@@ -471,7 +462,7 @@ const MapModal = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[5000] flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ease-in-out ${visibilityClass}`}
+      className={`fixed inset-0 z-[5000] flex items-center justify-center p-4 sm:p-6 transition-[opacity,transform] duration-300 ease-in-out ${visibilityClass}`}
       style={{ visibility: isOpen ? "visible" : "hidden" }}
       onTouchStart={(e) => {
         if (e.target === e.currentTarget) e.stopPropagation();
@@ -482,11 +473,18 @@ const MapModal = ({
         }
       }}
     >
-      <div
+      <button
+        type="button"
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
+        aria-label="關閉地圖"
       />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="map-modal-title"
+        tabIndex={-1}
         className={`relative w-full max-w-4xl h-[85vh] rounded-[32px] overflow-hidden border shadow-2xl flex flex-col animate-modal-in ${glassClass}`}
       >
         <div
@@ -499,7 +497,12 @@ const MapModal = ({
               Interactive Map
             </span>
             <div className="flex items-center gap-2">
-              <h2 className={`text-xl font-bold ${textClass}`}>當前路線導覽</h2>
+              <h2
+                id="map-modal-title"
+                className={`text-xl font-bold ${textClass}`}
+              >
+                當前路線導覽
+              </h2>
               <div
                 className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${isDarkMode ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-600"}`}
               >
@@ -508,10 +511,12 @@ const MapModal = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="關閉地圖"
             className={`p-2 rounded-full transition-all active:scale-90 ${isDarkMode ? "bg-white/10 hover:bg-white/20 text-white" : "bg-stone-200 hover:bg-stone-300 text-stone-600"}`}
           >
-            <X className="w-5 h-5" />
+            <X aria-hidden="true" className="w-5 h-5" />
           </button>
         </div>
 

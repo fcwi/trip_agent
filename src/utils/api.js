@@ -1,35 +1,118 @@
+export class HttpError extends Error {
+  constructor(response) {
+    super(
+      `HTTP ${response.status}: ${response.statusText || "Request failed"}`,
+    );
+    this.name = "HttpError";
+    this.status = response.status;
+  }
+}
+
+export class RequestTimeoutError extends Error {
+  constructor(timeoutMs) {
+    super(`Request timed out after ${timeoutMs}ms`);
+    this.name = "RequestTimeoutError";
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+const createRequestController = (parentSignal, timeoutMs) => {
+  const controller = new AbortController();
+  let didTimeout = false;
+
+  const abortFromParent = () => controller.abort(parentSignal?.reason);
+  if (parentSignal?.aborted) abortFromParent();
+  else parentSignal?.addEventListener("abort", abortFromParent, { once: true });
+
+  const timeoutId =
+    timeoutMs > 0
+      ? setTimeout(() => {
+          didTimeout = true;
+          controller.abort();
+        }, timeoutMs)
+      : null;
+
+  return {
+    signal: controller.signal,
+    didTimeout: () => didTimeout,
+    cleanup: () => {
+      if (timeoutId !== null) clearTimeout(timeoutId);
+      parentSignal?.removeEventListener("abort", abortFromParent);
+    },
+  };
+};
+
+export const fetchJson = async (
+  url,
+  { timeoutMs = 15000, fetchImpl = fetch, signal, ...options } = {},
+) => {
+  const requestController = createRequestController(signal, timeoutMs);
+
+  try {
+    const response = await fetchImpl(url, {
+      ...options,
+      signal: requestController.signal,
+    });
+
+    if (!response.ok) throw new HttpError(response);
+    return await response.json();
+  } catch (error) {
+    if (requestController.didTimeout()) {
+      throw new RequestTimeoutError(timeoutMs);
+    }
+    throw error;
+  } finally {
+    requestController.cleanup();
+  }
+};
+
+export const waitForRetry = (delayMs, signal) =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason || new DOMException("Aborted", "AbortError"));
+      return;
+    }
+
+    const handleAbort = () => {
+      clearTimeout(timeoutId);
+      reject(signal.reason || new DOMException("Aborted", "AbortError"));
+    };
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", handleAbort);
+      resolve();
+    }, delayMs);
+
+    signal?.addEventListener("abort", handleAbort, { once: true });
+  });
 
 /**
- * 使用指數退避策略 (Exponential Backoff) 的 fetch 封裝函式
- * 專門處理 Google Apps Script (GAS) 返回的 {status: "error", message: "Busy"}
- * 或 {status: "error", message: "Server is busy..."}
- *
- * @param {string} url - API URL
- * @param {object} options - fetch 選項
- * @param {number} retries - 剩餘重試次數，預設 3 次
- * @param {number} backoff - 當前重試延遲 (ms)
- * @returns {Promise<any>} - 解析後的 JSON 資料
+ * 使用指數退避處理 Google Apps Script 的 Busy 回應。
  */
-export async function fetchGasWithRetry(url, options = {}, retries = 3, backoff = 1000) {
-  const response = await fetch(url, options);
+export async function fetchGasWithRetry(
+  url,
+  options = {},
+  retries = 3,
+  backoff = 1000,
+) {
+  const { timeoutMs = 15000, signal, ...fetchOptions } = options;
+  const data = await fetchJson(url, {
+    ...fetchOptions,
+    signal,
+    timeoutMs,
+  });
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+  const isBusy =
+    data.status === "error" &&
+    (data.message === "Busy" || data.message?.includes("Server is busy"));
 
-  const data = await response.json();
+  if (!isBusy) return data;
+  if (retries <= 0) throw new Error("GAS busy, max retries reached.");
 
-  // 檢查 GAS 是否忙碌
-  if (data.status === "error" && (data.message === "Busy" || (data.message && data.message.includes("Server is busy")))) {
-    if (retries > 0) {
-      console.warn(`GAS busy, retrying in ${backoff}ms... (${retries} retries left)`);
-      await new Promise(resolve => setTimeout(resolve, backoff));
-      // 指數退避：延遲時間 * 2
-      return fetchGasWithRetry(url, options, retries - 1, backoff * 2);
-    } else {
-      throw new Error("GAS busy, max retries reached.");
-    }
-  }
-
-  return data;
+  await waitForRetry(backoff, signal);
+  return fetchGasWithRetry(
+    url,
+    { ...fetchOptions, signal, timeoutMs },
+    retries - 1,
+    backoff * 2,
+  );
 }

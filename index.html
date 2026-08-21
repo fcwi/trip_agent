@@ -2,13 +2,13 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/trip_agent/icon-192.png" />
+    <link rel="icon" type="image/png" href="%BASE_PATH%icon-192.png" />
 
     <!-- iOS 專用圖示 -->
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="/trip_agent/apple-touch-icon-180.png"
+      href="%BASE_PATH%apple-touch-icon-180.png"
     />
 
     <!-- iOS Safari 獨立模式設定 -->
@@ -18,7 +18,7 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="釜山旅遊" />
+    <meta name="apple-mobile-web-app-title" content="%SHORT_TITLE%" />
 
     <!-- 防止 iOS Safari 自動偵測電話號碼 -->
     <meta name="format-detection" content="telephone=no" />
@@ -29,7 +29,7 @@
     <!-- 視口設定 - 支援 iOS 安全區域 -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
 
     <!-- 禁止搜尋引擎索引 -->
@@ -38,15 +38,13 @@
     <meta name="description" content="%DESC%" />
     <meta property="og:title" content="%TITLE%" />
     <meta property="og:description" content="%DESC%" />
-    <meta
-      property="og:image"
-      content="https://fcwi.github.io/trip_agent/icon-512.png"
-    />
-    <meta property="og:url" content="https://fcwi.github.io/trip_agent/" />
+    <meta property="og:image" content="%OG_IMAGE%" />
+    <meta property="og:url" content="%SITE_URL%" />
     <meta property="og:type" content="website" />
     <title>%TITLE%</title>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">跳至主要內容</a>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -8,6 +8,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test --test-isolation=none",
+    "security:check": "node scripts/check-source-secrets.mjs",
+    "check": "npm run lint && npm run security:check && npm test",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",
     "preview": "vite preview",
@@ -15,16 +18,13 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@fontsource/noto-sans-tc": "^5.2.8",
     "framer-motion": "^12.23.26",
     "heic2any": "^0.0.4",
     "lucide-react": "^0.559.0",
     "maplibre-gl": "^5.19.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-swipeable": "^7.0.2",
-    "react-tsparticles": "^2.12.2",
-    "tsparticles-slim": "^2.12.0"
+    "react-swipeable": "^7.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

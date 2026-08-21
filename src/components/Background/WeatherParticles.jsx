@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, memo } from 'react';
-import { tripConfig } from "../../tripdata_2026_karuizawa.jsx";
+import React, { useEffect, useRef, memo } from "react";
+import { tripConfig } from "@trip-data";
 
 class Particle {
   constructor(canvas, ctx, type, isDay) {
@@ -161,7 +161,13 @@ const WeatherParticles = memo(({ type, isDay }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!type || type === "clouds") return;
+    if (
+      !type ||
+      type === "clouds" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return undefined;
+    }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     let animationFrameId;
@@ -210,10 +216,11 @@ const WeatherParticles = memo(({ type, isDay }) => {
   if (!type || type === "clouds") return null;
   return (
     <canvas
+      aria-hidden="true"
       ref={canvasRef}
       className="fixed top-0 left-0 w-full h-full pointer-events-none z-0"
     />
   );
 });
 
-export default memo(WeatherParticles);
+export default WeatherParticles;

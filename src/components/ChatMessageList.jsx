@@ -105,12 +105,21 @@ const ChatMessageList = ({
                   : (msg.image.data || null);
                 
                 return imageSrc ? (
-                  <img
-                    src={imageSrc}
-                    alt="Sent Image"
+                  <button
+                    type="button"
                     onClick={() => setFullPreviewImage(imageSrc)}
-                    className="mb-2 max-w-full h-auto rounded-lg border border-white/20 shadow-sm object-cover cursor-zoom-in active:scale-95 transition-transform"
-                  />
+                    className="mb-2 block max-w-full rounded-lg"
+                    aria-label="開啟已傳送圖片預覽"
+                  >
+                    <img
+                      src={imageSrc}
+                      alt="已傳送的圖片"
+                      width="640"
+                      height="480"
+                      loading="lazy"
+                      className="h-auto max-w-full cursor-zoom-in rounded-lg border border-white/20 object-cover shadow-sm transition-transform active:scale-95"
+                    />
+                  </button>
                 ) : null;
               })()}
               {/* 渲染文字內容 (支援 Markdown 或特殊格式) */}

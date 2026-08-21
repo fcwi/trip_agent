@@ -6,21 +6,32 @@ import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { Loader } from "lucide-react";
 import "./index.css";
-import "@fontsource/noto-sans-tc"; // 預設載入 400 字重
-import "@fontsource/noto-sans-tc/700.css"; // 需要粗體再額外引入
 import App from "./App.jsx";
+import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
+import PwaUpdatePrompt from "./components/PwaUpdatePrompt.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Suspense
-      fallback={
-        <div className="flex h-screen w-screen items-center justify-center bg-[#FDFBF7]">
-          <Loader className="w-10 h-10 animate-spin text-stone-400" />
-        </div>
-      }
-    >
-      <App />
-    </Suspense>
+    <AppErrorBoundary>
+      <Suspense
+        fallback={
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex h-screen w-screen items-center justify-center bg-[#FDFBF7]"
+          >
+            <Loader
+              aria-hidden="true"
+              className="h-10 w-10 animate-spin text-stone-400"
+            />
+            <span className="sr-only">載入網站中…</span>
+          </div>
+        }
+      >
+        <App />
+      </Suspense>
+      <PwaUpdatePrompt />
+    </AppErrorBoundary>
   </StrictMode>,
 );
 

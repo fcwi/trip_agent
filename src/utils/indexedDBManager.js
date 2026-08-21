@@ -1,15 +1,17 @@
 /**
  * IndexedDB Manager - 用於管理 AI 聊天記錄和財務記錄
  * 支持存儲文字、圖片和其他大型數據
- * 
+ *
  * 包含的數據庫：
  * 1. aiChatDB - 存儲 AI 導遊/口譯的聊天記錄
  * 2. financeDB - 存儲記帳/記事的內容和圖片
  */
 
+import { getTripDatabaseName, tripStorage } from "./tripStorage.js";
+
 const DB_CONFIG = {
   aiChat: {
-    name: "trip_agent_aiChatDB",
+    name: getTripDatabaseName("aiChat"),
     version: 1,
     stores: {
       messages: { keyPath: "id", indexes: ["mode", "timestamp"] },
@@ -17,7 +19,7 @@ const DB_CONFIG = {
     },
   },
   finance: {
-    name: "trip_agent_financeDB",
+    name: getTripDatabaseName("finance"),
     version: 1,
     stores: {
       records: { keyPath: "id", indexes: ["type", "date", "timestamp"] },
@@ -37,7 +39,10 @@ export const aiChatDB = {
 
   async init() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_CONFIG.aiChat.name, DB_CONFIG.aiChat.version);
+      const request = indexedDB.open(
+        DB_CONFIG.aiChat.name,
+        DB_CONFIG.aiChat.version,
+      );
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -262,7 +267,10 @@ export const financeDB = {
 
   async init() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_CONFIG.finance.name, DB_CONFIG.finance.version);
+      const request = indexedDB.open(
+        DB_CONFIG.finance.name,
+        DB_CONFIG.finance.version,
+      );
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -476,7 +484,7 @@ export const financeDB = {
     const tx = db.transaction("images", "readwrite");
     const store = tx.objectStore("images");
     // 確保所有 validRecordIds 都是字串
-    const validIdsSet = new Set(validRecordIds.map(id => String(id)));
+    const validIdsSet = new Set(validRecordIds.map((id) => String(id)));
 
     return new Promise((resolve, reject) => {
       const request = store.openCursor();
@@ -701,7 +709,10 @@ export const financeDB = {
 
   async clearAll() {
     const db = this.dbInstance || (await this.init());
-    const tx = db.transaction(["records", "images", "user", "notes", "noteImages"], "readwrite");
+    const tx = db.transaction(
+      ["records", "images", "user", "notes", "noteImages"],
+      "readwrite",
+    );
 
     return new Promise((resolve, reject) => {
       tx.objectStore("records").clear();
@@ -729,8 +740,11 @@ export const migrationTools = {
 
     for (const mode of modes) {
       try {
-        const key = `trip_agent_chat_history_${mode}`;
-        const data = localStorage.getItem(key);
+        const key = `chat-history-${mode}`;
+        const data = tripStorage.getItem(key, [
+          `trip_agent_chat_history_${mode}`,
+          `trip_chat_history_${mode}`,
+        ]);
         if (data) {
           const messages = JSON.parse(data);
           await aiChatDB.saveMessages(mode, messages);
@@ -752,10 +766,20 @@ export const migrationTools = {
    */
   async migrateFinance() {
     try {
-      const recordsData = localStorage.getItem("trip_agent_finance_records");
-      const userData = localStorage.getItem("trip_agent_finance_user");
+      const recordsData = tripStorage.getItem("finance-records", [
+        "trip_agent_finance_records",
+        "finance_records",
+      ]);
+      const userData = tripStorage.getItem("finance-user", [
+        "trip_agent_finance_user",
+        "finance_user",
+      ]);
 
-      const results = { recordsMigrated: 0, userMigrated: false, failed: false };
+      const results = {
+        recordsMigrated: 0,
+        userMigrated: false,
+        failed: false,
+      };
 
       if (recordsData) {
         const records = JSON.parse(recordsData);

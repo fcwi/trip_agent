@@ -1,9 +1,10 @@
-import React, { memo } from 'react';
-import { tripConfig } from "../../tripdata_2026_karuizawa.jsx";
+import React, { memo } from "react";
+import { tripConfig } from "@trip-data";
 
 // 輔助組件：雲朵 SVG
 const CloudSVG = ({ style, color }) => (
   <svg
+    aria-hidden="true"
     viewBox="0 0 24 24"
     fill={color}
     style={{
@@ -38,7 +39,7 @@ const SkyObjects = memo(({ isDay, condition }) => {
   const isCloudy = condition !== "clear";
   const themeConfig = getThemeConfig();
   const cloudColors = themeConfig.cloudColors;
-  
+
   let cloudColor;
   if (condition === "rain" || condition === "snow") {
     cloudColor = cloudColors.heavy;
@@ -67,11 +68,14 @@ const SkyObjects = memo(({ isDay, condition }) => {
     opacity: showCelestial ? 1 : 0,
     zIndex: 0,
     position: "absolute",
-    transition: "all 1s ease-in-out", // 確保平滑切換
+    transition: "opacity 1s ease-in-out, transform 1s ease-in-out",
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden">
+    <div
+      aria-hidden="true"
+      className="fixed top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden"
+    >
       <div style={celestialStyle} />
 
       {isCloudy && (
@@ -109,4 +113,4 @@ const SkyObjects = memo(({ isDay, condition }) => {
   );
 });
 
-export default memo(SkyObjects);
+export default SkyObjects;

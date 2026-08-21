@@ -11,6 +11,7 @@ import {
   Info,
 } from "lucide-react";
 import MapPicker from "./MapPicker.jsx";
+import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 
 // 🆕 讀取構建版本號
 const BUILD_VERSION = import.meta.env.VITE_BUILD_VERSION || "開發模式";
@@ -43,6 +44,7 @@ const TestModePanel = ({
   onUnfreeze = () => {},
   maptilerKey,
 }) => {
+  const dialogRef = useModalAccessibility(isOpen, onClose);
   const [expandedWeatherSection, setExpandedWeatherSection] =
     useState("overview");
 
@@ -124,6 +126,11 @@ const TestModePanel = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-end">
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="test-mode-title"
+        tabIndex={-1}
         className={`w-full rounded-t-3xl max-h-[90vh] overflow-y-auto transition-all duration-300 ${theme.cardBg} ${theme.cardBorder} border-t border-l border-r`}
       >
         {/* Header */}
@@ -131,16 +138,19 @@ const TestModePanel = ({
           className={`sticky top-0 flex items-center justify-between p-4 border-b ${isDarkMode ? "border-neutral-700/50 bg-neutral-900/40" : "border-stone-200/50 bg-white/30"} backdrop-blur-sm`}
         >
           <h2
+            id="test-mode-title"
             className={`text-lg font-bold flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDarkMode ? "bg-neutral-800/60" : "bg-white/40"} backdrop-blur-md ${theme.text}`}
           >
             <span>🧪</span>
             <span>測試模式</span>
           </h2>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="關閉測試模式"
             className={`p-2 rounded-lg transition-colors ${isDarkMode ? "hover:bg-neutral-700" : "hover:bg-stone-200"}`}
           >
-            <X className="w-5 h-5" />
+            <X aria-hidden="true" className="w-5 h-5" />
           </button>
         </div>
 

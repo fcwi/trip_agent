@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-family:
       system-ui,
@@ -16,6 +20,47 @@
 
     @apply text-slate-900 bg-white dark:text-slate-50 dark:bg-slate-950;
   }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 3px solid #0ea5e9;
+    outline-offset: 3px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    scroll-margin-top: 5rem;
+    text-wrap: balance;
+  }
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10001;
+  transform: translateY(-200%);
+  border-radius: 0.75rem;
+  background: #0f172a;
+  color: white;
+  padding: 0.65rem 0.9rem;
+  font-weight: 700;
+  transition: transform 150ms ease-out;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 /* 🆕 iOS 安全區域支援 - 防止內容被瀏海/Home Indicator 遮擋 */
@@ -198,9 +243,27 @@ textarea,
   padding: 2px 4px !important;
   margin: 4px !important;
   opacity: 0.5;
-  transition: all 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    background-color 0.3s ease,
+    transform 0.3s ease;
   transform: scale(0.85);
   transform-origin: bottom right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .maplibregl-ctrl-attrib:hover {

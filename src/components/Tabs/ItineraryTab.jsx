@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useRef } from "react";
+import React, { lazy, Suspense, useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -23,10 +23,64 @@ import {
 } from "lucide-react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
-import DayMap from "../DayMap.jsx";
 import FlightInfoCard from "../FlightInfoCard.jsx";
 import ChecklistCard from "../ChecklistCard.jsx";
 import WeatherCard from "../WeatherCard.jsx";
+
+const DayMap = lazy(() => import("../DayMap.jsx"));
+
+const DeferredDayMap = (props) => {
+  const { isDarkMode } = props;
+  const containerRef = useRef(null);
+  const [shouldLoad, setShouldLoad] = useState(
+    () => typeof window !== "undefined" && !("IntersectionObserver" in window),
+  );
+
+  useEffect(() => {
+    if (shouldLoad) return undefined;
+
+    const container = containerRef.current;
+    if (!container || !("IntersectionObserver" in window)) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  const fallback = (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex h-64 items-center justify-center rounded-xl border text-xs font-semibold ${
+        isDarkMode
+          ? "border-neutral-800 bg-neutral-900/30 text-neutral-400"
+          : "border-stone-200 bg-white/60 text-stone-500"
+      }`}
+    >
+      {shouldLoad ? "地圖載入中…" : "向下捲動時載入互動地圖"}
+    </div>
+  );
+
+  return (
+    <div ref={containerRef}>
+      {shouldLoad ? (
+        <Suspense fallback={fallback}>
+          <DayMap {...props} />
+        </Suspense>
+      ) : (
+        fallback
+      )}
+    </div>
+  );
+};
 
 const ItineraryTab = ({
   activeDay,
@@ -836,26 +890,16 @@ const ItineraryTab = ({
                           </h3>
                         </div>
 
-                        <Suspense
-                          fallback={
-                            <div
-                              className={`h-64 rounded-xl border flex items-center justify-center text-xs font-semibold animate-pulse ${isDarkMode ? "bg-neutral-900/30 border-neutral-800 text-neutral-400" : "bg-white/60 border-stone-200 text-stone-500"}`}
-                            >
-                              地圖載入中…
-                            </div>
-                          }
-                        >
-                          <DayMap
-                            events={dayMapEvents}
-                            userLocation={userWeather}
-                            isDarkMode={isDarkMode}
-                            theme={theme}
-                            onModalToggle={handleMapModalToggle}
-                            otherUsersLocations={otherUsersLocations}
-                            currentUser={currentUser}
-                            MAPTILER_KEY={maptilerKey}
-                          />
-                        </Suspense>
+                        <DeferredDayMap
+                          events={dayMapEvents}
+                          userLocation={userWeather}
+                          isDarkMode={isDarkMode}
+                          theme={theme}
+                          onModalToggle={handleMapModalToggle}
+                          otherUsersLocations={otherUsersLocations}
+                          currentUser={currentUser}
+                          MAPTILER_KEY={maptilerKey}
+                        />
 
                         <div className="flex flex-col gap-3 mt-4">
                           <div

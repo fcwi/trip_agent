@@ -1,65 +1,82 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { fetchJson } from "../utils/api.js";
 
 export const useCurrency = (code, target, isOnline) => {
-  // 初始狀態：根據 isOnline 決定 loading 的預設值，避免在 Effect 中同步更新
   const [rateData, setRateData] = useState({
     current: null,
     trend: "neutral",
     diff: 0,
-    loading: true, 
+    loading: true,
     error: false,
   });
 
   useEffect(() => {
-    // 即使離線也嘗試 fetch，讓 Service Worker 攔截並返回快取資料
-    // if (!isOnline) {
-    //   return;
-    // }
+    const controller = new AbortController();
 
     const fetchRates = async () => {
-      // 在開始請求前，確保 loading 是開啟的（這發生在非同步函數中，是安全的）
-      setRateData((prev) => (prev.loading ? prev : { ...prev, loading: true, error: false }));
+      setRateData((previous) =>
+        previous.loading
+          ? previous
+          : { ...previous, loading: true, error: false },
+      );
+
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 7);
+      const date = pastDate.toISOString().split("T")[0];
+      const requestOptions = {
+        signal: controller.signal,
+        timeoutMs: 12000,
+      };
 
       try {
-        const nowRes = await fetch(
-          `https://latest.currency-api.pages.dev/v1/currencies/${code}.json`
-        );
-        const nowData = await nowRes.json();
-        const currentRate = nowData[code][target.toLowerCase()];
+        const [currentResult, pastResult] = await Promise.allSettled([
+          fetchJson(
+            `https://latest.currency-api.pages.dev/v1/currencies/${code}.json`,
+            requestOptions,
+          ),
+          fetchJson(
+            `https://try.readme.io/https://${date}.currency-api.pages.dev/v1/currencies/${code}.json`,
+            requestOptions,
+          ),
+        ]);
 
-        const pastDate = new Date();
-        pastDate.setDate(pastDate.getDate() - 7);
-        const dateStr = pastDate.toISOString().split("T")[0];
+        if (currentResult.status === "rejected") throw currentResult.reason;
 
-        const pastRes = await fetch(
-          `https://try.readme.io/https://${dateStr}.currency-api.pages.dev/v1/currencies/${code}.json`
-        );
-        
-        let pastRate = currentRate;
-        if (pastRes.ok) {
-          const pastData = await pastRes.json();
-          pastRate = pastData[code][target.toLowerCase()];
+        const targetCode = target.toLowerCase();
+        const currentRate = currentResult.value?.[code]?.[targetCode];
+        if (!Number.isFinite(currentRate)) {
+          throw new Error("匯率 API 回傳格式不正確");
         }
 
+        const historicalRate =
+          pastResult.status === "fulfilled"
+            ? pastResult.value?.[code]?.[targetCode]
+            : null;
+        const pastRate = Number.isFinite(historicalRate)
+          ? historicalRate
+          : currentRate;
         const diff = currentRate - pastRate;
-        let trend = "neutral";
-        if (diff > 0.0001) trend = "up";
-        if (diff < -0.0001) trend = "down";
 
         setRateData({
           current: currentRate,
-          trend,
+          trend: diff > 0.0001 ? "up" : diff < -0.0001 ? "down" : "neutral",
           diff,
           loading: false,
           error: false,
         });
-      } catch (err) {
-        console.error("匯率抓取失敗:", err);
-        setRateData((prev) => ({ ...prev, loading: false, error: true }));
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        console.error("匯率抓取失敗:", error);
+        setRateData((previous) => ({
+          ...previous,
+          loading: false,
+          error: true,
+        }));
       }
     };
 
     fetchRates();
+    return () => controller.abort();
   }, [code, target, isOnline]);
 
   return rateData;

@@ -45,6 +45,18 @@ const DayMap = ({
     }
   }, [isModalOpen, onModalToggle]);
 
+  // 使用瀏覽器返回鍵時，讓內部地圖彈窗與父層歷史狀態一起關閉。
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isModalOpen && window.history.state?.modal !== "map") {
+        setIsModalOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isModalOpen]);
+
   // 過濾出有效座標的事件
   const validEvents = useMemo(
     () => events.filter((e) => e.lat && e.lon),

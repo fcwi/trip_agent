@@ -34,6 +34,13 @@ import {
 import { processFileForHeic } from "../utils/imageUtils";
 import { financeDB } from "../utils/indexedDBManager.js";
 import MarqueeText from "./MarqueeText.jsx";
+import { tripConfig } from "@trip-data";
+import { tripStorage } from "../utils/tripStorage.js";
+import {
+  formatCurrency,
+  getCurrencySymbol,
+} from "../utils/currencyFormatter.js";
+import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 
 // 預設頭像列表
 const AVATARS = [
@@ -184,24 +191,42 @@ const FinanceScreen = ({
   const [showUserMenu, setShowUserMenu] = useState(false); // 🆕 頭像選單狀態
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // 🆕 選單位置
   const menuButtonRef = useRef(null); // 🆕 頭像按鈕 ref
+  const sourceCurrency = tripConfig.currency.source;
+  const targetCurrency = tripConfig.currency.target;
+  const sourceCurrencySymbol = getCurrencySymbol(sourceCurrency);
+  const [showLocationConsent, setShowLocationConsent] = useState(false);
+  const locationConsentDialogRef = useModalAccessibility(
+    showLocationConsent,
+    () => setShowLocationConsent(false),
+  );
 
   // --- 1.5 位置追蹤狀態 ---
   const [enableLocationTracking, setEnableLocationTracking] = useState(() => {
-    const saved = localStorage.getItem("trip_agent_location_tracking");
-    return saved !== "false"; // 預設為 true
+    const saved = tripStorage.getItem("location-tracking", [
+      "trip_agent_location_tracking",
+    ]);
+    const consent = tripStorage.getItem("location-sharing-consent-v1");
+    return saved === "true" && consent === "true";
   });
 
   const toggleLocationTracking = () => {
-    setEnableLocationTracking((prev) => {
-      const newState = !prev;
-      localStorage.setItem("trip_agent_location_tracking", newState);
-      if (newState) {
-        showToast("已開啟位置記錄", "success");
-      } else {
-        showToast("已關閉位置記錄", "info");
-      }
-      return newState;
-    });
+    if (enableLocationTracking) {
+      tripStorage.setItem("location-tracking", false);
+      setEnableLocationTracking(false);
+      showToast("已關閉雲端位置記錄", "info");
+      return;
+    }
+
+    setShowUserMenu(false);
+    setShowLocationConsent(true);
+  };
+
+  const confirmLocationTracking = () => {
+    tripStorage.setItem("location-sharing-consent-v1", true);
+    tripStorage.setItem("location-tracking", true);
+    setEnableLocationTracking(true);
+    setShowLocationConsent(false);
+    showToast("已開啟雲端位置記錄", "success");
   };
 
   // --- 2. 輸入與 AI 狀態 ---
@@ -282,7 +307,10 @@ const FinanceScreen = ({
           setUser(savedUser);
         } else {
           // 回退到 localStorage
-          const localUser = localStorage.getItem("finance_user");
+          const localUser = tripStorage.getItem("finance-user", [
+            "trip_agent_finance_user",
+            "finance_user",
+          ]);
           if (localUser) {
             const parsedUser = JSON.parse(localUser);
             setUser(parsedUser);
@@ -294,7 +322,10 @@ const FinanceScreen = ({
         let allRecords = await financeDB.loadAllRecords();
         if (!allRecords || allRecords.length === 0) {
           // 回退到 localStorage
-          const localRecords = localStorage.getItem("finance_records");
+          const localRecords = tripStorage.getItem("finance-records", [
+            "trip_agent_finance_records",
+            "finance_records",
+          ]);
           if (localRecords) {
             allRecords = JSON.parse(localRecords);
             if (allRecords.length > 0) {
@@ -309,8 +340,14 @@ const FinanceScreen = ({
         console.error("IndexedDB 初始化失敗:", error);
         // 回退到 localStorage
         try {
-          const localUser = localStorage.getItem("finance_user");
-          const localRecords = localStorage.getItem("finance_records");
+          const localUser = tripStorage.getItem("finance-user", [
+            "trip_agent_finance_user",
+            "finance_user",
+          ]);
+          const localRecords = tripStorage.getItem("finance-records", [
+            "trip_agent_finance_records",
+            "finance_records",
+          ]);
           if (localUser) setUser(JSON.parse(localUser));
           if (localRecords) setRecords(JSON.parse(localRecords));
         } catch (e) {
@@ -400,6 +437,7 @@ const FinanceScreen = ({
             date: normalizeToLocalDate(r.date, r.timestamp),
             amount: Number(r.amount) || 0,
             twdAmount: Number(r.twdAmount) || 0,
+            targetAmount: Number(r.targetAmount ?? r.twdAmount) || 0,
             synced: true,
             hasCloudImage: !!r.image, // 🆕 標記此記錄有雲端圖片，供離線讀取使用
           }));
@@ -879,7 +917,13 @@ const FinanceScreen = ({
           // 更新進度
           setProcessingCount(i + 1);
 
-          const result = await parseReceiptWithGemini(img, apiKey);
+          const result = await parseReceiptWithGemini(
+            img,
+            apiKey,
+            undefined,
+            tripConfig.currency.source,
+            new Date(tripConfig.startDate).getFullYear(),
+          );
           const globalImgIndex = startIdx + i;
 
           let newItems = [];
@@ -931,7 +975,7 @@ const FinanceScreen = ({
 
   const addRecord = async (content, val, imageBase64, customType = null) => {
     const targetMode = customType || mode;
-    const currentRate = rateData?.current || 0.22;
+    const currentRate = rateData?.current ?? 0;
 
     // 使用本地時間格式化日期 (YYYY/M/D)
     const now = new Date();
@@ -947,6 +991,10 @@ const FinanceScreen = ({
       content: content,
       amount: targetMode === "finance" ? parseFloat(val) : 0,
       twdAmount:
+        targetMode === "finance"
+          ? Math.round(parseFloat(val) * currentRate)
+          : 0,
+      targetAmount:
         targetMode === "finance"
           ? Math.round(parseFloat(val) * currentRate)
           : 0,
@@ -1045,7 +1093,7 @@ const FinanceScreen = ({
     setIsUploading(true);
 
     try {
-      const currentRate = rateData?.current || 0.22;
+      const currentRate = rateData?.current ?? 0;
       const now = new Date();
       const localDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
 
@@ -1081,6 +1129,9 @@ const FinanceScreen = ({
           content: item.name,
           amount: parseFloat(item.amount) || 0,
           twdAmount: Math.round((parseFloat(item.amount) || 0) * currentRate),
+          targetAmount: Math.round(
+            (parseFloat(item.amount) || 0) * currentRate,
+          ),
           rate: currentRate,
           synced: false,
         };
@@ -1228,7 +1279,7 @@ const FinanceScreen = ({
       return;
     }
 
-    const currentRate = rateData?.current || 0.22;
+    const currentRate = rateData?.current ?? editingRecord.rate ?? 0;
     const newAmount =
       editingRecord.type === "finance" ? parseFloat(editAmount) : 0;
     const newTwdAmount =
@@ -1244,6 +1295,7 @@ const FinanceScreen = ({
           content: editContent,
           amount: newAmount,
           twdAmount: newTwdAmount,
+          targetAmount: newTwdAmount,
           synced: false,
         };
       }
@@ -1264,6 +1316,7 @@ const FinanceScreen = ({
             content: editContent,
             amount: newAmount,
             twdAmount: newTwdAmount,
+            targetAmount: newTwdAmount,
             item: editContent,
             store: editContent.split("-")[0]?.trim(),
           },
@@ -1443,6 +1496,10 @@ const FinanceScreen = ({
                           </div>
                         </div>
                         <button
+                          type="button"
+                          role="switch"
+                          aria-checked={enableLocationTracking}
+                          aria-label="雲端位置記錄"
                           onClick={() => {
                             toggleLocationTracking();
                             // setShowUserMenu(false); // 點擊開關不關閉選單，方便查看狀態
@@ -1455,7 +1512,7 @@ const FinanceScreen = ({
                         >
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            <span>記錄我的位置</span>
+                            <span>雲端位置記錄</span>
                           </div>
                           <div
                             className={`w-9 h-5 rounded-full relative transition-colors ${enableLocationTracking ? "bg-green-500" : "bg-gray-300"}`}
@@ -1645,7 +1702,7 @@ const FinanceScreen = ({
                             </div>
                             {result.type === "finance" && (
                               <span className="text-xs font-bold text-sky-500">
-                                ¥{result.amount}
+                                {formatCurrency(result.amount, sourceCurrency)}
                               </span>
                             )}
                           </div>
@@ -1722,9 +1779,13 @@ const FinanceScreen = ({
                 mode === "finance"
                   ? dateRecords.reduce((sum, r) => sum + (r.amount || 0), 0)
                   : dateRecords.length;
-              const dayTwdTotal =
+              const dayTargetTotal =
                 mode === "finance"
-                  ? dateRecords.reduce((sum, r) => sum + (r.twdAmount || 0), 0)
+                  ? dateRecords.reduce(
+                      (sum, r) =>
+                        sum + (r.targetAmount ?? r.twdAmount ?? 0),
+                      0,
+                    )
                   : 0;
 
               return (
@@ -1763,10 +1824,10 @@ const FinanceScreen = ({
                         <span
                           className={`text-sm font-mono font-bold ${isDarkMode ? "text-sky-400" : "text-[#5D737E]"}`}
                         >
-                          ¥{dayTotal.toLocaleString()}
+                          {formatCurrency(dayTotal, sourceCurrency)}
                         </span>
                         <span className={`text-[10px] ml-1.5 ${theme.textSec}`}>
-                          ≈ NT${dayTwdTotal.toLocaleString()}
+                          ≈ {formatCurrency(dayTargetTotal, targetCurrency)}
                         </span>
                       </div>
                     )}
@@ -1837,27 +1898,42 @@ const FinanceScreen = ({
                                     <div
                                       className={`text-base font-mono font-bold leading-tight ${isDarkMode ? "text-sky-400" : "text-[#5D737E]"}`}
                                     >
-                                      ¥{record.amount.toLocaleString()}
+                                      {formatCurrency(
+                                        record.amount,
+                                        sourceCurrency,
+                                      )}
                                     </div>
                                     <div
                                       className={`text-[10px] mt-0.5 ${theme.textSec}`}
                                     >
-                                      ≈ NT$ {record.twdAmount.toLocaleString()}
+                                      ≈{" "}
+                                      {formatCurrency(
+                                        record.targetAmount ??
+                                          record.twdAmount,
+                                        targetCurrency,
+                                      )}
                                     </div>
                                   </div>
                                 </div>
 
                                 {record.image && (
-                                  <div className="mt-2">
+                                  <button
+                                    type="button"
+                                    className="mt-2 block w-full rounded-lg"
+                                    aria-label="開啟記帳附件預覽"
+                                    onClick={() =>
+                                      setFullPreviewImage(record.image)
+                                    }
+                                  >
                                     <img
                                       src={record.image}
-                                      alt="attachment"
-                                      onClick={() =>
-                                        setFullPreviewImage(record.image)
-                                      }
+                                      alt="記帳附件"
+                                      width="640"
+                                      height="256"
+                                      loading="lazy"
                                       className="w-full h-32 object-cover rounded-lg border border-white/20 shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity"
                                     />
-                                  </div>
+                                  </button>
                                 )}
                               </div>
                             ) : (
@@ -1871,14 +1947,23 @@ const FinanceScreen = ({
                                   </div>
                                 )}
                                 {record.image && (
-                                  <img
-                                    src={record.image}
-                                    alt="attachment"
+                                  <button
+                                    type="button"
+                                    className="mt-2 block max-w-full rounded-lg"
+                                    aria-label="開啟記事附件預覽"
                                     onClick={() =>
                                       setFullPreviewImage(record.image)
                                     }
-                                    className="mt-2 rounded-lg max-h-40 object-cover border border-white/20 shadow-sm cursor-zoom-in"
-                                  />
+                                  >
+                                    <img
+                                      src={record.image}
+                                      alt="記事附件"
+                                      width="640"
+                                      height="320"
+                                      loading="lazy"
+                                      className="max-h-40 rounded-lg border border-white/20 object-cover shadow-sm cursor-zoom-in"
+                                    />
+                                  </button>
                                 )}
                                 <div className="flex items-center justify-end gap-1 mt-1.5">
                                   <span
@@ -1944,11 +2029,15 @@ const FinanceScreen = ({
                   >
                     <img
                       src={img}
-                      alt={`Preview ${idx}`}
+                      alt={`待新增圖片 ${idx + 1}`}
+                      width="48"
+                      height="48"
                       className="h-12 w-auto rounded-lg border shadow-sm object-cover"
                     />
                     <button
+                      type="button"
                       onClick={() => removeNoteImage(idx)}
+                      aria-label={`移除待新增圖片 ${idx + 1}`}
                       className={`absolute -top-2 -right-2 p-1 rounded-full text-white shadow-md active:scale-90 transition-all ${isDarkMode ? "bg-red-500 hover:bg-red-600" : "bg-red-500 hover:bg-red-600"}`}
                       title="移除圖片"
                     >
@@ -2076,6 +2165,9 @@ const FinanceScreen = ({
       {showReceiptModal &&
         createPortal(
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="receipt-modal-title"
             className="fixed inset-0 z-[9999] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm animate-fadeIn transform-gpu"
             style={{ willChange: "opacity, transform" }}
           >
@@ -2085,6 +2177,7 @@ const FinanceScreen = ({
               {/* Modal Header */}
               <div className="p-4 border-b flex items-center justify-between shrink-0 bg-opacity-50 backdrop-blur-lg">
                 <h3
+                  id="receipt-modal-title"
                   className={`text-lg font-bold flex items-center gap-2 ${theme.text}`}
                 >
                   {isScanning ? (
@@ -2092,10 +2185,11 @@ const FinanceScreen = ({
                   ) : (
                     <Scan className="w-5 h-5 text-sky-500" />
                   )}
-                  {isScanning ? "正在分析..." : "確認發票明細"}
+                  {isScanning ? "正在分析…" : "確認發票明細"}
                 </h3>
                 {!isScanning && (
                   <button
+                    type="button"
                     onClick={() => {
                       setShowReceiptModal(false);
                       setReceiptImages([]);
@@ -2106,6 +2200,7 @@ const FinanceScreen = ({
                         ? "hover:bg-neutral-700 text-neutral-300 hover:text-neutral-100"
                         : "hover:bg-stone-200 text-stone-500 hover:text-stone-700"
                     }`}
+                    aria-label="關閉發票明細"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -2123,7 +2218,9 @@ const FinanceScreen = ({
                     >
                       <img
                         src={img}
-                        alt={`Receipt ${idx}`}
+                        alt={`已辨識發票 ${idx + 1}`}
+                        width="96"
+                        height="96"
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         decoding="async"
                       />
@@ -2133,11 +2230,13 @@ const FinanceScreen = ({
                       {/* 刪除按鈕 (僅在非掃描時可用) */}
                       {!isScanning && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveReceiptImage(idx);
                           }}
                           className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                          aria-label={`移除已辨識發票 ${idx + 1}`}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -2153,7 +2252,9 @@ const FinanceScreen = ({
                     >
                       <img
                         src={img}
-                        alt={`Pending ${idx}`}
+                        alt={`待辨識發票 ${idx + 1}`}
+                        width="96"
+                        height="96"
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute top-1 right-1 bg-orange-500/80 text-white text-[9px] px-1.5 py-0.5 rounded-full backdrop-blur-lg">
@@ -2161,12 +2262,14 @@ const FinanceScreen = ({
                       </div>
                       {!isScanning && (
                         <button
+                          type="button"
                           onClick={() => {
                             setPendingImages((prev) =>
                               prev.filter((_, i) => i !== idx),
                             );
                           }}
                           className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white shadow-sm"
+                          aria-label={`移除待辨識發票 ${idx + 1}`}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -2249,7 +2352,9 @@ const FinanceScreen = ({
                             isDarkMode ? "text-sky-400" : "text-sky-600"
                           }`}
                         >
-                          <span className="mr-1">¥</span>
+                          <span className="mr-1" translate="no">
+                            {sourceCurrencySymbol}
+                          </span>
                           <input
                             type="number"
                             id={`receiptItemAmount-${idx}`}
@@ -2284,6 +2389,7 @@ const FinanceScreen = ({
 
                 {!isScanning && (
                   <button
+                    type="button"
                     onClick={() =>
                       setReceiptItems([
                         ...receiptItems,
@@ -2332,6 +2438,75 @@ const FinanceScreen = ({
           document.body,
         )}
 
+      {showLocationConsent &&
+        createPortal(
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/70 px-4 py-8 backdrop-blur-sm">
+            <section
+              ref={locationConsentDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="location-consent-title"
+              aria-describedby="location-consent-description"
+              tabIndex={-1}
+              className={`w-full max-w-sm rounded-3xl border p-6 shadow-2xl ${
+                isDarkMode
+                  ? "border-white/10 bg-neutral-900 text-neutral-100"
+                  : "border-stone-200 bg-white text-stone-800"
+              }`}
+            >
+              <div
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${
+                  isDarkMode
+                    ? "bg-sky-500/15 text-sky-300"
+                    : "bg-sky-50 text-sky-700"
+                }`}
+              >
+                <MapPin aria-hidden="true" className="h-6 w-6" />
+              </div>
+              <h2
+                id="location-consent-title"
+                className="text-balance text-xl font-bold"
+              >
+                開啟雲端位置記錄？
+              </h2>
+              <div
+                id="location-consent-description"
+                className={`mt-3 space-y-3 text-sm leading-relaxed ${
+                  isDarkMode ? "text-neutral-300" : "text-stone-600"
+                }`}
+              >
+                <p>
+                  開啟後，網站會將你的暱稱、頭像、經緯度、定位精度，以及裝置與瀏覽器類型傳送至目前設定的 Google Apps Script。
+                </p>
+                <p>
+                  這項功能只用於旅伴位置分享，不影響本機天氣定位；你可以隨時從使用者選單關閉。
+                </p>
+              </div>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLocationConsent(false)}
+                  className={`min-h-11 flex-1 rounded-xl px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    isDarkMode
+                      ? "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                      : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                  }`}
+                >
+                  暫不開啟
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmLocationTracking}
+                  className="min-h-11 flex-1 rounded-xl bg-sky-600 px-4 text-sm font-bold text-white transition-colors hover:bg-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+                >
+                  同意並開啟
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
+
       {/* --- 編輯紀錄 Modal - 使用 Portal 確保獨立顯示 --- */}
       {editingRecord &&
         createPortal(
@@ -2367,7 +2542,7 @@ const FinanceScreen = ({
                     <label
                       className={`text-xs font-bold mb-1 block ${theme.textSec}`}
                     >
-                      金額 (JPY)
+                      金額（{tripConfig.currency.source}）
                     </label>
                     <input
                       type="number"
