@@ -115,6 +115,12 @@ textarea,
   user-select: text;
 }
 
+.allow-touch-callout {
+  -webkit-touch-callout: default;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
 /* 🆕 毛玻璃效果優化 - 解決滑動/切換時的視覺閃爍 */
 
 /* 全局 backdrop-filter 優化 */

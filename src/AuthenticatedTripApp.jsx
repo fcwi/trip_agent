@@ -51,9 +51,6 @@ import {
   Plane,
   History,
   Phone,
-  Moon,
-  Lock,
-  Key,
   DollarSign,
   Download,
   Search,
@@ -97,7 +94,6 @@ import { processFileForHeic } from "./utils/imageUtils";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 const ChatInput = lazy(() => import("./components/ChatInput.jsx"));
-const CurrencyWidget = lazy(() => import("./components/CurrencyWidget.jsx"));
 const CalculatorModal = lazy(() => import("./components/CalculatorModal.jsx"));
 const TestModePanel = lazy(() => import("./components/TestModePanel.jsx"));
 const WeatherDetail = lazy(() => import("./components/WeatherDetail.jsx"));
@@ -133,7 +129,7 @@ const LazyPanelFallback = ({ label = "載入功能中…", overlay = false }) =>
     } flex items-center justify-center p-6`}
   >
     <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-neutral-900/80 px-5 py-3 text-sm font-bold text-white shadow-xl">
-      <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+      <Loader aria-hidden="true" className="h-5 w-5 animate-spin" />
       <span>{label}</span>
     </div>
   </div>
@@ -143,6 +139,7 @@ import WeatherParticles from "./components/Background/WeatherParticles.jsx";
 import { getParticleType, getSkyCondition } from "./utils/weatherHelpers.js";
 
 import SkyObjects from "./components/Background/SkyObjects.jsx";
+import TripHeader from "./components/TripHeader.jsx";
 
 // 使用 Web Crypto API 實作加密工具，取代外部依賴以提升安全性與效能
 //  FlightInfoCard 組件
@@ -163,27 +160,11 @@ import { useCurrency } from "./hooks/useCurrency.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
 import { tripStorage } from "./utils/tripStorage.js";
+import { logger } from "./utils/logger.js";
 
-// 開發環境偵錯開關
-const isDev = import.meta.env.DEV;
-
-const debugLog = (message, data = null) => {
-  if (isDev) {
-    if (data === null) {
-      console.log(message);
-    } else {
-      console.log(message, data);
-    }
-  }
-};
-
-const debugGroup = (label) => {
-  if (isDev) console.group(label);
-};
-
-const debugGroupEnd = () => {
-  if (isDev) console.groupEnd();
-};
+const debugLog = (...args) => logger.debug(...args);
+const debugGroup = (...args) => logger.group(...args);
+const debugGroupEnd = (...args) => logger.groupEnd(...args);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -282,6 +263,12 @@ const ItineraryApp = ({ authentication }) => {
     ]);
     return !!cached;
   });
+
+  // 行程內容不應被定位或外部天氣服務阻塞；解鎖後先顯示可用的離線資料，
+  // 定位與天氣仍由既有 effect 在背景更新。
+  useEffect(() => {
+    if (isVerified) setIsAppReady(true);
+  }, [isVerified]);
 
   const [isMobile, setIsMobile] = useState(false);
   const {
@@ -920,7 +907,7 @@ const ItineraryApp = ({ authentication }) => {
       if (isDark !== undefined) {
         setIsDarkMode(isDark);
       }
-      console.log(`🧪 測試模式啟動: Code=${code}, DarkMode=${isDark}`);
+      debugLog(`🧪 測試模式啟動: Code=${code}, DarkMode=${isDark}`);
     };
 
     return () => {
@@ -968,7 +955,7 @@ const ItineraryApp = ({ authentication }) => {
     setFrozenTestWeatherOverride(
       JSON.parse(JSON.stringify(testWeatherOverride)),
     );
-    console.log(
+    debugLog(
       `🔒 凍結測試設定 - dateTime=${testDateTime.toLocaleString("zh-TW")}, weather=`,
       testWeatherOverride,
     );
@@ -978,7 +965,7 @@ const ItineraryApp = ({ authentication }) => {
   const unfreezeTestSettings = () => {
     setFrozenTestDateTime(null);
     setFrozenTestWeatherOverride(null);
-    console.log(`🔓 解凍測試設定`);
+    debugLog(`🔓 解凍測試設定`);
     showToast("測試設定已解凍", "success");
   };
 
@@ -1014,7 +1001,7 @@ const ItineraryApp = ({ authentication }) => {
         const { aiChatDB } = await import("./utils/indexedDBManager.js");
         await aiChatDB.init();
         const savedMessages = await aiChatDB.loadMessages(aiMode);
-        console.log(
+        debugLog(
           "📦 App.jsx IndexedDB 載入結果:",
           savedMessages?.length || 0,
           "則訊息",
@@ -1044,7 +1031,7 @@ const ItineraryApp = ({ authentication }) => {
               return msg;
             }),
           );
-          console.log(
+          debugLog(
             "✅ 從 IndexedDB 載入完成，共",
             messagesWithImages.length,
             "則訊息",
@@ -1060,7 +1047,7 @@ const ItineraryApp = ({ authentication }) => {
               if (aiMode === "translate") {
                 const targetLangName = tripConfig.language.name;
                 if (!messagesWithImages[0].text.includes(targetLangName)) {
-                  console.log(
+                  debugLog(
                     `♻️ Welcome message outdated (Lang mismatch), refreshing to ${targetLangName}...`,
                   );
                   messagesWithImages[0] = currentWelcome;
@@ -1087,10 +1074,10 @@ const ItineraryApp = ({ authentication }) => {
                 await aiChatDB.saveMessages(aiMode, messagesToSave);
                 tripStorage.removeItem(`chat-history-${aiMode}`);
                 setMessages(oldMessages);
-                console.log(`✅ 已將聊天記錄從 localStorage 遷移至 IndexedDB`);
+                debugLog(`✅ 已將聊天記錄從 localStorage 遷移至 IndexedDB`);
               } else {
                 // localStorage 也沒有數據，使用默認歡迎消息
-                console.log("📭 無快取資料，顯示預設歡迎訊息");
+                debugLog("📭 無快取資料，顯示預設歡迎訊息");
                 setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
               }
             } catch (error) {
@@ -1099,7 +1086,7 @@ const ItineraryApp = ({ authentication }) => {
             }
           } else {
             // IndexedDB 和 localStorage 都沒有數據，使用默認歡迎消息
-            console.log("📭 無快取資料，顯示預設歡迎訊息");
+            debugLog("📭 無快取資料，顯示預設歡迎訊息");
             setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
           }
         }
@@ -1356,7 +1343,7 @@ const ItineraryApp = ({ authentication }) => {
       const displayDateTime =
         frozenTestDateTime || (isTestMode ? testDateTime : new Date());
 
-      console.log(
+      debugLog(
         `🧪 行程狀態計算 - isTestMode=${isTestMode}, isFrozen=${!!frozenTestDateTime}, displayDateTime=${displayDateTime.toLocaleString("zh-TW")}`,
       );
 
@@ -1377,7 +1364,7 @@ const ItineraryApp = ({ authentication }) => {
         calculatedCurrentTripDayIndex = Math.floor(
           diffTime / (1000 * 60 * 60 * 24),
         );
-        console.log(
+        debugLog(
           `🧪 正在行程中 - currentTripDayIndex=${calculatedCurrentTripDayIndex}`,
         );
       } else {
@@ -1405,7 +1392,7 @@ const ItineraryApp = ({ authentication }) => {
         const { financeDB } = await import("./utils/indexedDBManager.js");
         const savedUser = await financeDB.loadUser();
         if (savedUser) {
-          console.log("👤 [App] User loaded from DB:", savedUser);
+          debugLog("👤 [App] User loaded from DB:", savedUser);
           setCurrentUser(savedUser);
         } else {
           // Fallback to localStorage logic
@@ -1419,13 +1406,10 @@ const ItineraryApp = ({ authentication }) => {
           else if (localUserOld) fallbackUser = JSON.parse(localUserOld);
 
           if (fallbackUser) {
-            console.log(
-              "👤 [App] User loaded from LocalStorage:",
-              fallbackUser,
-            );
+            debugLog("👤 [App] User loaded from LocalStorage:", fallbackUser);
             setCurrentUser(fallbackUser);
           } else {
-            console.log("👤 [App] No user found, default to Guest");
+            debugLog("👤 [App] No user found, default to Guest");
           }
         }
       } catch (e) {
@@ -1451,7 +1435,7 @@ const ItineraryApp = ({ authentication }) => {
       const currentGasUrl = gasUrlRef.current;
       const currentGasToken = gasTokenRef.current;
 
-      console.log(
+      debugLog(
         `📍 [LocationLog] Triggered. Enabled: ${isTrackingEnabled}, GAS_URL: ${currentGasUrl ? "Set" : "Missing"}, Accuracy: ${accuracy}`,
       );
 
@@ -1899,7 +1883,6 @@ const ItineraryApp = ({ authentication }) => {
         }
         isFetchingLocationRef.current = false;
       }
-
     },
     [
       isVerified,
@@ -2959,7 +2942,7 @@ const ItineraryApp = ({ authentication }) => {
 
         // 🔍 根據訊息內容與模型能力動態決定是否啟用 Google Search Grounding
         const searchTools = getSearchTools(messageText);
-        console.log(
+        debugLog(
           `🔍 [Search Filter] model=${getActiveModel().label}, hasTools=${!!searchTools.tools}, message="${messageText.slice(0, 30)}..."`,
         );
 
@@ -3421,83 +3404,21 @@ const ItineraryApp = ({ authentication }) => {
         id="main-content"
         className="max-w-md mx-auto relative min-h-screen flex flex-col z-10"
       >
-        {/* 頂部標題與功能列 */}
-        <div className="flex justify-between items-end px-4 pt-5 pb-2 relative z-20 gap-4">
-          {/* 左側：行程標題 (點擊觸發測試模式彩蛋) */}
-          <div
-            className={`px-3 py-2.5 rounded-2xl backdrop-blur-md shadow-sm border transition-all duration-300 min-w-0 ${componentStyles.itineraryCard}`}
-          >
-            <h1
-              className={`text-base font-bold tracking-wide transition-colors whitespace-nowrap drop-shadow-sm ${theme.text}`}
-              style={{
-                textShadow: isDarkMode
-                  ? "0 1px 2px rgba(0,0,0,0.5)"
-                  : "0 1px 1px rgba(255,255,255,0.5)",
-              }}
-            >
-              <button
-                type="button"
-                aria-label="行程標題；連續點擊可開啟測試模式"
-                className="rounded-md text-left"
-                onClick={handleTitleClick}
-              >
-                {tripConfig.title}
-              </button>
-            </h1>
-            <p
-              className={`text-[10px] mt-0.5 font-medium tracking-widest whitespace-nowrap opacity-70 ${theme.textSec}`}
-            >
-              {tripConfig.subTitle}
-            </p>
-          </div>
-
-          {/* 右側：功能按鈕與匯率卡片 */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLockButtonClick();
-                }}
-                className={`p-2 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 active:scale-90 ${componentStyles.itineraryCard} ${theme.accent}`}
-                title={testModeClickCount === 10 ? "進入測試模式" : "鎖定行程"}
-                aria-label={
-                  testModeClickCount === 10 ? "進入測試模式" : "鎖定行程"
-                }
-              >
-                {testModeClickCount === 10 ? (
-                  <Key className="w-4 h-4 fill-current text-pink-500 animate-bounce" />
-                ) : (
-                  <Lock className="w-4 h-4 fill-current" />
-                )}
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleInterruptClick();
-                  toggleTheme();
-                }}
-                className={`p-2 rounded-full backdrop-blur-md shadow-sm border transition-all duration-300 active:scale-90 ${componentStyles.itineraryCard} ${theme.accent}`}
-                aria-label={`切換到${isDarkMode ? "亮色" : "深色"}模式`}
-              >
-                {isDarkMode ? (
-                  <Moon className="w-4 h-4 fill-current" />
-                ) : (
-                  <Sun className="w-4 h-4 text-amber-500 fill-current" />
-                )}
-              </button>
-            </div>
-
-            <CurrencyWidget
-              isDarkMode={isDarkMode}
-              rateData={rateData}
-              isOnline={isOnline}
-              tripConfig={tripConfig}
-            />
-          </div>
-        </div>
+        <TripHeader
+          tripConfig={tripConfig}
+          isDarkMode={isDarkMode}
+          theme={theme}
+          componentStyles={componentStyles}
+          testModeClickCount={testModeClickCount}
+          onTitleClick={handleTitleClick}
+          onLock={handleLockButtonClick}
+          onToggleTheme={() => {
+            handleInterruptClick();
+            toggleTheme();
+          }}
+          rateData={rateData}
+          isOnline={isOnline}
+        />
 
         {/* --- 分頁內容 --- */}
 
@@ -3727,7 +3648,7 @@ const ItineraryApp = ({ authentication }) => {
               onClose={handleTestModeClose}
               testDateTime={testDateTime}
               onDateTimeChange={(newDateTime) => {
-                console.log(
+                debugLog(
                   `🧪 更新時間: ${testDateTime.toLocaleString("zh-TW")} -> ${newDateTime.toLocaleString("zh-TW")}`,
                 );
                 setTestDateTime(newDateTime);
@@ -3735,7 +3656,7 @@ const ItineraryApp = ({ authentication }) => {
               testLatitude={testLatitude}
               testLongitude={testLongitude}
               onLocationChange={(coords) => {
-                console.log(
+                debugLog(
                   `🧪 更新位置: (${testLatitude}, ${testLongitude}) -> (${coords.lat}, ${coords.lon})`,
                 );
                 setTestLatitude(coords.lat);
@@ -3748,7 +3669,7 @@ const ItineraryApp = ({ authentication }) => {
               }}
               testWeatherOverride={testWeatherOverride}
               onWeatherChange={(newOverride) => {
-                console.log(
+                debugLog(
                   `🧪 更新天氣覆蓋: `,
                   testWeatherOverride,
                   ` -> `,
@@ -3808,7 +3729,7 @@ const ItineraryApp = ({ authentication }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setFullPreviewImage(null)}
-              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out"
+              className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/90 p-4 backdrop-blur-md cursor-zoom-out"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -3822,7 +3743,7 @@ const ItineraryApp = ({ authentication }) => {
                   alt="圖片完整預覽"
                   width="1200"
                   height="1200"
-                  className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+                  className="allow-touch-callout max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
                 />
                 {isIOSSafari && (
                   <div className="absolute bottom-4 left-4 text-[11px] md:text-xs text-white/90 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
@@ -3867,7 +3788,7 @@ const ItineraryApp = ({ authentication }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+              className="fixed inset-0 z-[110] flex flex-col items-center justify-center overscroll-contain bg-black/95 p-4 backdrop-blur-xl"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -3992,7 +3913,7 @@ const ItineraryApp = ({ authentication }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+              className="fixed inset-0 z-[10000] flex items-center justify-center overscroll-contain p-4 bg-black/80 backdrop-blur-md"
               onClick={() => setShowOrientationWarning(false)}
             >
               <motion.div
@@ -4033,7 +3954,7 @@ const ItineraryApp = ({ authentication }) => {
 
         {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
         <div
-          className={`fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-all duration-300 ${
+          className={`fixed inset-0 z-[999] flex flex-col items-center justify-center overscroll-contain bg-black/60 backdrop-blur-sm p-4 transition-[opacity] duration-300 ${
             showWeatherDetail && detailWeatherData
               ? "opacity-100 pointer-events-auto"
               : "opacity-0 pointer-events-none delay-100"
@@ -4056,7 +3977,7 @@ const ItineraryApp = ({ authentication }) => {
                 aria-modal="true"
                 aria-label="天氣詳情"
                 tabIndex={-1}
-                className={`relative z-10 w-full max-w-[400px] transition-all duration-300 ${
+                className={`relative z-10 w-full max-w-[400px] transition-[opacity,transform] duration-300 ${
                   showWeatherDetail && detailWeatherData
                     ? "opacity-100 scale-100 translate-y-0"
                     : "opacity-0 scale-95 translate-y-4"

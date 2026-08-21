@@ -8,6 +8,7 @@
  */
 
 import { getTripDatabaseName, tripStorage } from "./tripStorage.js";
+import { logger } from "./logger.js";
 
 const DB_CONFIG = {
   aiChat: {
@@ -502,7 +503,7 @@ export const financeDB = {
           }
           cursor.continue();
         } else {
-          console.log(`🧹 清理了 ${deletedCount} 張孤立圖片`);
+          logger.debug(`🧹 清理了 ${deletedCount} 張孤立圖片`);
         }
       };
 

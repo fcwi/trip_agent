@@ -41,6 +41,7 @@ import {
   getCurrencySymbol,
 } from "../utils/currencyFormatter.js";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
+import { logger } from "../utils/logger.js";
 
 // 預設頭像列表
 const AVATARS = [
@@ -152,7 +153,7 @@ const compressImage = (dataUrl, maxSizeKB = 400) => {
         compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
       }
 
-      console.log(
+      logger.debug(
         `🖼️ 圖片壓縮: ${(dataUrl.length / 1024).toFixed(0)} KB → ${(compressedDataUrl.length / 1024).toFixed(0)} KB`,
       );
       resolve(compressedDataUrl);
@@ -464,12 +465,12 @@ const FinanceScreen = ({
             );
 
             if (recordsWithImages.length > 0) {
-              console.log(`🖼️ 開始快取 ${recordsWithImages.length} 張圖片...`);
+              logger.debug(`🖼️ 開始快取 ${recordsWithImages.length} 張圖片…`);
               // 背景快取圖片
               (async () => {
                 for (const record of recordsWithImages) {
                   try {
-                    console.log(
+                    logger.debug(
                       `📦 檢查圖片快取: ${record.id}, URL: ${record.image?.substring(0, 50)}...`,
                     );
 
@@ -483,7 +484,7 @@ const FinanceScreen = ({
                       existingImages[0].data
                     ) {
                       // 已有快取，直接更新 UI
-                      console.log(`✅ 已有快取，直接使用: ${record.id}`);
+                      logger.debug(`✅ 已有快取，直接使用: ${record.id}`);
                       const cachedBase64 = existingImages[0].data;
                       setRecords((prev) =>
                         prev.map((r) =>
@@ -496,12 +497,12 @@ const FinanceScreen = ({
                     }
 
                     // 下載並快取圖片
-                    console.log(`⬇️ 下載圖片中: ${record.id}`);
+                    logger.debug(`⬇️ 下載圖片中: ${record.id}`);
                     const result = await fetchImageAsBase64(record.image);
 
                     if (result && result.base64) {
                       const { base64, mimeType } = result;
-                      console.log(
+                      logger.debug(
                         `💾 儲存圖片到 IndexedDB: ${record.id}, type: ${mimeType}`,
                       );
 
@@ -544,7 +545,7 @@ const FinanceScreen = ({
                             : r,
                         ),
                       );
-                      console.log(
+                      logger.debug(
                         `✅ 已快取圖片: record ${record.id} (${filename})`,
                       );
                     } else {
@@ -554,7 +555,7 @@ const FinanceScreen = ({
                     console.warn(`❌ 快取圖片失敗 (record ${record.id}):`, err);
                   }
                 }
-                console.log(`🖼️ 圖片快取完成`);
+                logger.debug(`🖼️ 圖片快取完成`);
               })();
             }
           } catch (error) {
@@ -657,7 +658,7 @@ const FinanceScreen = ({
               return r;
             }),
           );
-          console.log(
+          logger.debug(
             `✅ 從 IndexedDB 載入了 ${updatedRecords.length} 張快取圖片`,
           );
         }
@@ -743,7 +744,7 @@ const FinanceScreen = ({
       handleSyncData(true);
       const intervalId = setInterval(
         () => {
-          console.log("⏰ 觸發背景同步...");
+          logger.debug("⏰ 觸發背景同步…");
           handleSyncData(true);
         },
         10 * 60 * 1000,
@@ -1782,8 +1783,7 @@ const FinanceScreen = ({
               const dayTargetTotal =
                 mode === "finance"
                   ? dateRecords.reduce(
-                      (sum, r) =>
-                        sum + (r.targetAmount ?? r.twdAmount ?? 0),
+                      (sum, r) => sum + (r.targetAmount ?? r.twdAmount ?? 0),
                       0,
                     )
                   : 0;
@@ -1908,8 +1908,7 @@ const FinanceScreen = ({
                                     >
                                       ≈{" "}
                                       {formatCurrency(
-                                        record.targetAmount ??
-                                          record.twdAmount,
+                                        record.targetAmount ?? record.twdAmount,
                                         targetCurrency,
                                       )}
                                     </div>
@@ -2476,7 +2475,8 @@ const FinanceScreen = ({
                 }`}
               >
                 <p>
-                  開啟後，網站會將你的暱稱、頭像、經緯度、定位精度，以及裝置與瀏覽器類型傳送至目前設定的 Google Apps Script。
+                  開啟後，網站會將你的暱稱、頭像、經緯度、定位精度，以及裝置與瀏覽器類型傳送至目前設定的
+                  Google Apps Script。
                 </p>
                 <p>
                   這項功能只用於旅伴位置分享，不影響本機天氣定位；你可以隨時從使用者選單關閉。

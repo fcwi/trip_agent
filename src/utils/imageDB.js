@@ -2,6 +2,7 @@
 // IndexedDB 圖片縮圖儲存模組
 
 import { getTripDatabaseName } from "./tripStorage.js";
+import { logger } from "./logger.js";
 
 const DB_NAME = getTripDatabaseName("images");
 const STORE_NAME = "imageThumbnails";
@@ -30,7 +31,7 @@ export const initDB = () => {
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
         objectStore.createIndex("timestamp", "timestamp", { unique: false });
-        console.log("✅ IndexedDB object store 創建成功");
+        logger.debug("✅ IndexedDB object store 創建成功");
       }
     };
   });
@@ -58,7 +59,7 @@ export const saveImage = async (id, imageData) => {
       const request = store.put(data);
 
       request.onsuccess = () => {
-        console.log(`✅ 圖片已儲存至 IndexedDB: ${id}`);
+        logger.debug(`✅ 圖片已儲存至 IndexedDB: ${id}`);
         resolve();
       };
 
@@ -136,7 +137,7 @@ export const batchGetImages = async (ids) => {
 
           completed++;
           if (completed === total) {
-            console.log(
+            logger.debug(
               `✅ 批次載入 ${Object.keys(results).length}/${total} 張圖片`,
             );
             resolve(results);
@@ -171,7 +172,7 @@ export const deleteImage = async (id) => {
       const request = store.delete(String(id));
 
       request.onsuccess = () => {
-        console.log(`✅ 圖片已從 IndexedDB 刪除: ${id}`);
+        logger.debug(`✅ 圖片已從 IndexedDB 刪除: ${id}`);
         resolve();
       };
 
@@ -198,7 +199,7 @@ export const clearAllImages = async () => {
       const request = store.clear();
 
       request.onsuccess = () => {
-        console.log("✅ 所有圖片已清空");
+        logger.debug("✅ 所有圖片已清空");
         resolve();
       };
 

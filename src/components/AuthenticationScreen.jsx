@@ -1,9 +1,15 @@
-import { Key, Loader, Lock, Unlock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy, Key, Loader, Lock, Unlock } from "lucide-react";
 
 const fieldClasses =
   "w-full rounded-xl border border-stone-200/70 bg-white/90 px-4 py-3 text-base shadow-inner outline-none ring-black/5 transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-neutral-700/70 dark:bg-neutral-900/80 dark:ring-white/5";
 
 const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
+  const authErrorRef = useRef(null);
+  const [copyFeedback, setCopyFeedback] = useState({
+    value: "",
+    message: "",
+  });
   const {
     password,
     setPassword,
@@ -28,12 +34,34 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
     handleAuthSubmit(event);
   };
 
+  useEffect(() => {
+    if (authError) authErrorRef.current?.focus();
+  }, [authError]);
+
+  const canCopyToolResult = toolResult.split(":").length === 3;
+  const copyStatus =
+    copyFeedback.value === toolResult ? copyFeedback.message : "";
+  const copyToolResult = async () => {
+    try {
+      await navigator.clipboard.writeText(toolResult);
+      setCopyFeedback({ value: toolResult, message: "已複製加密字串" });
+    } catch {
+      setCopyFeedback({
+        value: toolResult,
+        message: "無法自動複製，請長按字串後手動複製",
+      });
+    }
+  };
+
   return (
     <main
       id="main-content"
       className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50 p-6 text-stone-800 dark:bg-neutral-950 dark:text-neutral-100"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
         <div className="absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full bg-sky-300/20 blur-3xl dark:bg-sky-700/15" />
         <div className="absolute -bottom-1/4 -right-1/4 h-3/4 w-3/4 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-700/15" />
       </div>
@@ -65,6 +93,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="輸入密碼…"
             autoComplete="current-password"
+            aria-describedby={authError ? "authentication-error" : undefined}
             className={`${fieldClasses} text-center text-lg tracking-widest placeholder:tracking-normal`}
           />
           <button
@@ -82,7 +111,10 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
           </button>
           {authError ? (
             <div
+              id="authentication-error"
+              ref={authErrorRef}
               role="alert"
+              tabIndex={-1}
               className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-center text-sm font-medium text-red-600 dark:text-red-400"
             >
               {authError}
@@ -165,10 +197,31 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
 
               {toolResult ? (
                 <div className="animate-fadeIn">
-                  <p className="mb-1 text-xs font-bold">請複製下方加密字串至 `.env` 對應欄位：</p>
+                  <p className="mb-1 text-xs font-bold">
+                    請複製下方加密字串至 `.env` 對應欄位：
+                  </p>
                   <output className="block break-all rounded-lg border border-stone-300 bg-white p-2 font-mono text-xs text-stone-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-green-400">
                     {toolResult}
                   </output>
+                  {canCopyToolResult ? (
+                    <button
+                      type="button"
+                      onClick={copyToolResult}
+                      className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-700 transition-[background-color,border-color,color] hover:bg-stone-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+                    >
+                      {copyStatus ? (
+                        <Check aria-hidden="true" className="h-4 w-4" />
+                      ) : (
+                        <Copy aria-hidden="true" className="h-4 w-4" />
+                      )}
+                      {copyStatus || "複製加密字串"}
+                    </button>
+                  ) : null}
+                  {copyStatus ? (
+                    <p className="sr-only" role="status" aria-live="polite">
+                      {copyStatus}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </div>

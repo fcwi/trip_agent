@@ -37,4 +37,36 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Build trip
+        run: npm run build
+      - name: Verify build output
+        run: npm run build:verify
+
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        trip:
+          - 2026_busan
+          - 2026_karuizawa
+    env:
+      E2E_TRIP_ID: ${{ matrix.trip }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser smoke tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.trip }}
+          path: playwright-report/
+          retention-days: 7
