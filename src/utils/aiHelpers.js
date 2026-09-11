@@ -188,3 +188,74 @@ export function shouldEnableSearch(message) {
     normalized.includes(keyword.toLowerCase()),
   );
 }
+
+export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Gemini generateContent with abort + exponential backoff.
+ * Behavior-equivalent extraction from AuthenticatedTripApp.
+ */
+export async function callGeminiSafe({
+  apiKey,
+  payload,
+  abortControllerRef,
+}) {
+  const currentKey = apiKey;
+  const maxRetries = 3;
+  let attempt = 0;
+  const activeModel = getActiveModel();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
+
+  while (attempt < maxRetries) {
+    try {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (response.status === 429 || response.status === 503) {
+        console.warn(
+          `API 忙碌中，嘗試進行指數退避... (嘗試 ${attempt + 1}/${maxRetries})`,
+        );
+        attempt++;
+        await sleep(2000 * Math.pow(2, attempt));
+        continue;
+      }
+
+      if (response.status === 400) {
+        throw new Error("API 參數錯誤。");
+      }
+      if (response.status === 403) {
+        throw new Error("API Key 無效或過期，請檢查加密設定。");
+      }
+
+      throw new Error(`API Error: ${response.status}`);
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("API 請求已被中止");
+      }
+      console.error("Fetch attempt error:", error);
+      if (error.message.includes("API Key")) throw error;
+
+      attempt++;
+      if (attempt < maxRetries) {
+        await sleep(2000 * Math.pow(2, attempt));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error("API Max retries reached");
+}
+

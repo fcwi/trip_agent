@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { fetchGasWithRetry } from "./utils/api";
-import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
+import { getActiveModel, getSearchTools, callGeminiSafe as callGeminiSafeRequest } from "./utils/aiHelpers.js";
 import {
   Sun,
   CloudSnow,
@@ -149,8 +149,6 @@ import { logger } from "./utils/logger.js";
 const debugLog = (...args) => logger.debug(...args);
 const debugGroup = (...args) => logger.group(...args);
 const debugGroupEnd = (...args) => logger.groupEnd(...args);
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const ItineraryApp = ({ authentication }) => {
   const {
@@ -2250,73 +2248,12 @@ const ItineraryApp = ({ authentication }) => {
     return placeName || "";
   };
 
-  // --- Gemini API Safe Call Function (New Implementation + AbortController) ---
-  const callGeminiSafe = async (payload) => {
-    // 使用解密後的 Key，如果沒有則使用空字串 (會失敗)
-    const currentKey = apiKey;
-
-    const maxRetries = 3;
-    let attempt = 0;
-    // 🔧 使用 aiHelpers 統一管理的模型設定
-    const activeModel = getActiveModel();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
-
-    while (attempt < maxRetries) {
-      try {
-        // 🆕 中止上一個未完成的 Gemini API 請求
-        if (geminiAbortControllerRef.current) {
-          geminiAbortControllerRef.current.abort();
-        }
-        geminiAbortControllerRef.current = new AbortController();
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: geminiAbortControllerRef.current.signal,
-        });
-
-        if (response.ok) {
-          return await response.json();
-        }
-
-        // 處理流量限制 (429) 或服務暫時不可用 (503)
-        if (response.status === 429 || response.status === 503) {
-          console.warn(
-            `API 忙碌中，嘗試進行指數退避... (嘗試 ${attempt + 1}/${maxRetries})`,
-          );
-          attempt++;
-          // 指數退避：2s, 4s, 8s... 避免短時間內重複請求加重伺服器負擔
-          await sleep(2000 * Math.pow(2, attempt));
-          continue;
-        }
-
-        if (response.status === 400) {
-          throw new Error("API 參數錯誤。");
-        }
-        if (response.status === 403) {
-          throw new Error("API Key 無效或過期，請檢查加密設定。");
-        }
-
-        throw new Error(`API Error: ${response.status}`);
-      } catch (error) {
-        // 中止請求通常是使用者切換頁面或手動停止，不視為錯誤
-        if (error.name === "AbortError") {
-          throw new Error("API 請求已被中止");
-        }
-        console.error("Fetch attempt error:", error);
-        if (error.message.includes("API Key")) throw error;
-
-        attempt++;
-        if (attempt < maxRetries) {
-          await sleep(2000 * Math.pow(2, attempt));
-        } else {
-          throw error;
-        }
-      }
-    }
-    throw new Error("API Max retries reached");
-  };
+  const callGeminiSafe = async (payload) =>
+    callGeminiSafeRequest({
+      apiKey,
+      payload,
+      abortControllerRef: geminiAbortControllerRef,
+    });
 
   // --- 周邊地標輔助：直接呼叫 Google Maps API ---
   const getBestPOI = async (latitude, longitude) => {
