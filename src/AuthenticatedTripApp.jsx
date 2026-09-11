@@ -140,6 +140,7 @@ import { useCurrency } from "./hooks/useCurrency.js";
 import { useNetworkStatus } from "./hooks/useNetworkStatus.js";
 import { useDeviceChrome } from "./hooks/useDeviceChrome.js";
 import { useTripShellTheme } from "./hooks/useTripShellTheme.js";
+import { useItineraryDayPager } from "./hooks/useItineraryDayPager.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
 import { tripStorage } from "./utils/tripStorage.js";
@@ -491,8 +492,7 @@ const ItineraryApp = ({ authentication }) => {
     colors,
   } = useTripShellTheme();
 
-  // activeDay: -1 for Overview, 0-5 for Day 1-6
-  const [activeDay, setActiveDay] = useState(-1);
+  // activeDay + day swipe/pull-to-refresh live in useItineraryDayPager
   const [expandedItems, setExpandedItems] = useState({});
   const [availableVoices, setAvailableVoices] = useState([]);
   const [isFlightInfoExpanded, setIsFlightInfoExpanded] = useState(false);
@@ -510,175 +510,30 @@ const ItineraryApp = ({ authentication }) => {
     }
   }, []);
 
-  // 導覽列自動捲動用的 Ref
-  const navContainerRef = useRef(null);
-  const navItemsRef = useRef({}); // 用物件來存每一顆按鈕的 ref
+  const dayPagerDepsRef = useRef({});
 
-  useEffect(() => {
-    // 取得當前 activeDay 對應的按鈕 DOM 元素
-    const currentTab = navItemsRef.current[activeDay];
-
-    if (currentTab) {
-      // 使用原生 API 讓它平滑捲動到視野中央
-      currentTab.scrollIntoView({
-        behavior: "smooth", // 平滑動畫
-        block: "nearest", // 垂直方向不動
-        inline: "center", // 水平方向置中 (關鍵！)
-      });
-    }
-  }, [activeDay]);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: 0,
-        behavior: "smooth", // 使用平滑捲動
-      });
-    }
-  }, [activeDay]); // 💡 偵測 activeDay 的變化
-
-  // 新增：滑動手勢偵測 State 與函式
-  const [touchStart, setTouchStart] = useState(null);
-  // Pull to Refresh logic
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const pullThreshold = 80;
-  const startYRef = useRef(0);
-
-  const handleMainTouchStart = (e) => {
-    if (window.scrollY === 0) {
-      startYRef.current = e.touches[0].pageY;
-    }
-  };
-
-  const handleMainTouchMove = (e) => {
-    if (startYRef.current === 0) return;
-    const currentY = e.touches[0].pageY;
-    const diff = currentY - startYRef.current;
-    if (diff > 0 && window.scrollY === 0) {
-      setPullDistance(Math.min(diff * 0.4, pullThreshold + 20));
-    }
-  };
-
-  const handleMainTouchEnd = () => {
-    if (pullDistance > pullThreshold) {
-      triggerRefresh();
-    }
-    setPullDistance(0);
-    startYRef.current = 0;
-  };
-
-  const triggerRefresh = async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        getUserLocationWeather({ isSilent: true, highAccuracy: false }),
-      ]);
-      showToast("資訊已更新 ✨");
-      if (navigator.vibrate) navigator.vibrate(50);
-    } catch (err) {
-      console.error("更新失敗:", err);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const [[, direction], setPage] = useState([activeDay, 0]);
-
-  const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? "100%" : "-100%",
-      opacity: 0,
-      position: "absolute",
-      width: "100%",
-      z: 0,
-      willChange: "transform, opacity",
-      backfaceVisibility: "hidden",
-      WebkitFontSmoothing: "antialiased",
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      position: "relative",
-      z: 0,
-      zIndex: 1,
-      willChange: "auto",
-      transition: {
-        duration: 0.3,
-        ease: [0.23, 1, 0.32, 1],
-        opacity: { duration: 0.3, ease: [0.23, 1, 0.32, 1] },
-      },
-    },
-    exit: (direction) => ({
-      x: direction < 0 ? "100%" : "-100%",
-      opacity: 0,
-      position: "absolute",
-      width: "100%",
-      willChange: "transform, opacity",
-      backfaceVisibility: "hidden",
-      transition: {
-        duration: 0.2,
-        ease: "easeIn",
-        opacity: { duration: 0.15 },
-      },
-    }),
-  };
-
-  const onTouchStart = (e) => {
-    setTouchStart({
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY,
-    });
-  };
-
-  const onTouchEnd = (e) => {
-    if (!touchStart) return;
-
-    // 如果任何全螢幕彈窗開啟中，則完全停用滑動換頁功能
-    if (showWeatherDetail || isCalculatorOpen || isMapModalOpen) {
-      setTouchStart(null);
-      return;
-    }
-
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-
-    const distanceX = touchStart.x - endX;
-    const distanceY = touchStart.y - endY;
-
-    const absX = Math.abs(distanceX);
-    const absY = Math.abs(distanceY);
-
-    const minSwipeDistance = 75;
-    const slopeThreshold = 2.5;
-
-    // 判斷是否為有效的水平滑動，並排除垂直捲動的干擾
-    if (absX > minSwipeDistance && absX > absY * slopeThreshold) {
-      if (testModeClickCount > 0) {
-        setTestModeClickCount(0);
-        showToast("連續點擊計數已重置，請重新開始", "info");
-      }
-
-      if (distanceX > 0) {
-        if (activeDay < itineraryData.length - 1) {
-          changeDay(activeDay + 1);
-        }
-      } else {
-        if (activeDay > -1) {
-          changeDay(activeDay - 1);
-        }
-      }
-    }
-
-    setTouchStart(null);
-  };
-
-  const changeDay = (newDay) => {
-    const newDirection = newDay > activeDay ? 1 : -1;
-    setPage([newDay, newDirection]);
-    setActiveDay(newDay);
-  };
+  const {
+    activeDay,
+    navContainerRef,
+    navItemsRef,
+    pullDistance,
+    isRefreshing,
+    handleMainTouchStart,
+    handleMainTouchMove,
+    handleMainTouchEnd,
+    direction,
+    slideVariants,
+    onTouchStart,
+    onTouchEnd,
+    changeDay,
+  } = useItineraryDayPager({
+    itineraryLength: itineraryData.length,
+    scrollContainerRef,
+    showWeatherDetail,
+    isCalculatorOpen,
+    isMapModalOpen,
+    depsRef: dayPagerDepsRef,
+  });
 
   const [weatherForecast, setWeatherForecast] = useState(() => ({
     ...Object.fromEntries(tripConfig.locations.map(({ key }) => [key, null])),
@@ -1759,6 +1614,16 @@ const ItineraryApp = ({ authentication }) => {
     userWeather.temp,
     userWeather.locationName,
   ]);
+
+
+  // Keep day-pager late deps in sync (refresh + toast + test-mode click reset)
+  dayPagerDepsRef.current = {
+    onPullRefresh: () =>
+      getUserLocationWeather({ isSilent: true, highAccuracy: false }),
+    showToast,
+    testModeClickCount,
+    setTestModeClickCount,
+  };
 
   const handleShareLocation = async () => {
     // 測試模式優先處理：直接使用測試設定的位置分享，不觸發實際定位
