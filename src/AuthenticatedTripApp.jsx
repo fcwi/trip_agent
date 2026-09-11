@@ -106,11 +106,6 @@ const tabModuleLoaders = {
   shops: () => import("./components/Tabs/ShopsTab.jsx"),
 };
 
-const ItineraryTab = lazy(tabModuleLoaders.itinerary);
-const FinanceTab = lazy(tabModuleLoaders.finance);
-const AIPanel = lazy(tabModuleLoaders.ai);
-const GuidesTab = lazy(tabModuleLoaders.guides);
-const ShopsTab = lazy(tabModuleLoaders.shops);
 
 const preloadTab = (tabId) => {
   tabModuleLoaders[tabId]?.().catch(() => {
@@ -118,22 +113,6 @@ const preloadTab = (tabId) => {
   });
 };
 
-const LazyPanelFallback = ({ label = "載入功能中…", overlay = false }) => (
-  <div
-    role="status"
-    aria-live="polite"
-    className={`${
-      overlay
-        ? "fixed inset-0 z-[998] bg-black/30 backdrop-blur-sm"
-        : "min-h-[40vh]"
-    } flex items-center justify-center p-6`}
-  >
-    <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-neutral-900/80 px-5 py-3 text-sm font-bold text-white shadow-xl">
-      <Loader aria-hidden="true" className="h-5 w-5 animate-spin" />
-      <span>{label}</span>
-    </div>
-  </div>
-);
 
 import WeatherParticles from "./components/Background/WeatherParticles.jsx";
 import { getParticleType, getSkyCondition } from "./utils/weatherHelpers.js";
@@ -151,12 +130,16 @@ import WeatherCard from "./components/WeatherCard.jsx";
 
 // BottomNav 組件
 import BottomNav from "./components/Navigation/BottomNav.jsx";
+import TripTabPanels from "./components/TripTabPanels.jsx";
+import { LazyPanelFallback } from "./components/LazyPanelFallback.jsx";
 
 // 提取主題設定
-import { useThemeConfig } from "./config/ThemeConfig.jsx";
 
 // 自定義 Hook：匯率管理
 import { useCurrency } from "./hooks/useCurrency.js";
+import { useNetworkStatus } from "./hooks/useNetworkStatus.js";
+import { useDeviceChrome } from "./hooks/useDeviceChrome.js";
+import { useTripShellTheme } from "./hooks/useTripShellTheme.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
 import { tripStorage } from "./utils/tripStorage.js";
@@ -270,7 +253,6 @@ const ItineraryApp = ({ authentication }) => {
     if (isVerified) setIsAppReady(true);
   }, [isVerified]);
 
-  const [isMobile, setIsMobile] = useState(false);
   const {
     activeTab,
     visitedTabs,
@@ -312,139 +294,16 @@ const ItineraryApp = ({ authentication }) => {
     () => closeModal("testMode"),
     [closeModal],
   );
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [connectionNotice, setConnectionNotice] = useState(() =>
-    navigator.onLine ? null : "offline",
-  );
-  const [isIOSSafari, setIsIOSSafari] = useState(false);
-
-  // iOS PWA 安裝提示
-  const [showIOSInstallPrompt, setShowIOSInstallPrompt] = useState(false);
-
-  // 螢幕方向鎖定警告
-  const [showOrientationWarning, setShowOrientationWarning] = useState(false);
-  const orientationDialogRef = useModalAccessibility(
+  const { isOnline, connectionNotice } = useNetworkStatus();
+  const {
+    isMobile,
+    isIOSSafari,
+    showIOSInstallPrompt,
+    setShowIOSInstallPrompt,
     showOrientationWarning,
-    () => setShowOrientationWarning(false),
-  );
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const ua = navigator.userAgent || navigator.vendor || window.opera;
-      const isAndroid = /android/i.test(ua);
-      const isIOSLike =
-        /iPad|iPhone|iPod/.test(ua) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      const isWindowsTouch =
-        /Windows/i.test(ua) && navigator.maxTouchPoints > 0;
-      const byViewport = window.innerWidth < 768;
-      setIsMobile(isAndroid || isIOSLike || isWindowsTouch || byViewport);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // 偵測 iOS Safari（iPadOS 也涵蓋）以提供友善提示
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isIOSDevice =
-      /iPad|iPhone|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const isSafariEngine =
-      /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
-    setIsIOSSafari(isIOSDevice && isSafariEngine);
-
-    // iOS PWA 安裝提示邏輯
-    if (isIOSDevice && isSafariEngine) {
-      // 檢查是否已在獨立模式運行（已加入主畫面）
-      const isStandalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true;
-
-      // 檢查用戶是否已關閉過提示
-      const hasClosedPrompt = tripStorage.getItem("ios-install-prompt-closed", [
-        "trip_agent_ios_install_prompt_closed",
-        "ios_install_prompt_closed",
-      ]);
-
-      // 只在非獨立模式且未關閉過提示時顯示
-      if (!isStandalone && !hasClosedPrompt) {
-        // 延遲 3 秒顯示，避免初次載入時過於干擾
-        const timer = setTimeout(() => {
-          setShowIOSInstallPrompt(true);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, []);
-
-  // 螢幕方向鎖定監聽
-  useEffect(() => {
-    const handleOrientationChange = () => {
-      // 檢測是否為橫向
-      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-
-      if (isLandscape && isMobile) {
-        setShowOrientationWarning(true);
-
-        // 3 秒後自動隱藏警告
-        const timer = setTimeout(() => {
-          setShowOrientationWarning(false);
-        }, 3000);
-
-        return () => clearTimeout(timer);
-      } else {
-        setShowOrientationWarning(false);
-      }
-    };
-
-    // 初始檢查
-    handleOrientationChange();
-
-    // 監聽方向變化（同時支援舊版和新版 API）
-    window.addEventListener("orientationchange", handleOrientationChange);
-    window.addEventListener("resize", handleOrientationChange);
-
-    // 使用 Screen Orientation API（較新的瀏覽器）
-    if (screen.orientation) {
-      screen.orientation.addEventListener("change", handleOrientationChange);
-    }
-
-    return () => {
-      window.removeEventListener("orientationchange", handleOrientationChange);
-      window.removeEventListener("resize", handleOrientationChange);
-      if (screen.orientation) {
-        screen.orientation.removeEventListener(
-          "change",
-          handleOrientationChange,
-        );
-      }
-    };
-  }, [isMobile]);
-
-  useEffect(() => {
-    let recoveryTimer;
-
-    const handleOnline = () => {
-      clearTimeout(recoveryTimer);
-      setIsOnline(true);
-      setConnectionNotice("online");
-      recoveryTimer = setTimeout(() => setConnectionNotice(null), 3000);
-    };
-    const handleOffline = () => {
-      clearTimeout(recoveryTimer);
-      setIsOnline(false);
-      setConnectionNotice("offline");
-    };
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      clearTimeout(recoveryTimer);
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+    setShowOrientationWarning,
+    orientationDialogRef,
+  } = useDeviceChrome();
 
   // 使用自定義 Hook 簡化狀態管理
   const { code, target } = tripConfig.currency;
@@ -620,57 +479,17 @@ const ItineraryApp = ({ authentication }) => {
     copyToClipboard(text, `已複製：${text}`);
   };
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 17 || hour < 6) {
-      setIsDarkMode(true);
-    }
-  }, []);
-
-  // 🆕 動態更新 PWA 狀態列顏色 (解決 Android 狀態列黑色問題)
-  useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    // 使用 ThemeConfig 中的背景色基調 (#FDFBF7) 而非純白，讓狀態列與背景融合更自然
-    const color = isDarkMode ? "#020617" : "#FDFBF7";
-    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
-
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", color);
-    } else {
-      // 如果找不到，動態創建一個
-      const meta = document.createElement("meta");
-      meta.name = "theme-color";
-      meta.content = color;
-      document.head.appendChild(meta);
-    }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
-
-  const { currentTheme, componentStyles } = useThemeConfig(isDarkMode);
-
-  const cBase = currentTheme.colorBase;
-  const cAccent = currentTheme.colorAccent;
-
-  const containerStyle = React.useMemo(
-    () => ({
-      "--bg-texture": currentTheme.bgTexture,
-    }),
-    [currentTheme.bgTexture],
-  );
-
-  const colors = React.useMemo(() => {
-    const sc = currentTheme.semanticColors;
-    return {
-      blue: isDarkMode ? sc.blue.dark : sc.blue.light,
-      green: isDarkMode ? sc.green.dark : sc.green.light,
-      red: isDarkMode ? sc.red.dark : sc.red.light,
-      orange: isDarkMode ? sc.orange.dark : sc.orange.light,
-      pink: isDarkMode ? sc.pink.dark : sc.pink.light,
-    };
-  }, [isDarkMode, currentTheme.semanticColors]);
+  const {
+    isDarkMode,
+    setIsDarkMode,
+    toggleTheme,
+    currentTheme,
+    componentStyles,
+    cBase,
+    cAccent,
+    containerStyle,
+    colors,
+  } = useTripShellTheme();
 
   // activeDay: -1 for Overview, 0-5 for Day 1-6
   const [activeDay, setActiveDay] = useState(-1);
@@ -913,7 +732,7 @@ const ItineraryApp = ({ authentication }) => {
     return () => {
       delete window.setTestWeather;
     };
-  }, []);
+  }, [setIsDarkMode]);
 
   const [locationSource, setLocationSource] = useState(() => {
     try {
@@ -978,7 +797,7 @@ const ItineraryApp = ({ authentication }) => {
         setIsDarkMode(false);
       }
     }
-  }, [isTestMode, testDateTime]);
+  }, [isTestMode, testDateTime, setIsDarkMode]);
 
   const geminiAbortControllerRef = useRef(null);
   const mapsAbortControllerRef = useRef(null);
@@ -3421,150 +3240,92 @@ const ItineraryApp = ({ authentication }) => {
         />
 
         {/* --- 分頁內容 --- */}
-
-        {/* 1. 行程分頁：首次造訪時載入，之後保留狀態 */}
-        <div style={{ display: activeTab === "itinerary" ? "block" : "none" }}>
-          {(activeTab === "itinerary" || visitedTabs.has("itinerary")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入行程內容中…" />}>
-              <ItineraryTab
-                activeDay={activeDay}
-                changeDay={changeDay}
-                direction={direction}
-                slideVariants={slideVariants}
-                navContainerRef={navContainerRef}
-                navItemsRef={navItemsRef}
-                itineraryData={itineraryData}
-                isDarkMode={isDarkMode}
-                theme={theme}
-                componentStyles={componentStyles}
-                tripConfig={tripConfig}
-                tripStatus={tripStatus}
-                daysUntilTrip={daysUntilTrip}
-                checklistData={checklistData}
-                currentTripDayIndex={currentTripDayIndex}
-                weatherForecast={weatherForecast}
-                userWeather={userWeather}
-                displayWeather={displayWeather}
-                isFlightInfoExpanded={isFlightInfoExpanded}
-                setIsFlightInfoExpanded={setIsFlightInfoExpanded}
-                handleCopy={handleCopy}
-                expandedItems={expandedItems}
-                toggleExpand={toggleExpand}
-                getMapLink={getMapLink}
-                colors={colors}
-                currentTheme={currentTheme}
-                handleWeatherDetailOpen={handleWeatherDetailOpen}
-                isUpdatingLocation={isUpdatingLocation}
-                isTestMode={isTestMode}
-                testDateTime={testDateTime}
-                getWeatherInfo={getWeatherInfo}
-                getUserLocationWeather={getUserLocationWeather}
-                handleMapModalToggle={handleMapModalToggle}
-                scrollContainerRef={scrollContainerRef}
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
-                pullDistance={pullDistance}
-                isRefreshing={isRefreshing}
-                current={current}
-                currentLocation={currentLocation}
-                dayMapEvents={dayMapEvents}
-                otherUsersLocations={otherUsersLocations}
-                currentUser={currentUser}
-                maptilerKey={maptilerKey}
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* --- 頁籤：實用指南，切換時才載入 --- */}
-        {activeTab === "guides" && (
-          <Suspense fallback={<LazyPanelFallback label="載入實用指南中…" />}>
-            <GuidesTab
-              guidesData={guidesData}
-              usefulLinks={usefulLinks}
-              isDarkMode={isDarkMode}
-              theme={theme}
-              currentTheme={currentTheme}
-              componentStyles={componentStyles}
-            />
-          </Suspense>
-        )}
-
-        {/* --- 頁籤：商家導覽，切換時才載入 --- */}
-        {activeTab === "shops" && (
-          <Suspense fallback={<LazyPanelFallback label="載入商家指南中…" />}>
-            <ShopsTab
-              shopGuideData={shopGuideData}
-              getMapLink={getMapLink}
-              isDarkMode={isDarkMode}
-              theme={theme}
-              componentStyles={componentStyles}
-            />
-          </Suspense>
-        )}
-
-        {/* --- 頁籤：AI 導遊，首次造訪時載入 --- */}
-        <div style={{ display: activeTab === "ai" ? "block" : "none" }}>
-          {(activeTab === "ai" || visitedTabs.has("ai")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入 AI 導遊中…" />}>
-              <AIPanel
-                isDarkMode={isDarkMode}
-                theme={theme}
-                currentTheme={currentTheme}
-                componentStyles={componentStyles}
-                aiMode={aiMode}
-                handleSwitchMode={handleSwitchMode}
-                isSpeaking={isSpeaking}
-                setIsSpeaking={setIsSpeaking}
-                showAiSearch={showAiSearch}
-                setShowAiSearch={setShowAiSearch}
-                aiSearchQuery={aiSearchQuery}
-                setAiSearchQuery={setAiSearchQuery}
-                getSearchResults={getSearchResults}
-                scrollToMessage={scrollToMessage}
-                handleClearChat={handleClearChat}
-                messages={messages}
-                renderMessage={renderMessage}
-                handleSpeak={handleSpeak}
-                isLoading={isLoading}
-                loadingText={loadingText}
-                chatEndRef={chatEndRef}
-                setFullPreviewImage={setFullPreviewImage}
-                expandedMessages={expandedMessages}
-                toggleMessageExpand={toggleMessageExpand}
-                messageRefs={messageRefs}
-                tripConfig={tripConfig}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                listeningLang={listeningLang}
-                toggleListening={toggleListening}
-                fileInputRef={fileInputRef}
-                handleImageSelect={handleImageSelect}
-                selectedImage={selectedImage}
-                clearImage={clearImage}
-                handleSendMessage={handleSendMessage}
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* --- 頁籤：記帳/記事，首次造訪時載入 --- */}
-        <div style={{ display: activeTab === "finance" ? "block" : "none" }}>
-          {(activeTab === "finance" || visitedTabs.has("finance")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入記帳資料中…" />}>
-              <FinanceTab
-                isDarkMode={isDarkMode}
-                theme={theme}
-                rateData={rateData} // 傳遞匯率資料
-                gasUrl={gasUrl} // 傳遞 GAS URL
-                gasToken={gasToken} // 傳遞 Token
-                apiKey={apiKey} // 傳遞 Gemini API Key
-                setFullPreviewImage={setFullPreviewImage} // 複用 App.jsx 的圖片預覽遮罩
-                showToast={showToast} // 複用 Toast 提示
-              />
-            </Suspense>
-          )}
-        </div>
+        <TripTabPanels
+          activeTab={activeTab}
+          visitedTabs={visitedTabs}
+          activeDay={activeDay}
+          changeDay={changeDay}
+          direction={direction}
+          slideVariants={slideVariants}
+          navContainerRef={navContainerRef}
+          navItemsRef={navItemsRef}
+          itineraryData={itineraryData}
+          isDarkMode={isDarkMode}
+          theme={theme}
+          componentStyles={componentStyles}
+          tripConfig={tripConfig}
+          tripStatus={tripStatus}
+          daysUntilTrip={daysUntilTrip}
+          checklistData={checklistData}
+          currentTripDayIndex={currentTripDayIndex}
+          weatherForecast={weatherForecast}
+          userWeather={userWeather}
+          displayWeather={displayWeather}
+          isFlightInfoExpanded={isFlightInfoExpanded}
+          setIsFlightInfoExpanded={setIsFlightInfoExpanded}
+          handleCopy={handleCopy}
+          expandedItems={expandedItems}
+          toggleExpand={toggleExpand}
+          getMapLink={getMapLink}
+          colors={colors}
+          currentTheme={currentTheme}
+          handleWeatherDetailOpen={handleWeatherDetailOpen}
+          isUpdatingLocation={isUpdatingLocation}
+          isTestMode={isTestMode}
+          testDateTime={testDateTime}
+          getWeatherInfo={getWeatherInfo}
+          getUserLocationWeather={getUserLocationWeather}
+          handleMapModalToggle={handleMapModalToggle}
+          scrollContainerRef={scrollContainerRef}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          current={current}
+          currentLocation={currentLocation}
+          dayMapEvents={dayMapEvents}
+          otherUsersLocations={otherUsersLocations}
+          currentUser={currentUser}
+          maptilerKey={maptilerKey}
+          guidesData={guidesData}
+          usefulLinks={usefulLinks}
+          shopGuideData={shopGuideData}
+          aiMode={aiMode}
+          handleSwitchMode={handleSwitchMode}
+          isSpeaking={isSpeaking}
+          setIsSpeaking={setIsSpeaking}
+          showAiSearch={showAiSearch}
+          setShowAiSearch={setShowAiSearch}
+          aiSearchQuery={aiSearchQuery}
+          setAiSearchQuery={setAiSearchQuery}
+          getSearchResults={getSearchResults}
+          scrollToMessage={scrollToMessage}
+          handleClearChat={handleClearChat}
+          messages={messages}
+          renderMessage={renderMessage}
+          handleSpeak={handleSpeak}
+          isLoading={isLoading}
+          loadingText={loadingText}
+          chatEndRef={chatEndRef}
+          setFullPreviewImage={setFullPreviewImage}
+          expandedMessages={expandedMessages}
+          toggleMessageExpand={toggleMessageExpand}
+          messageRefs={messageRefs}
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          listeningLang={listeningLang}
+          toggleListening={toggleListening}
+          fileInputRef={fileInputRef}
+          handleImageSelect={handleImageSelect}
+          selectedImage={selectedImage}
+          clearImage={clearImage}
+          handleSendMessage={handleSendMessage}
+          rateData={rateData}
+          gasUrl={gasUrl}
+          gasToken={gasToken}
+          apiKey={apiKey}
+          showToast={showToast}
+        />
 
         {/* --- 底部導覽列 (Bottom Navigation) --- */}
         <BottomNav
