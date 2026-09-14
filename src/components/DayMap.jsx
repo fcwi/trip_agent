@@ -6,12 +6,11 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { Lock, Unlock, Loader2 } from "lucide-react";
 import MapModal from "./MapModal.jsx";
 import { escapeHtml } from "../utils/html.js";
 import { buildEventPopupHtml, isValidLngLat } from "../utils/mapHelpers.js";
+import { useMapLibre } from "../hooks/useMapLibre.js";
 
 /**
  * DayMap Component with MapLibre GL JS & MapTiler
@@ -27,6 +26,7 @@ const DayMap = ({
   currentUser,
   MAPTILER_KEY,
 }) => {
+  const maplibregl = useMapLibre();
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markers = useRef([]);
@@ -121,7 +121,7 @@ const DayMap = ({
 
   // 初始化地圖
   useEffect(() => {
-    if (map.current) return; // 只初始化一次
+    if (!maplibregl || map.current || !mapContainer.current) return;
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -151,7 +151,7 @@ const DayMap = ({
         map.current = null;
       }
     };
-  }, [mapStyle, setMapLanguage]);
+  }, [maplibregl, mapStyle, setMapLanguage]);
 
   // 切換主題樣式
   useEffect(() => {
@@ -192,7 +192,7 @@ const DayMap = ({
 
   // 更新地圖內容 (標記、路線、視野)
   useEffect(() => {
-    if (!map.current) return;
+    if (!maplibregl || !map.current) return;
 
     const currentMap = map.current;
 
@@ -345,6 +345,7 @@ const DayMap = ({
     otherUsersLocations,
     isDarkMode,
     currentUser?.avatar,
+    maplibregl,
   ]);
 
   return (

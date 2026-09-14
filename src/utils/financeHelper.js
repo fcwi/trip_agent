@@ -2,6 +2,7 @@
 import { getActiveModel } from "./aiHelpers";
 import { fetchJson, HttpError, waitForRetry } from "./api.js";
 import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
+import { fetchGasAction } from "./gasClient.js";
 
 /**
  * 通用的 Gemini API 呼叫函式 (包含 Retry 機制與錯誤處理)
@@ -163,16 +164,15 @@ export const fetchFromGAS = async (gasUrl, gasToken, signal) => {
   if (!gasUrl || !gasToken) return [];
 
   try {
-    // GET 請求將參數帶在 URL 上
-    const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getAll`;
+    const result = await fetchGasAction(
+      gasUrl,
+      gasToken,
+      "getAll",
+      {},
+      { signal, timeoutMs: 20000 },
+    );
 
-    const result = await fetchJson(url, {
-      method: "GET",
-      signal,
-      timeoutMs: 20000,
-    });
-
-    if (result.status === "success" && Array.isArray(result.data)) {
+    if (result?.status === "success" && Array.isArray(result.data)) {
       return result.data.map((item) => {
         // ★ 修正 2：強效解析使用者資料
         // 目標：解決截圖中顯示 {"name":"阿溫"...} 的問題

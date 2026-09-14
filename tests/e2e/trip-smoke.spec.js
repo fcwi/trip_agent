@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import process from "node:process";
 
 const TEST_PASSWORD = "trip-e2e-password";
 
@@ -94,15 +95,33 @@ test("syncs bottom navigation with the URL and browser history", async ({
   ).toHaveAttribute("aria-current", "page");
 });
 
-test("opens a deep-linked tab after restoring the session", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await unlockTrip(page);
-
+test("opens a deep-linked tab after unlocking", async ({ page }) => {
   await page.goto("/?tab=shops");
+  await unlockTrip(page);
   await expect(
     page.getByRole("button", { name: "商店（目前分頁）" }),
   ).toHaveAttribute("aria-current", "page");
   await expect(page).toHaveURL(/\?tab=shops$/);
+});
+
+test("ignores leftover session passwords after reload", async ({ page }) => {
+  const tripId = process.env.E2E_TRIP_ID || "2026_busan";
+  await page.addInitScript((storageKey) => {
+    sessionStorage.setItem(storageKey, "trip-e2e-password");
+    localStorage.setItem("trip_agent_password", "trip-e2e-password");
+  }, `trip_agent:${tripId}:password`);
+
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "行程表已鎖定" }),
+  ).toBeVisible();
+});
+
+test("requires the password again after a full reload", async ({ page }) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "行程表已鎖定" }),
+  ).toBeVisible();
 });

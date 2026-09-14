@@ -1,5 +1,7 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { fetchGasWithRetry, HttpError } from "./utils/api";
+import { fetchGasAction } from "./utils/gasClient.js";
+import { reverseGeocode } from "./utils/geocode.js";
 import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
 import { callGeminiAPI } from "./utils/financeHelper";
 import {
@@ -91,9 +93,6 @@ import {
 import { processFileForHeic } from "./utils/imageUtils";
 // import { financeDB } from "./utils/indexedDBManager.js";
 
-// 抑制 ESLint 對於 JSX 中 motion 未使用的誤判
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
 const ChatInput = lazy(() => import("./components/ChatInput.jsx"));
 const CalculatorModal = lazy(() => import("./components/CalculatorModal.jsx"));
 const TestModePanel = lazy(() => import("./components/TestModePanel.jsx"));
@@ -1583,10 +1582,9 @@ const ItineraryApp = ({ authentication }) => {
       isFetchingLocationsRef.current = true; // 上鎖
       debugLog("📍 [App] 正在獲取其他使用者位置...");
 
-      const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getLocations`;
-      const result = await fetchGasWithRetry(url);
+      const result = await fetchGasAction(gasUrl, gasToken, "getLocations");
 
-      if (result.status === "success" && Array.isArray(result.data)) {
+      if (result?.status === "success" && Array.isArray(result.data)) {
         // 過濾掉自己，避免自己同時出現在「使用者位置」和「其他使用者」
         const me = currentUserRef.current?.name;
         const others = me
@@ -1666,9 +1664,7 @@ const ItineraryApp = ({ authentication }) => {
                   (geoNamesCacheRef.current[geoKey]?.timestamp || 0) >
                   CACHE_EXPIRY_MS
               ) {
-                const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-TW&zoom=18`;
-                const geoRes = await fetch(geoUrl);
-                geoData = await geoRes.json();
+                geoData = await reverseGeocode(latitude, longitude);
 
                 geoNamesCacheRef.current[geoKey] = {
                   data: geoData,
@@ -3691,240 +3687,208 @@ const ItineraryApp = ({ authentication }) => {
         )}
 
         {/* 圖片放大預覽遮罩 */}
-        <AnimatePresence>
-          {fullPreviewImage && (
-            <motion.div
-              ref={previewDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="圖片預覽"
-              tabIndex={-1}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setFullPreviewImage(null)}
-              className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/90 p-4 backdrop-blur-md cursor-zoom-out"
+        {fullPreviewImage && (
+          <div
+            ref={previewDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="圖片預覽"
+            tabIndex={-1}
+            onClick={() => setFullPreviewImage(null)}
+            className="animate-fadeIn fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/90 p-4 backdrop-blur-md cursor-zoom-out"
+          >
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className="relative max-w-full max-h-full flex items-center justify-center"
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(event) => event.stopPropagation()}
-                className="relative max-w-full max-h-full flex items-center justify-center"
-              >
-                <img
-                  src={fullPreviewImage}
-                  alt="圖片完整預覽"
-                  width="1200"
-                  height="1200"
-                  className="allow-touch-callout max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
-                />
-                {isIOSSafari && (
-                  <div className="absolute bottom-4 left-4 text-[11px] md:text-xs text-white/90 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
-                    iOS 提示：長按圖片即可儲存
-                  </div>
-                )}
-                <div className="absolute bottom-4 right-4 flex gap-2 px-2 py-2 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
-                  <button
-                    onClick={handleDownloadPreview}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
-                    aria-label="下載圖片"
-                    title="下載"
-                  >
-                    <Download className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFullPreviewImage(null);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
-                    aria-label="關閉預覽"
-                    title="關閉"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+              <img
+                src={fullPreviewImage}
+                alt="圖片完整預覽"
+                width="1200"
+                height="1200"
+                className="allow-touch-callout max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+              />
+              {isIOSSafari && (
+                <div className="absolute bottom-4 left-4 text-[11px] md:text-xs text-white/90 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
+                  iOS 提示：長按圖片即可儲存
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 圖片上傳確認視窗 */}
-        <AnimatePresence>
-          {tempImage && (
-            <motion.div
-              ref={imageConfirmDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="確認上傳圖片"
-              tabIndex={-1}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] flex flex-col items-center justify-center overscroll-contain bg-black/95 p-4 backdrop-blur-xl"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative max-w-full max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-              >
-                <img
-                  src={tempImage}
-                  alt="待確認的上傳圖片"
-                  width="1200"
-                  height="1200"
-                  className="max-w-full max-h-[70vh] object-contain"
-                />
-              </motion.div>
-
-              <p className="text-white/70 text-sm mt-6 mb-8 font-medium tracking-wide">
-                照片清楚嗎？請確認是否使用此圖片
-              </p>
-
-              <div className="flex gap-6 w-full max-w-xs">
+              )}
+              <div className="absolute bottom-4 right-4 flex gap-2 px-2 py-2 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
                 <button
-                  onClick={handleCancelImage}
-                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-neutral-800/80 backdrop-blur-lg text-neutral-300 border border-neutral-700/60 ring-1 ring-neutral-600/30 hover:bg-neutral-700/90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                  onClick={handleDownloadPreview}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
+                  aria-label="下載圖片"
+                  title="下載"
                 >
-                  <X className="w-5 h-5" /> 取消
+                  <Download className="w-6 h-6" />
                 </button>
                 <button
-                  onClick={handleConfirmImage}
-                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-sky-600/90 backdrop-blur-lg text-white border border-sky-500/40 ring-1 ring-sky-400/30 shadow-lg shadow-sky-900/30 hover:bg-sky-500/95 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFullPreviewImage(null);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
+                  aria-label="關閉預覽"
+                  title="關閉"
                 >
-                  <Check className="w-5 h-5" /> 確認使用
+                  <X className="w-6 h-6" />
                 </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
+
+        {/* 圖片上傳確認視窗 */}
+        {tempImage && (
+          <div
+            ref={imageConfirmDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="確認上傳圖片"
+            tabIndex={-1}
+            className="animate-fadeIn fixed inset-0 z-[110] flex flex-col items-center justify-center overscroll-contain bg-black/95 p-4 backdrop-blur-xl"
+          >
+            <div className="relative max-w-full max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+              <img
+                src={tempImage}
+                alt="待確認的上傳圖片"
+                width="1200"
+                height="1200"
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            </div>
+
+            <p className="text-white/70 text-sm mt-6 mb-8 font-medium tracking-wide">
+              照片清楚嗎？請確認是否使用此圖片
+            </p>
+
+            <div className="flex gap-6 w-full max-w-xs">
+              <button
+                onClick={handleCancelImage}
+                className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-neutral-800/80 backdrop-blur-lg text-neutral-300 border border-neutral-700/60 ring-1 ring-neutral-600/30 hover:bg-neutral-700/90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+              >
+                <X className="w-5 h-5" /> 取消
+              </button>
+              <button
+                onClick={handleConfirmImage}
+                className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-sky-600/90 backdrop-blur-lg text-white border border-sky-500/40 ring-1 ring-sky-400/30 shadow-lg shadow-sky-900/30 hover:bg-sky-500/95 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Check className="w-5 h-5" /> 確認使用
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* iOS PWA 安裝提示橫幅 */}
-        <AnimatePresence>
-          {showIOSInstallPrompt && (
-            <motion.div
-              initial={{ y: -100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -100, opacity: 0 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="fixed top-0 left-0 right-0 z-[9999] mx-auto max-w-md"
-              style={{
-                paddingTop: "max(1rem, env(safe-area-inset-top))",
-                paddingLeft: "max(1rem, env(safe-area-inset-left))",
-                paddingRight: "max(1rem, env(safe-area-inset-right))",
-              }}
-            >
-              <div className="mx-4 bg-gradient-to-br from-blue-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 overflow-hidden">
-                <div className="p-4 relative">
-                  {/* 關閉按鈕 */}
-                  <button
-                    onClick={() => {
-                      setShowIOSInstallPrompt(false);
-                      tripStorage.setItem("ios-install-prompt-closed", "true");
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-                    aria-label="關閉提示"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
+        {showIOSInstallPrompt && (
+          <div
+            className="animate-fadeIn fixed top-0 left-0 right-0 z-[9999] mx-auto max-w-md"
+            style={{
+              paddingTop: "max(1rem, env(safe-area-inset-top))",
+              paddingLeft: "max(1rem, env(safe-area-inset-left))",
+              paddingRight: "max(1rem, env(safe-area-inset-right))",
+            }}
+          >
+            <div className="mx-4 bg-gradient-to-br from-blue-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 overflow-hidden">
+              <div className="p-4 relative">
+                {/* 關閉按鈕 */}
+                <button
+                  onClick={() => {
+                    setShowIOSInstallPrompt(false);
+                    tripStorage.setItem("ios-install-prompt-closed", "true");
+                  }}
+                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+                  aria-label="關閉提示"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
 
-                  {/* 內容 */}
-                  <div className="flex items-start gap-3 pr-6">
-                    <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                      <Download className="w-7 h-7 text-blue-600" />
-                    </div>
-                    <div className="flex-1 text-white">
-                      <h3 className="font-bold text-base mb-1">安裝到主畫面</h3>
-                      <p className="text-sm text-blue-100 leading-relaxed mb-3">
-                        將此 App 加入主畫面，享受完整螢幕體驗
-                      </p>
+                {/* 內容 */}
+                <div className="flex items-start gap-3 pr-6">
+                  <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                    <Download className="w-7 h-7 text-blue-600" />
+                  </div>
+                  <div className="flex-1 text-white">
+                    <h3 className="font-bold text-base mb-1">安裝到主畫面</h3>
+                    <p className="text-sm text-blue-100 leading-relaxed mb-3">
+                      將此 App 加入主畫面，享受完整螢幕體驗
+                    </p>
 
-                      {/* 步驟說明 */}
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-xs text-blue-50 space-y-2 border border-white/20">
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            1
-                          </span>
-                          <span>
-                            點擊底部的{" "}
-                            <Share2 className="inline w-4 h-4 mx-0.5" />{" "}
-                            分享按鈕
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            2
-                          </span>
-                          <span>選擇「加入主畫面」</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            3
-                          </span>
-                          <span>點擊右上角「新增」完成</span>
-                        </div>
+                    {/* 步驟說明 */}
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-xs text-blue-50 space-y-2 border border-white/20">
+                      <div className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                          1
+                        </span>
+                        <span>
+                          點擊底部的{" "}
+                          <Share2 className="inline w-4 h-4 mx-0.5" /> 分享按鈕
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                          2
+                        </span>
+                        <span>選擇「加入主畫面」</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                          3
+                        </span>
+                        <span>點擊右上角「新增」完成</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         {/* 螢幕方向鎖定警告 */}
-        <AnimatePresence>
-          {showOrientationWarning && (
-            <motion.div
-              ref={orientationDialogRef}
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="orientation-warning-title"
-              aria-describedby="orientation-warning-description"
-              tabIndex={-1}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed inset-0 z-[10000] flex items-center justify-center overscroll-contain p-4 bg-black/80 backdrop-blur-md"
-              onClick={() => setShowOrientationWarning(false)}
+        {showOrientationWarning && (
+          <div
+            ref={orientationDialogRef}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="orientation-warning-title"
+            aria-describedby="orientation-warning-description"
+            tabIndex={-1}
+            className="animate-fadeIn fixed inset-0 z-[10000] flex items-center justify-center overscroll-contain p-4 bg-black/80 backdrop-blur-md"
+            onClick={() => setShowOrientationWarning(false)}
+          >
+            <div
+              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-2xl p-8 max-w-sm text-center border-2 border-orange-300/50"
+              onClick={(e) => e.stopPropagation()}
             >
-              <motion.div
-                initial={{ rotate: 90 }}
-                animate={{ rotate: 0 }}
-                className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-2xl p-8 max-w-sm text-center border-2 border-orange-300/50"
-                onClick={(e) => e.stopPropagation()}
+              <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Phone className="w-12 h-12 text-white transform rotate-90" />
+              </div>
+
+              <h3
+                id="orientation-warning-title"
+                className="text-2xl font-bold text-white mb-3"
               >
-                <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <Phone className="w-12 h-12 text-white transform rotate-90" />
-                </div>
+                請旋轉螢幕
+              </h3>
+              <p
+                id="orientation-warning-description"
+                className="text-white/90 text-base leading-relaxed mb-6"
+              >
+                為了獲得最佳體驗
+                <br />
+                請將裝置轉回直向模式
+              </p>
 
-                <h3
-                  id="orientation-warning-title"
-                  className="text-2xl font-bold text-white mb-3"
-                >
-                  請旋轉螢幕
-                </h3>
-                <p
-                  id="orientation-warning-description"
-                  className="text-white/90 text-base leading-relaxed mb-6"
-                >
-                  為了獲得最佳體驗
-                  <br />
-                  請將裝置轉回直向模式
-                </p>
-
-                <button
-                  onClick={() => setShowOrientationWarning(false)}
-                  className="px-6 py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 active:bg-orange-100 transition-colors shadow-lg"
-                >
-                  我知道了
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <button
+                onClick={() => setShowOrientationWarning(false)}
+                className="px-6 py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 active:bg-orange-100 transition-colors shadow-lg"
+              >
+                我知道了
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
         <div

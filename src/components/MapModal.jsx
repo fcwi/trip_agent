@@ -1,8 +1,7 @@
 ﻿import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import { X, RotateCcw, LocateFixed } from "lucide-react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
+import { useMapLibre } from "../hooks/useMapLibre.js";
 import { escapeHtml } from "../utils/html.js";
 import {
   buildEventPopupHtml,
@@ -41,6 +40,7 @@ const MapModal = ({
   currentUser,
   MAPTILER_KEY,
 }) => {
+  const maplibregl = useMapLibre();
   const dialogRef = useModalAccessibility(isOpen, onClose);
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -61,7 +61,7 @@ const MapModal = ({
   );
 
   const resetView = useCallback(() => {
-    if (!map.current) return;
+    if (!maplibregl || !map.current) return;
     const bounds = new maplibregl.LngLatBounds();
     let hasPoints = false;
 
@@ -97,7 +97,13 @@ const MapModal = ({
     if (hasPoints && !bounds.isEmpty()) {
       map.current.fitBounds(bounds, { padding: 50, duration: 1000 });
     }
-  }, [validEvents, userLocation, mapRouteCoords, otherUsersLocations]);
+  }, [
+    maplibregl,
+    validEvents,
+    userLocation,
+    mapRouteCoords,
+    otherUsersLocations,
+  ]);
 
   const centerOnUser = useCallback(() => {
     if (!map.current || !userLocation?.lat || !userLocation?.lon) return;
@@ -168,7 +174,7 @@ const MapModal = ({
 
   // 初始化地圖
   useEffect(() => {
-    if (!isOpen || map.current) return;
+    if (!maplibregl || !isOpen || map.current || !mapContainer.current) return;
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -202,7 +208,7 @@ const MapModal = ({
         map.current = null;
       }
     };
-  }, [isOpen, mapStyle, validEvents, resetView, setMapLanguage]);
+  }, [maplibregl, isOpen, mapStyle, validEvents, resetView, setMapLanguage]);
 
   // 切換主題
   useEffect(() => {
@@ -213,7 +219,7 @@ const MapModal = ({
 
   // 更新內容
   useEffect(() => {
-    if (!map.current || !isOpen) return;
+    if (!maplibregl || !map.current || !isOpen) return;
     const currentMap = map.current;
 
     // Clear existing markers
@@ -412,6 +418,7 @@ const MapModal = ({
     otherUsersLocations,
     isDarkMode,
     currentUser,
+    maplibregl,
     resetView,
   ]);
 

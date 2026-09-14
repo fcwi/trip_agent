@@ -15,6 +15,12 @@ const ENCRYPTED_PAYLOADS = Object.freeze({
   maptilerKey: (import.meta.env?.VITE_ENCODED_MAPTILER_KEY || "").trim(),
 });
 
+const clearPersistedPasswords = () => {
+  tripSessionStorage.removeItem("password");
+  tripStorage.removeItem("password");
+  localStorage.removeItem("trip_agent_password");
+};
+
 export const useTripAuthentication = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -41,12 +47,10 @@ export const useTripAuthentication = () => {
 
       setCredentials(decryptedCredentials);
       setIsVerified(true);
-      tripSessionStorage.setItem("password", inputPassword);
-      tripStorage.removeItem("password");
-      localStorage.removeItem("trip_agent_password");
+      clearPersistedPasswords();
     } catch {
       if (!isAuto) setAuthError("密碼錯誤，請再試一次");
-      if (isAuto) tripSessionStorage.removeItem("password");
+      clearPersistedPasswords();
     } finally {
       setIsAuthLoading(false);
     }
@@ -55,24 +59,9 @@ export const useTripAuthentication = () => {
   useEffect(() => {
     const restoreAuthentication = async () => {
       try {
-        let savedPassword = tripSessionStorage.getItem("password");
+        clearPersistedPasswords();
 
-        if (!savedPassword) {
-          const legacyPassword = tripStorage.getItem("password", [
-            "trip_agent_password",
-          ]);
-          if (legacyPassword) {
-            savedPassword = legacyPassword;
-            tripSessionStorage.setItem("password", legacyPassword);
-          }
-        }
-
-        tripStorage.removeItem("password");
-        localStorage.removeItem("trip_agent_password");
-
-        if (savedPassword && ENCRYPTED_PAYLOADS.apiKey) {
-          await attemptUnlock(savedPassword, true);
-        } else if (
+        if (
           shouldAutoUnlockWithoutPassword(
             ENCRYPTED_PAYLOADS.apiKey,
             import.meta.env?.DEV,
@@ -86,7 +75,7 @@ export const useTripAuthentication = () => {
     };
 
     restoreAuthentication();
-  }, [attemptUnlock]);
+  }, []);
 
   const handleAuthSubmit = useCallback(
     (event) => {
@@ -110,7 +99,7 @@ export const useTripAuthentication = () => {
   }, [toolKey, toolPwd]);
 
   const lock = useCallback(() => {
-    tripSessionStorage.removeItem("password");
+    clearPersistedPasswords();
     setCredentials(EMPTY_CREDENTIALS);
     setPassword("");
     setIsVerified(false);

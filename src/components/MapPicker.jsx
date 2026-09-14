@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import { useMapLibre } from "../hooks/useMapLibre.js";
 
 /**
  * MapPicker Component with MapLibre GL JS
@@ -15,6 +14,7 @@ const MapPicker = ({
   isDarkMode,
   maptilerKey,
 }) => {
+  const maplibregl = useMapLibre();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -70,7 +70,12 @@ const MapPicker = ({
 
   // 初始化地圖 (僅一次)
   useEffect(() => {
-    if (!mapContainerRef.current || !maptilerKey || mapInstanceRef.current)
+    if (
+      !maplibregl ||
+      !mapContainerRef.current ||
+      !maptilerKey ||
+      mapInstanceRef.current
+    )
       return;
 
     const styleUrl = isDarkMode
@@ -110,7 +115,7 @@ const MapPicker = ({
       mapInstanceRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maptilerKey]);
+  }, [maptilerKey, maplibregl]);
 
   // 監聽主題變化 (使用 setStyle 避免重新初始化)
   useEffect(() => {
@@ -124,7 +129,7 @@ const MapPicker = ({
 
   // 監聽外部經緯度變化以同步標記
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return;
+    if (!maplibregl || !mapInstanceRef.current || !mapLoaded) return;
 
     const map = mapInstanceRef.current;
 
@@ -161,7 +166,7 @@ const MapPicker = ({
       });
     }
     isInternalUpdateRef.current = false;
-  }, [latitude, longitude, mapLoaded]);
+  }, [latitude, longitude, mapLoaded, maplibregl]);
 
   // 控制項處理
   const handleZoomIn = () => mapInstanceRef.current?.zoomIn();

@@ -61,7 +61,9 @@ npm run check
 
 `.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。若 `.env` 曾被提交到 Git，請輪替 Gemini、Maps、MapTiler 與 GAS 憑證，因為歷史紀錄仍可能含有密文。
 
-解鎖密碼只保留在目前分頁的 `sessionStorage`；關閉分頁或按下鎖定後需重新輸入。舊版本曾保存於 `localStorage` 的密碼會在首次載入時自動移除。
+解鎖密碼只保留在記憶體中；重新整理頁面、關閉分頁或按下鎖定後都需再輸入。舊版本留在 `sessionStorage`／`localStorage` 的密碼會在載入時清除。
+
+GAS 讀取（記帳 `getAll`、位置 `getLocations`）改為 POST，token 放在 body，不再出現在 URL。Apps Script 的 `doPost` 需能辨識 `{ type: "query", action, token }`，且不可把這類請求當成新紀錄寫入。
 
 請注意，所有 `VITE_*` 變數都會進入瀏覽器端建置內容。現有加密可避免直接顯示憑證，但不能取代伺服器端秘密管理；正式公開部署時，應限制 Maps／MapTiler Key 的允許網域與配額，Gemini／GAS 則建議改由受驗證的後端代理呼叫。
 
