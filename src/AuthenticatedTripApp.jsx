@@ -661,6 +661,7 @@ const ItineraryApp = ({ authentication }) => {
   const { getBestPOI, lookupReverseGeoName, abortPlacesRequests } =
     useGeoPlaces({ mapsApiKey });
   const { callGeminiSafe, abortAiRequests } = useAiInvocation({ apiKey });
+  const forecastAbortControllerRef = useRef(null);
 
   const [aiMode, setAiMode] = useState("translate");
   // 初始訊息設為空陣列，等待 IndexedDB 載入後再決定
@@ -1888,6 +1889,8 @@ const ItineraryApp = ({ authentication }) => {
   };
 
   useEffect(() => {
+    const forecastControllerRef = forecastAbortControllerRef;
+
     return () => {
       // 組件卸載時立即停止語音與 API 請求，避免記憶體洩漏或狀態更新錯誤
       if ("speechSynthesis" in window) {
@@ -1901,14 +1904,76 @@ const ItineraryApp = ({ authentication }) => {
 
       abortAiRequests();
       abortPlacesRequests();
+      forecastControllerRef.current?.abort();
     };
   }, [abortAiRequests, abortPlacesRequests]);
 
+  const fetchWeatherForecast = React.useCallback(
+    async ({ showLoading = false } = {}) => {
+      if (!isVerified) return false;
+
+      forecastAbortControllerRef.current?.abort();
+      const controller = new AbortController();
+      forecastAbortControllerRef.current = controller;
+
+      if (showLoading) {
+        setWeatherForecast((prev) => ({ ...prev, loading: true }));
+      }
+
+      try {
+        const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
+
+        const results = await Promise.all(
+          tripConfig.locations.map(async (loc) => {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
+            const response = await fetch(url, { signal: controller.signal });
+            if (!response.ok) {
+              throw new Error(`Weather API HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(data.reason || `Weather API error: ${loc.key}`);
+            }
+
+            if (data.timezone) setAutoTimeZone(data.timezone);
+            return {
+              key: loc.key,
+              data: { ...data.daily, hourly: data.hourly },
+            };
+          }),
+        );
+
+        if (controller.signal.aborted) return false;
+
+        const updatedAt = Date.now();
+        const newForecast = Object.fromEntries(
+          results.map(({ key, data }) => [key, data]),
+        );
+        const nextForecast = { ...newForecast, loading: false, updatedAt };
+
+        tripStorage.setItem(
+          "weather-forecast",
+          JSON.stringify({ ...newForecast, updatedAt }),
+        );
+        setWeatherForecast(nextForecast);
+        return true;
+      } catch (error) {
+        if (error?.name === "AbortError") return false;
+        console.error("Failed to fetch weather:", error);
+        setWeatherForecast((prev) => ({ ...prev, loading: false }));
+        return false;
+      } finally {
+        if (forecastAbortControllerRef.current === controller) {
+          forecastAbortControllerRef.current = null;
+        }
+      }
+    },
+    [isVerified],
+  );
+
   useEffect(() => {
     if (!isVerified) return;
-
-    const controller = new AbortController();
-    let cancelled = false;
 
     const loadCachedForecast = () => {
       try {
@@ -1927,61 +1992,12 @@ const ItineraryApp = ({ authentication }) => {
 
     loadCachedForecast();
 
-    const fetchWeather = async () => {
-      try {
-        const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
-
-        const weatherPromises = tripConfig.locations.map(async (loc) => {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
-          const res = await fetch(url, { signal: controller.signal });
-          const data = await res.json();
-
-          if (data.error) {
-            console.error(`Weather API error for ${loc.key}:`, data.reason);
-            return { key: loc.key, data: null };
-          }
-
-          if (!cancelled && data.timezone) {
-            setAutoTimeZone(data.timezone);
-          }
-          return {
-            key: loc.key,
-            data: {
-              ...data.daily,
-              hourly: data.hourly,
-            },
-          };
-        });
-
-        const results = await Promise.all(weatherPromises);
-
-        if (cancelled) return;
-
-        const newForecast = {};
-        results.forEach((item) => {
-          newForecast[item.key] = item.data;
-        });
-
-        tripStorage.setItem("weather-forecast", JSON.stringify(newForecast));
-
-        setWeatherForecast({
-          ...newForecast,
-          loading: false,
-        });
-      } catch (error) {
-        if (error?.name === "AbortError") return;
-        console.error("Failed to fetch weather:", error);
-        setWeatherForecast((prev) => ({ ...prev, loading: false }));
-      }
-    };
-
-    fetchWeather();
+    fetchWeatherForecast();
 
     return () => {
-      cancelled = true;
-      controller.abort();
+      forecastAbortControllerRef.current?.abort();
     };
-  }, [isVerified]);
+  }, [fetchWeatherForecast, isVerified]);
 
   useEffect(() => {
     const updateVoices = () => {
@@ -2519,6 +2535,7 @@ const ItineraryApp = ({ authentication }) => {
       hourly: forecast.hourly,
       daily: forecast,
       loading: weatherForecast.loading,
+      updatedAt: weatherForecast.updatedAt,
     };
   }, [activeDay, userWeather, weatherForecast]);
 
@@ -3206,6 +3223,8 @@ const ItineraryApp = ({ authentication }) => {
 
         {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
         <div
+          aria-hidden={!showWeatherDetail || !detailWeatherData}
+          inert={!showWeatherDetail || !detailWeatherData}
           className={`fixed inset-0 z-[999] flex flex-col items-center justify-center overscroll-contain bg-black/60 backdrop-blur-sm p-4 transition-[opacity] duration-300 ${
             showWeatherDetail && detailWeatherData
               ? "opacity-100 pointer-events-auto"
@@ -3249,11 +3268,19 @@ const ItineraryApp = ({ authentication }) => {
                     isDarkMode={isDarkMode}
                     theme={currentTheme}
                     onClose={handleWeatherDetailClose}
-                    onRefresh={() => {
+                    onRefresh={async () => {
                       if (activeDay === -1) {
-                        getUserLocationWeather({ isSilent: false });
+                        await getUserLocationWeather({ isSilent: false });
                       } else {
-                        showToast("已更新預報資訊");
+                        const refreshed = await fetchWeatherForecast({
+                          showLoading: true,
+                        });
+                        showToast(
+                          refreshed
+                            ? "天氣預報已更新"
+                            : "無法更新天氣預報，已保留原有資料",
+                          refreshed ? "success" : "error",
+                        );
                       }
                     }}
                     advice={(() => {

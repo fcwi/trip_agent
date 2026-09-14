@@ -42,6 +42,32 @@ import {
 } from "../utils/currencyFormatter.js";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import { logger } from "../utils/logger.js";
+import {
+  enqueuePendingDelete,
+  mergeFinanceRecords,
+  normalizeFinanceRecordId,
+  removePendingDelete,
+} from "../utils/financeSync.js";
+import { shouldSubmitTextInput } from "../utils/keyboard.js";
+
+const PENDING_DELETES_STORAGE_KEY = "finance-pending-deletes";
+
+const readPendingDeletes = () => {
+  try {
+    const value = tripStorage.getItem(PENDING_DELETES_STORAGE_KEY);
+    return value ? JSON.parse(value) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writePendingDeletes = (queue) => {
+  if (queue.length === 0) {
+    tripStorage.removeItem(PENDING_DELETES_STORAGE_KEY);
+    return;
+  }
+  tripStorage.setItem(PENDING_DELETES_STORAGE_KEY, JSON.stringify(queue));
+};
 
 // 預設頭像列表
 const AVATARS = [
@@ -188,6 +214,7 @@ const FinanceScreen = ({
   const [setupAvatar, setSetupAvatar] = useState(AVATARS[0]);
   const [mode, setMode] = useState("finance");
   const [records, setRecords] = useState([]);
+  const recordsRef = useRef(records);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false); // 🆕 頭像選單狀態
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // 🆕 選單位置
@@ -200,6 +227,10 @@ const FinanceScreen = ({
     showLocationConsent,
     () => setShowLocationConsent(false),
   );
+
+  useEffect(() => {
+    recordsRef.current = records;
+  }, [records]);
 
   // --- 1.5 位置追蹤狀態 ---
   const [enableLocationTracking, setEnableLocationTracking] = useState(() => {
@@ -411,6 +442,24 @@ const FinanceScreen = ({
       if (!isBackground) setIsSyncing(true);
 
       try {
+        let pendingDeletes = readPendingDeletes();
+        for (const pendingDelete of pendingDeletes) {
+          try {
+            await uploadToGAS(
+              { action: "delete", ...pendingDelete },
+              gasUrl,
+              gasToken,
+            );
+            pendingDeletes = removePendingDelete(
+              pendingDeletes,
+              pendingDelete.id,
+            );
+          } catch (error) {
+            logger.debug("待刪除記錄仍無法同步", pendingDelete.id, error);
+          }
+        }
+        writePendingDeletes(pendingDeletes);
+
         const cloudRecords = await fetchFromGAS(gasUrl, gasToken);
         if (cloudRecords && Array.isArray(cloudRecords)) {
           // 將日期轉換為本地時間 YYYY/M/D 格式
@@ -446,18 +495,73 @@ const FinanceScreen = ({
           formatted.sort(
             (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
           );
-          setRecords(formatted);
+          let mergedRecords = mergeFinanceRecords({
+            cloudRecords: formatted,
+            localRecords: recordsRef.current,
+            pendingDeletes,
+          });
+          const cloudRecordIds = new Set(
+            formatted.map((record) => normalizeFinanceRecordId(record.id)),
+          );
+
+          for (let index = 0; index < mergedRecords.length; index += 1) {
+            const record = mergedRecords[index];
+            if (record.synced === true) continue;
+
+            const recordId = normalizeFinanceRecordId(record.id);
+            const action = cloudRecordIds.has(recordId) ? "edit" : "add";
+            let imageBase64 =
+              typeof record.image === "string" &&
+              record.image.startsWith("data:image")
+                ? record.image
+                : null;
+
+            if (action === "add" && !imageBase64 && record.hasCloudImage) {
+              const cachedImages =
+                await financeDB.getImagesByRecordId(recordId);
+              imageBase64 = cachedImages?.[0]?.data || null;
+            }
+
+            try {
+              await uploadToGAS(
+                {
+                  ...record,
+                  id: recordId,
+                  action,
+                  image: undefined,
+                  imageBase64,
+                  item: record.content,
+                  store: record.content?.split("-")[0]?.trim() || "",
+                  userName: record.user?.name || user?.name || "未知",
+                  userAvatar: record.user?.avatar || user?.avatar || "👤",
+                },
+                gasUrl,
+                gasToken,
+              );
+              mergedRecords[index] = {
+                ...record,
+                id: recordId,
+                synced: true,
+                syncAction: null,
+              };
+            } catch (error) {
+              logger.debug("本機記錄仍待同步", recordId, error);
+            }
+          }
+
+          recordsRef.current = mergedRecords;
+          setRecords(mergedRecords);
 
           // 同時保存到 IndexedDB
           try {
-            await financeDB.saveRecords(formatted);
+            await financeDB.saveRecords(mergedRecords);
 
             // 🆕 清理孤立的圖片快取（被刪除記錄的圖片）
-            const validRecordIds = formatted.map((r) => r.id);
+            const validRecordIds = mergedRecords.map((r) => r.id);
             await financeDB.cleanOrphanedImages(validRecordIds);
 
             // 🆕 快取圖片到 IndexedDB（背景執行，快取完成後立即更新 UI）
-            const recordsWithImages = formatted.filter(
+            const recordsWithImages = mergedRecords.filter(
               (r) =>
                 r.image &&
                 typeof r.image === "string" &&
@@ -562,7 +666,17 @@ const FinanceScreen = ({
             console.error("保存到 IndexedDB 失敗:", error);
           }
 
-          if (!isBackground) showToast("資料同步完成");
+          if (!isBackground) {
+            const unsyncedCount = mergedRecords.filter(
+              (record) => record.synced !== true,
+            ).length;
+            showToast(
+              unsyncedCount > 0
+                ? `雲端資料已更新，仍有 ${unsyncedCount} 筆本機變更待同步`
+                : "資料同步完成",
+              unsyncedCount > 0 ? "info" : "success",
+            );
+          }
         }
       } catch (e) {
         console.error("Sync error:", e);
@@ -571,12 +685,12 @@ const FinanceScreen = ({
         if (!isBackground) setIsSyncing(false);
       }
     },
-    [gasUrl, gasToken, showToast, fetchImageAsBase64],
+    [gasUrl, gasToken, showToast, fetchImageAsBase64, user],
   );
 
   // 保存記錄到 IndexedDB（主要存儲）
   useEffect(() => {
-    if (!isDBReady || records.length === 0) return;
+    if (!isDBReady) return;
 
     const debounceTimer = setTimeout(() => {
       try {
@@ -1003,6 +1117,7 @@ const FinanceScreen = ({
       image: imageBase64, // 臨時顯示，等 IndexedDB 儲存完成
       hasCloudImage: !!imageBase64,
       synced: false,
+      syncAction: "add",
     };
 
     // ✅ 儲存到 IndexedDB
@@ -1033,7 +1148,11 @@ const FinanceScreen = ({
       )
         .then(() => {
           setRecords((prev) =>
-            prev.map((r) => (r.id === newItem.id ? { ...r, synced: true } : r)),
+            prev.map((r) =>
+              r.id === newItem.id
+                ? { ...r, synced: true, syncAction: null }
+                : r,
+            ),
           );
         })
         .catch((err) => console.error("Upload failed", err));
@@ -1243,6 +1362,17 @@ const FinanceScreen = ({
   const handleDelete = async (id, type) => {
     if (!window.confirm("確定要刪除這筆紀錄嗎？(連動雲端刪除)")) return;
 
+    const normalizedId = normalizeFinanceRecordId(id);
+    const record = recordsRef.current.find(
+      (item) => normalizeFinanceRecordId(item.id) === normalizedId,
+    );
+    const shouldDeleteFromCloud = record?.syncAction !== "add";
+    if (shouldDeleteFromCloud) {
+      writePendingDeletes(
+        enqueuePendingDelete(readPendingDeletes(), { id: normalizedId, type }),
+      );
+    }
+
     // ✅ 刪除 IndexedDB 中的記錄和圖片
     try {
       await financeDB.deleteRecord(id);
@@ -1250,13 +1380,26 @@ const FinanceScreen = ({
       console.error("從 IndexedDB 刪除失敗:", err);
     }
 
-    setRecords((prev) => prev.filter((r) => r.id !== id));
-    if (gasUrl && gasToken) {
-      uploadToGAS(
-        { action: "delete", id: id, type: type },
-        gasUrl,
-        gasToken,
-      ).catch(() => showToast("雲端刪除失敗", "error"));
+    setRecords((prev) => {
+      const nextRecords = prev.filter(
+        (item) => normalizeFinanceRecordId(item.id) !== normalizedId,
+      );
+      recordsRef.current = nextRecords;
+      return nextRecords;
+    });
+    if (gasUrl && gasToken && shouldDeleteFromCloud) {
+      try {
+        await uploadToGAS(
+          { action: "delete", id: normalizedId, type },
+          gasUrl,
+          gasToken,
+        );
+        writePendingDeletes(
+          removePendingDelete(readPendingDeletes(), normalizedId),
+        );
+      } catch {
+        showToast("已從本機刪除，恢復連線後會重試雲端刪除", "error");
+      }
     }
   };
 
@@ -1298,6 +1441,7 @@ const FinanceScreen = ({
           twdAmount: newTwdAmount,
           targetAmount: newTwdAmount,
           synced: false,
+          syncAction: r.syncAction === "add" ? "add" : "edit",
         };
       }
       return r;
@@ -1327,7 +1471,9 @@ const FinanceScreen = ({
 
         setRecords((prev) =>
           prev.map((r) =>
-            r.id === editingRecord.id ? { ...r, synced: true } : r,
+            r.id === editingRecord.id
+              ? { ...r, synced: true, syncAction: null }
+              : r,
           ),
         );
         showToast("同步更新成功");
@@ -2102,16 +2248,14 @@ const FinanceScreen = ({
                     e.target.style.height = `${Math.min(e.target.scrollHeight, 40)}px`;
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
+                    if (shouldSubmitTextInput(e)) {
                       e.preventDefault();
                       handleManualSubmit();
                       e.target.style.height = "auto";
                     }
                   }}
                   rows={1}
-                  placeholder={
-                    mode === "finance" ? "項目說明..." : "記事內容..."
-                  }
+                  placeholder={mode === "finance" ? "項目說明…" : "記事內容…"}
                   style={{ fontSize: "16px" }}
                   className={`flex-1 min-w-0 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 resize-none max-h-[40px] leading-snug
                             ${isDarkMode ? "text-white placeholder:text-neutral-400" : "text-stone-700 placeholder:text-stone-400"}`}

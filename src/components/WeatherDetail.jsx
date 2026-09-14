@@ -15,6 +15,7 @@ import {
   Moon,
   Sunrise,
   Sunset,
+  RefreshCw,
 } from "lucide-react";
 
 // ... (formatHour, formatDay 函式保持不變) ...
@@ -183,6 +184,7 @@ const WeatherDetail = ({
   simulatedDate = new Date(),
   loading = false,
   onClose,
+  onRefresh,
   advice,
   isDarkMode = false,
   theme, // 外部傳入的主題配置
@@ -306,6 +308,13 @@ const WeatherDetail = ({
   }, [weather, theme]);
 
   const themeClass = isDarkMode ? "theme-dark" : "theme-light";
+  const updatedLabel = weather?.updatedAt
+    ? `更新於 ${new Date(weather.updatedAt).toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}`
+    : "尚無更新時間";
 
   return (
     <div className={`weather-card ${themeClass}`}>
@@ -322,6 +331,9 @@ const WeatherDetail = ({
               )}
             </span>
           </div>
+          <span className="wc-updated-at" aria-live="polite">
+            {isLoading ? "更新中…" : updatedLabel}
+          </span>
           <div className="wc-temp-row">
             <div className="wc-temp-big">
               {isLoading ? (
@@ -357,7 +369,21 @@ const WeatherDetail = ({
         </div>
 
         <div className="wc-header-actions">
-          <button className="wc-icon-btn close" onClick={onClose} title="關閉">
+          <button
+            type="button"
+            className="wc-icon-btn"
+            onClick={onRefresh}
+            disabled={isLoading}
+            aria-label={isLoading ? "正在更新天氣" : "重新整理天氣"}
+          >
+            <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+          </button>
+          <button
+            type="button"
+            className="wc-icon-btn close"
+            onClick={onClose}
+            aria-label="關閉天氣詳情"
+          >
             <X size={18} />
           </button>
         </div>

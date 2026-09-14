@@ -328,40 +328,18 @@ export const financeDB = {
   async saveRecords(records) {
     const db = this.dbInstance || (await this.init());
 
-    // 第一步：先清除所有舊記錄
-    await new Promise((resolve, reject) => {
-      const clearTx = db.transaction("records", "readwrite");
-      const clearStore = clearTx.objectStore("records");
-      const clearRequest = clearStore.clear();
-
-      clearRequest.onsuccess = () => resolve();
-      clearRequest.onerror = () => reject(clearRequest.error);
-    });
-
-    // 第二步：保存新記錄
-    if (records.length === 0) {
-      return Promise.resolve();
-    }
-
     return new Promise((resolve, reject) => {
       const tx = db.transaction("records", "readwrite");
       const store = tx.objectStore("records");
-      let completed = 0;
-      const total = records.length;
+      const clearRequest = store.clear();
 
-      records.forEach((record) => {
-        // 圖片處理邏輯已在調用端處理 (FinanceNote.jsx 會只保留 URL)，這裡直接儲存
-        const request = store.put(record);
-
-        request.onsuccess = () => {
-          completed++;
-          if (completed === total) {
-            tx.oncomplete = () => resolve();
-          }
-        };
-
-        request.onerror = () => reject(request.error);
-      });
+      clearRequest.onsuccess = () => {
+        records.forEach((record) => store.put(record));
+      };
+      clearRequest.onerror = () => tx.abort();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("保存記帳資料失敗"));
+      tx.onabort = () => reject(tx.error || new Error("保存記帳資料已取消"));
     });
   },
 

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const TEST_PASSWORD = "trip-e2e-password";
+const pageErrors = new WeakMap();
 
 const blockExternalRequests = async (page) => {
   await page.route("**/*", async (route) => {
@@ -22,10 +23,19 @@ const unlockTrip = async (page) => {
 };
 
 test.beforeEach(async ({ page }) => {
+  const errors = [];
+  pageErrors.set(page, errors);
   page.on("pageerror", (error) => {
-    console.error(`[pageerror] ${error.message}`);
+    errors.push(error.message);
   });
   await blockExternalRequests(page);
+});
+
+test.afterEach(async ({ page }) => {
+  expect(
+    pageErrors.get(page) ?? [],
+    "unexpected browser runtime errors",
+  ).toEqual([]);
 });
 
 test("keeps authenticated application code behind the lock screen", async ({

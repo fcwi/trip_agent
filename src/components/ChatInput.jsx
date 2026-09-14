@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Camera, X, Mic, Send } from "lucide-react";
+import { shouldSubmitTextInput } from "../utils/keyboard.js";
 
 const ChatInput = ({
   inputMessage,
@@ -226,7 +227,7 @@ const ChatInput = ({
                 e.target.style.height = `${Math.min(e.target.scrollHeight, 80)}px`;
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (shouldSubmitTextInput(e)) {
                   e.preventDefault();
                   onSendMessage();
                   e.target.style.height = "auto";
