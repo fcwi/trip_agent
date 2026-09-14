@@ -1,9 +1,19 @@
-import { fetchJson } from "./api.js";
+import { fetchGasWithRetry } from "./api.js";
 import {
   addGasTripContextToPayload,
   addGasTripContextToUrl,
 } from "./gasTripContextCore.js";
 import { GasResponseError, requireGasSuccess } from "./gasResponse.js";
+
+const requestGas = async (url, options) => {
+  const { fetchImpl, signal, timeoutMs = 20000, ...fetchOptions } = options;
+  return fetchGasWithRetry(url, {
+    ...fetchOptions,
+    signal,
+    timeoutMs,
+    ...(fetchImpl ? { fetchImpl } : {}),
+  });
+};
 
 export const uploadToGasWithContext = async ({
   data,
@@ -22,13 +32,12 @@ export const uploadToGasWithContext = async ({
     token: gasToken,
   };
   try {
-    const result = await fetchJson(gasUrl, {
+    const result = await requestGas(gasUrl, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
       signal,
-      timeoutMs: 20000,
-      ...(fetchImpl ? { fetchImpl } : {}),
+      fetchImpl,
     });
     return requireGasSuccess(result, [gasToken, gasUrl]);
   } catch (error) {
@@ -39,10 +48,11 @@ export const uploadToGasWithContext = async ({
   }
 };
 
-export const fetchFromGasWithContext = async ({
+const fetchGasAction = async ({
   gasUrl,
   gasToken,
   context,
+  action,
   signal,
   fetchImpl,
 }) => {
@@ -50,13 +60,12 @@ export const fetchFromGasWithContext = async ({
 
   const requestUrl = new URL(gasUrl);
   requestUrl.searchParams.set("token", gasToken);
-  requestUrl.searchParams.set("action", "getAll");
+  requestUrl.searchParams.set("action", action);
   const url = addGasTripContextToUrl(requestUrl.toString(), context);
-  const result = await fetchJson(url, {
+  const result = await requestGas(url, {
     method: "GET",
     signal,
-    timeoutMs: 20000,
-    ...(fetchImpl ? { fetchImpl } : {}),
+    fetchImpl,
   });
   requireGasSuccess(result, [gasToken, gasUrl]);
   if (!Array.isArray(result.data)) {
@@ -64,3 +73,9 @@ export const fetchFromGasWithContext = async ({
   }
   return result.data;
 };
+
+export const fetchFromGasWithContext = (options) =>
+  fetchGasAction({ ...options, action: "getAll" });
+
+export const fetchLocationsFromGasWithContext = (options) =>
+  fetchGasAction({ ...options, action: "getLocations" });

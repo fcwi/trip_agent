@@ -40,10 +40,7 @@ const BottomNav = ({
   };
 
   return (
-    <nav
-      aria-label="主要功能"
-      className="fixed bottom-3 left-1/2 z-50 w-auto -translate-x-1/2 pb-[env(safe-area-inset-bottom)]"
-    >
+    <nav aria-label="主要功能" className="relative z-50 w-auto">
       <div
         className={`flex h-[60px] items-center gap-1 rounded-full border px-3 shadow-xl backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-300 ${
           isDarkMode

@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FlightInfoCard from "../FlightInfoCard.jsx";
 import ChecklistCard from "../ChecklistCard.jsx";
 import WeatherCard from "../WeatherCard.jsx";
+import { getItineraryChipLabel } from "../../utils/itineraryHelpers.js";
 
 const DayMap = lazy(() => import("../DayMap.jsx"));
 
@@ -287,7 +288,7 @@ const ItineraryTab = ({
                   : `${theme.navBtnStyle} ${theme.textSec} hover:bg-stone-200/90 hover:shadow-md`
               }`}
           >
-            {data.day} · {data.date?.split(" ")[0] || data.date}
+            {getItineraryChipLabel(data)}
           </button>
         ))}
       </div>

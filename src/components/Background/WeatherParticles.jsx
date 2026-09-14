@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import { tripConfig } from "@trip-data";
-import { WEATHER_PARTICLE_COUNTS } from "../../utils/weatherParticleConfig.js";
+import { getWeatherParticleCount } from "../../utils/weatherParticleConfig.js";
 
 class Particle {
   constructor(canvas, ctx, type, isDay) {
@@ -163,12 +163,24 @@ const WeatherParticles = memo(({ type, isDay }) => {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
+  const [isNarrowViewport, setIsNarrowViewport] = useState(
+    () => window.matchMedia("(max-width: 640px), (pointer: coarse)").matches,
+  );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleChange = (event) => setPrefersReducedMotion(event.matches);
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const viewportQuery = window.matchMedia(
+      "(max-width: 640px), (pointer: coarse)",
+    );
+    const handleMotionChange = (event) =>
+      setPrefersReducedMotion(event.matches);
+    const handleViewportChange = (event) => setIsNarrowViewport(event.matches);
+    motionQuery.addEventListener("change", handleMotionChange);
+    viewportQuery.addEventListener("change", handleViewportChange);
+    return () => {
+      motionQuery.removeEventListener("change", handleMotionChange);
+      viewportQuery.removeEventListener("change", handleViewportChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -189,7 +201,7 @@ const WeatherParticles = memo(({ type, isDay }) => {
     window.addEventListener("resize", resize);
     resize();
 
-    const count = WEATHER_PARTICLE_COUNTS[type] ?? 0;
+    const count = getWeatherParticleCount(type, { isNarrowViewport });
     for (let i = 0; i < count; i++) {
       particles.push(new Particle(canvas, ctx, type, isDay));
     }
@@ -234,7 +246,7 @@ const WeatherParticles = memo(({ type, isDay }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       pauseAnimation();
     };
-  }, [type, isDay, prefersReducedMotion]);
+  }, [type, isDay, prefersReducedMotion, isNarrowViewport]);
 
   if (!type || type === "clouds" || prefersReducedMotion) return null;
   return (

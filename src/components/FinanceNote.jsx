@@ -2234,16 +2234,20 @@ const FinanceScreen = ({
                         {record.user.name === user.name && (
                           <div className="flex flex-col justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button
+                              type="button"
                               onClick={() => startEditing(record)}
+                              aria-label="編輯紀錄"
                               className={`p-2 rounded-full border transition-colors shadow-sm ${isDarkMode ? "bg-neutral-800 border-neutral-700 hover:text-sky-400 hover:border-sky-500" : "bg-white border-stone-200 hover:text-sky-600 hover:border-sky-400"}`}
                               title="編輯"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() =>
                                 handleDelete(record.id, record.type)
                               }
+                              aria-label="刪除紀錄"
                               className={`p-2 rounded-full border transition-colors shadow-sm ${isDarkMode ? "bg-neutral-800 border-neutral-700 hover:text-red-400 hover:border-red-500" : "bg-white border-stone-200 hover:text-red-600 hover:border-red-400"}`}
                               title="刪除"
                             >
@@ -2367,6 +2371,8 @@ const FinanceScreen = ({
 
               {/* 發送按鈕 */}
               <button
+                type="button"
+                aria-label="送出紀錄"
                 onClick={() => {
                   handleManualSubmit();
                   const textarea = document.querySelector("textarea");

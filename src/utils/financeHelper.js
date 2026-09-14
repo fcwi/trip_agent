@@ -140,44 +140,40 @@ export const uploadToGAS = async (data, gasUrl, gasToken, signal) => {
 export const fetchFromGAS = async (gasUrl, gasToken, signal) => {
   if (!gasUrl || !gasToken) return [];
 
-  try {
-    const records = await fetchFromGasWithContext({
-      gasUrl,
-      gasToken,
-      context: gasTripContext,
-      signal,
-    });
+  const records = await fetchFromGasWithContext({
+    gasUrl,
+    gasToken,
+    context: gasTripContext,
+    signal,
+  });
 
-    return records.map((item) => {
-      // ★ 修正 2：強效解析使用者資料
-      // 目標：解決截圖中顯示 {"name":"阿溫"...} 的問題
-      let parsedUser = { name: "未知", avatar: "👤" };
+  return records.map((item) => {
+    // ★ 修正 2：強效解析使用者資料
+    // 目標：解決截圖中顯示 {"name":"阿溫"...} 的問題
+    let parsedUser = { name: "未知", avatar: "👤" };
 
-      try {
-        // 情況 A: item.user 已經是正確的物件 (GAS 端解析成功)
-        if (typeof item.user === "object" && item.user !== null) {
-          parsedUser = item.user;
-        }
-        // 情況 B: item.user 是 JSON 字串 (GAS 端回傳原始字串)
-        else if (typeof item.user === "string" && item.user.startsWith("{")) {
-          parsedUser = JSON.parse(item.user);
-        }
-        // 情況 C: item.user 是舊資料 (只有純名字字串)
-        else {
-          parsedUser = { name: String(item.user), avatar: "👤" };
-        }
-      } catch {
-        // 解析失敗，當作純名字處理
+    try {
+      // 情況 A: item.user 已經是正確的物件 (GAS 端解析成功)
+      if (typeof item.user === "object" && item.user !== null) {
+        parsedUser = item.user;
+      }
+      // 情況 B: item.user 是 JSON 字串 (GAS 端回傳原始字串)
+      else if (typeof item.user === "string" && item.user.startsWith("{")) {
+        parsedUser = JSON.parse(item.user);
+      }
+      // 情況 C: item.user 是舊資料 (只有純名字字串)
+      else {
         parsedUser = { name: String(item.user), avatar: "👤" };
       }
+    } catch {
+      // 解析失敗，當作純名字處理
+      parsedUser = { name: String(item.user), avatar: "👤" };
+    }
 
-      return {
-        ...item,
-        date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
-        user: parsedUser,
-      };
-    });
-  } catch (error) {
-    throw error;
-  }
+    return {
+      ...item,
+      date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
+      user: parsedUser,
+    };
+  });
 };

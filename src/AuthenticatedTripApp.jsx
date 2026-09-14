@@ -1,10 +1,9 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { fetchGasWithRetry } from "./utils/api";
 import {
-  withGasTripContext,
-  withGasTripContextUrl,
-} from "./utils/gasTripContext.js";
-import { requireGasSuccess } from "./utils/gasResponse.js";
+  fetchLocationsFromGasWithContext,
+  uploadToGasWithContext,
+} from "./utils/gasClient.js";
+import { gasTripContext } from "./utils/gasTripContext.js";
 import {
   getNextAiLoadingText,
   buildAiChatPayload,
@@ -1067,6 +1066,14 @@ const ItineraryApp = ({ authentication }) => {
       };
     }, [isTestMode, testDateTime, frozenTestDateTime]);
 
+  const didAutoFocusTripDayRef = useRef(false);
+  useEffect(() => {
+    if (didAutoFocusTripDayRef.current) return;
+    if (tripStatus !== "during" || currentTripDayIndex < 0) return;
+    didAutoFocusTripDayRef.current = true;
+    changeDay(currentTripDayIndex);
+  }, [changeDay, currentTripDayIndex, tripStatus]);
+
   // 🆕 使用者狀態 (用於後台定位記錄)
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRef = useRef(null);
@@ -1203,34 +1210,26 @@ const ItineraryApp = ({ authentication }) => {
         }
       };
 
-      // 4. 準備資料
-      const payload = withGasTripContext({
-        type: "location",
-        token: currentGasToken,
-        id: crypto.randomUUID(),
-        userName: user.name,
-        userAvatar: user.avatar,
-        lat: weatherData.lat,
-        lon: weatherData.lon,
-        accuracy: accuracy, // High, Low, Cache
-        device: getDeviceInfo(),
-      });
-
-      // 4. 發送 (優化 Fetch 設定)
       try {
-        // 使用 fetchGasWithRetry 處理 GAS 的 Busy 狀態與重試
-        fetchGasWithRetry(currentGasUrl, {
-          method: "POST",
-          redirect: "follow",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8",
+        uploadToGasWithContext({
+          data: {
+            action: "add",
+            type: "location",
+            id: crypto.randomUUID(),
+            userName: user.name,
+            userAvatar: user.avatar,
+            lat: weatherData.lat,
+            lon: weatherData.lon,
+            accuracy: accuracy,
+            device: getDeviceInfo(),
           },
-          body: JSON.stringify(payload),
+          gasUrl: currentGasUrl,
+          gasToken: currentGasToken,
+          context: gasTripContext,
         })
-          .then((result) => {
-            requireGasSuccess(result, [currentGasToken, currentGasUrl]);
-            debugLog("📍 Location log sent successfully (with retry)");
-          })
+          .then(() =>
+            debugLog("📍 Location log sent successfully (with retry)"),
+          )
           .catch((e) =>
             console.error("Location log send failed after retries", e),
           );
@@ -1255,22 +1254,17 @@ const ItineraryApp = ({ authentication }) => {
       isFetchingLocationsRef.current = true; // 上鎖
       debugLog("📍 [App] 正在獲取其他使用者位置...");
 
-      const requestUrl = new URL(gasUrl);
-      requestUrl.searchParams.set("token", gasToken);
-      requestUrl.searchParams.set("action", "getLocations");
-      const url = withGasTripContextUrl(requestUrl.toString());
-      const result = await fetchGasWithRetry(url);
-      requireGasSuccess(result, [gasToken, gasUrl]);
-
-      if (Array.isArray(result.data)) {
-        // 過濾掉自己，避免自己同時出現在「使用者位置」和「其他使用者」
-        const me = currentUserRef.current?.name;
-        const others = me
-          ? result.data.filter((loc) => loc.user?.name !== me)
-          : result.data;
-        debugLog("✅ [App] 獲取其他使用者位置成功:", others.length);
-        setOtherUsersLocations(others);
-      }
+      const locations = await fetchLocationsFromGasWithContext({
+        gasUrl,
+        gasToken,
+        context: gasTripContext,
+      });
+      const me = currentUserRef.current?.name;
+      const others = me
+        ? locations.filter((loc) => loc.user?.name !== me)
+        : locations;
+      debugLog("✅ [App] 獲取其他使用者位置成功:", others.length);
+      setOtherUsersLocations(others);
     } catch (e) {
       console.error("📍 [App] 獲取其他使用者位置失敗:", e);
     } finally {
@@ -2854,24 +2848,26 @@ const ItineraryApp = ({ authentication }) => {
           showToast={showToast}
         />
 
-        {/* --- 底部導覽列 (Bottom Navigation) --- */}
-        <BottomNav
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onTabPreload={preloadTab}
-          handleInterruptClick={() => {}} // 空函式，因為原函式不存在
-          isDarkMode={isDarkMode}
-          theme={currentTheme}
-        />
-
-        <TripToolsMenu
-          isDarkMode={isDarkMode}
-          isSharing={isSharing}
-          locationSource={locationSource}
-          hasLocationPermission={hasLocationPermission}
-          onShareLocation={handleShareLocation}
-          onOpenCalculator={handleCalculatorOpen}
-        />
+        <div className="fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-end gap-2">
+            <BottomNav
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onTabPreload={preloadTab}
+              handleInterruptClick={() => {}}
+              isDarkMode={isDarkMode}
+              theme={currentTheme}
+            />
+            <TripToolsMenu
+              isDarkMode={isDarkMode}
+              isSharing={isSharing}
+              locationSource={locationSource}
+              hasLocationPermission={hasLocationPermission}
+              onShareLocation={handleShareLocation}
+              onOpenCalculator={handleCalculatorOpen}
+            />
+          </div>
+        </div>
 
         {/* 匯率計算機彈窗 */}
         {isCalculatorOpen && (

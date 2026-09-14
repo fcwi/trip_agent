@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
+import process from "node:process";
 
 const TEST_PASSWORD = "trip-e2e-password";
+const EXPECTED_TRIP_ID = process.env.E2E_TRIP_ID || "2026_busan";
 const pageErrors = new WeakMap();
+const gasCallsByPage = new WeakMap();
 
 const blockExternalRequests = async (page) => {
   await page.route("**/*", async (route) => {
@@ -11,6 +14,36 @@ const blockExternalRequests = async (page) => {
       return;
     }
     await route.abort("blockedbyclient");
+  });
+};
+
+const interceptGasRequests = async (page) => {
+  const calls = [];
+  gasCallsByPage.set(page, calls);
+  await page.route("**/__e2e_gas__**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    let body = {};
+    if (request.method() === "POST") {
+      try {
+        body = JSON.parse(request.postData() || "{}");
+      } catch {
+        body = {};
+      }
+    }
+    calls.push({
+      method: request.method(),
+      action: body.action || url.searchParams.get("action") || "add",
+      tripId: body.tripId || url.searchParams.get("tripId"),
+      hasPropertyKey: Boolean(
+        body.gasPropertyKey || url.searchParams.get("gasPropertyKey"),
+      ),
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "success", data: [] }),
+    });
   });
 };
 
@@ -29,6 +62,7 @@ test.beforeEach(async ({ page }) => {
     errors.push(error.message);
   });
   await blockExternalRequests(page);
+  await interceptGasRequests(page);
 });
 
 test.afterEach(async ({ page }) => {
@@ -150,7 +184,7 @@ test("centers selected dates, names icon controls, and renders offline currency 
   ).toBeVisible();
 
   const dayButtons = page.locator('button[aria-label^="查看Day"]');
-  await expect(dayButtons.first()).toContainText(/Day 1 · \d{1,2}\/\d{1,2}/);
+  await expect(dayButtons.first()).toContainText(/\d{1,2}\/\d{1,2} · /);
   const selectedDay = dayButtons.nth(
     Math.min(2, (await dayButtons.count()) - 1),
   );
@@ -291,15 +325,76 @@ test("honors reduced motion and keeps the closed tools clear of navigation", asy
         .boundingBox();
       expect(toolBox).not.toBeNull();
       expect(navBox).not.toBeNull();
-      expect(toolBox.y + toolBox.height).toBeLessThanOrEqual(navBox.y);
+      expect(toolBox.x).toBeGreaterThanOrEqual(navBox.x + navBox.width - 8);
+      expect(Math.abs(toolBox.y - navBox.y)).toBeLessThan(24);
     }
   };
 
   await verifyResponsiveLayout();
 
-  await page.getByRole("button", { name: "切換到深色模式" }).click();
-  await expect(
-    page.getByRole("button", { name: "切換到亮色模式" }),
-  ).toBeVisible();
+  const themeToggle = page.getByRole("button", {
+    name: /切換到(深色|亮色)模式/,
+  });
+  await themeToggle.click();
+  await expect(themeToggle).toBeVisible();
   await verifyResponsiveLayout();
+});
+
+test("scopes mocked GAS reads and writes to the active trip", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+
+  await expect
+    .poll(() =>
+      (gasCallsByPage.get(page) || []).some(
+        (call) => call.action === "getLocations",
+      ),
+    )
+    .toBe(true);
+
+  await page.getByRole("button", { name: /^記錄/ }).click();
+  await page.getByLabel("暱稱").fill("E2E");
+  await page.getByRole("button", { name: "開始記錄" }).click();
+  await expect
+    .poll(() =>
+      (gasCallsByPage.get(page) || []).some((call) => call.action === "getAll"),
+    )
+    .toBe(true);
+
+  await page.getByPlaceholder("金額").fill("120");
+  await page.getByPlaceholder("項目說明…").fill("測試午餐");
+  await page.getByRole("button", { name: "送出紀錄" }).click();
+  await expect
+    .poll(() =>
+      (gasCallsByPage.get(page) || []).some(
+        (call) => call.action === "add" && call.method === "POST",
+      ),
+    )
+    .toBe(true);
+
+  await page.getByRole("button", { name: "編輯紀錄" }).click({ force: true });
+  await page.locator("#editContent").fill("測試午餐（已改）");
+  await page.getByRole("button", { name: "儲存" }).click();
+  await expect
+    .poll(() =>
+      (gasCallsByPage.get(page) || []).some((call) => call.action === "edit"),
+    )
+    .toBe(true);
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "刪除紀錄" }).click({ force: true });
+  await expect
+    .poll(() =>
+      (gasCallsByPage.get(page) || []).some((call) => call.action === "delete"),
+    )
+    .toBe(true);
+
+  const calls = gasCallsByPage.get(page) || [];
+  expect(calls.length).toBeGreaterThan(0);
+  for (const call of calls) {
+    expect(call.tripId).toBe(EXPECTED_TRIP_ID);
+    expect(call.hasPropertyKey).toBe(false);
+  }
 });

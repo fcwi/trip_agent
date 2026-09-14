@@ -62,15 +62,12 @@ export default function TripToolsMenu({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] right-[max(1rem,env(safe-area-inset-right))] z-[70] flex flex-col items-end gap-2"
-    >
+    <div ref={containerRef} className="relative z-[70] flex flex-col items-end">
       <div
         id="trip-tools-panel"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`flex origin-bottom-right flex-col gap-2 rounded-2xl border p-2 shadow-xl backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 ${panelClasses} ${
+        className={`absolute bottom-full right-0 mb-2 flex origin-bottom-right flex-col gap-2 rounded-2xl border p-2 shadow-xl backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 ${panelClasses} ${
           isOpen
             ? "visible translate-y-0 scale-100 opacity-100"
             : "invisible translate-y-2 scale-95 opacity-0"
