@@ -5,7 +5,7 @@
 如果專案已經有 `.env`，請保留原檔與其中的 API／加密設定，只新增或修改以下旅程設定：
 
 ```env
-VITE_TRIP_ID=2026_karuizawa
+VITE_TRIP_ID=2027_tohoku
 VITE_BASE_PATH=/trip_agent/
 VITE_PUBLIC_SITE_URL=https://example.com/trip_agent/
 ```
@@ -65,9 +65,12 @@ npm run check
 
 GAS 讀取（記帳 `getAll`、位置 `getLocations`）改為 POST，token 放在 body，不再出現在 URL。Apps Script 的 `doPost` 需能辨識 `{ type: "query", action, token, tripId }`，且不可把這類請求當成新紀錄寫入。
 
-前端每次請求都會帶目前建置的 `VITE_TRIP_ID`（例如 `2026_busan`），以及對應的指令碼屬性名稱 `gasPropertyKey`。預設屬性名是 `trip_agent_{VITE_TRIP_ID}`：
+前端每次請求都會帶目前建置的 `VITE_TRIP_ID`（例如 `2027_tohoku`），以及對應的指令碼屬性名稱 `gasPropertyKey`。預設屬性名是 `trip_agent_{VITE_TRIP_ID}`：
 
 ```
+名稱：trip_agent_2027_tohoku
+值：{"spreadsheetId":"試算表ID","folderId":"資料夾ID"}
+
 名稱：trip_agent_2026_busan
 值：{"spreadsheetId":"試算表ID","folderId":"資料夾ID"}
 

@@ -28,6 +28,7 @@ jobs:
         trip:
           - 2026_busan
           - 2026_karuizawa
+          - 2027_tohoku
     env:
       VITE_TRIP_ID: ${{ matrix.trip }}
     steps:
@@ -50,6 +51,7 @@ jobs:
         trip:
           - 2026_busan
           - 2026_karuizawa
+          - 2027_tohoku
     env:
       E2E_TRIP_ID: ${{ matrix.trip }}
     steps:

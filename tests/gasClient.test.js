@@ -35,6 +35,7 @@ test("GAS action requests keep the built-in tripId and property key", () => {
 
 test("GAS property keys default to trip_agent_{tripId}", () => {
   assert.equal(gasTripPropertyKey("2026_busan"), "trip_agent_2026_busan");
+  assert.equal(gasTripPropertyKey("2027_tohoku"), "trip_agent_2027_tohoku");
   assert.equal(gasTripPropertyKey("busan2026"), "trip_agent_busan2026");
 });
 

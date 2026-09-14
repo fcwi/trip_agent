@@ -5,8 +5,9 @@
  *   名稱：trip_agent_{VITE_TRIP_ID}   （預設）
  *   值：{"spreadsheetId":"...","folderId":"..."}
  *
- * 目前旅程 ID 是 2026_busan / 2026_karuizawa，所以預設屬性名是：
+ * 目前旅程 ID 包含 2027_tohoku / 2026_busan / 2026_karuizawa，預設屬性名是：
  *
+ *   trip_agent_2027_tohoku
  *   trip_agent_2026_busan
  *   trip_agent_2026_karuizawa
  *

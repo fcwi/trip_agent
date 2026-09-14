@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DEFAULT_TRIP_ID = "2026_busan";
+const DEFAULT_TRIP_ID = "2027_tohoku";
 
 const normalizeBasePath = (value = "/trip_agent/") => {
   const withLeadingSlash = value.startsWith("/") ? value : `/${value}`;

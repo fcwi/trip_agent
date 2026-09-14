@@ -105,7 +105,7 @@ test("opens a deep-linked tab after unlocking", async ({ page }) => {
 });
 
 test("ignores leftover session passwords after reload", async ({ page }) => {
-  const tripId = process.env.E2E_TRIP_ID || "2026_busan";
+  const tripId = process.env.E2E_TRIP_ID || "2027_tohoku";
   await page.addInitScript((storageKey) => {
     sessionStorage.setItem(storageKey, "trip-e2e-password");
     localStorage.setItem("trip_agent_password", "trip-e2e-password");
