@@ -100,25 +100,46 @@
 * {
   /* 移除 iOS 點擊高亮效果 */
   -webkit-tap-highlight-color: transparent;
-  /* 防止長按選單彈出 */
-  -webkit-touch-callout: none;
   /* 平滑滾動 */
   -webkit-overflow-scrolling: touch;
-}
-
-/* 允許特定元素的文字選擇 */
-input,
-textarea,
-[contenteditable="true"] {
-  -webkit-touch-callout: default;
-  -webkit-user-select: text;
-  user-select: text;
 }
 
 .allow-touch-callout {
   -webkit-touch-callout: default;
   -webkit-user-select: auto;
   user-select: auto;
+}
+
+.no-touch-callout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 0.75rem,
+    black calc(100% - 0.75rem),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 0.75rem,
+    black calc(100% - 0.75rem),
+    transparent
+  );
 }
 
 /* 🆕 毛玻璃效果優化 - 解決滑動/切換時的視覺閃爍 */

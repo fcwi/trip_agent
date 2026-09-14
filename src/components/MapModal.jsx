@@ -187,6 +187,21 @@ const MapModal = ({
       "bottom-right",
     );
     map.current.addControl(new maplibregl.NavigationControl(), "top-left");
+    const zoomInButton = mapContainer.current?.querySelector(
+      ".maplibregl-ctrl-zoom-in",
+    );
+    const zoomOutButton = mapContainer.current?.querySelector(
+      ".maplibregl-ctrl-zoom-out",
+    );
+    const compassButton = mapContainer.current?.querySelector(
+      ".maplibregl-ctrl-compass",
+    );
+    [zoomInButton, zoomOutButton, compassButton].forEach((button) => {
+      button?.setAttribute("type", "button");
+    });
+    zoomInButton?.setAttribute("aria-label", "放大地圖");
+    zoomOutButton?.setAttribute("aria-label", "縮小地圖");
+    compassButton?.setAttribute("aria-label", "重設地圖方向");
 
     map.current.on("load", () => {
       setMapLanguage(map.current);
@@ -455,6 +470,7 @@ const MapModal = ({
   const textSecClass = isDarkMode
     ? theme?.textColors?.secDark || "text-stone-300"
     : theme?.textColors?.secLight || "text-stone-500";
+  const hasUserLocation = isValidLngLat(userLocation?.lon, userLocation?.lat);
 
   const visibilityClass = isOpen
     ? "opacity-100 pointer-events-auto scale-100"
@@ -523,18 +539,21 @@ const MapModal = ({
         <div className="flex-1 relative">
           <div ref={mapContainer} style={{ height: "100%", width: "100%" }} />
           <button
+            type="button"
             onClick={resetView}
-            className="absolute bottom-6 right-6 z-[10] p-3 rounded-2xl bg-white/90 dark:bg-neutral-800/90 shadow-xl border border-stone-200 dark:border-neutral-700 text-stone-600 dark:text-neutral-300 hover:scale-110 active:scale-95 transition-all"
-            title="重置視野"
+            aria-label="重置地圖視野"
+            className="absolute bottom-6 right-6 z-[10] p-3 rounded-2xl bg-white/90 dark:bg-neutral-800/90 shadow-xl border border-stone-200 dark:border-neutral-700 text-stone-600 dark:text-neutral-300 hover:scale-110 active:scale-95 transition-[background-color,color,transform]"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw aria-hidden="true" className="w-5 h-5" />
           </button>
           <button
+            type="button"
             onClick={centerOnUser}
-            className={`absolute bottom-[104px] right-6 z-[10] p-3 rounded-2xl bg-white/90 dark:bg-neutral-800/90 shadow-xl border border-stone-200 dark:border-neutral-700 hover:scale-110 active:scale-95 transition-all ${userLocation?.lat && userLocation?.lon ? "text-blue-500" : "text-stone-400 opacity-50 cursor-not-allowed"}`}
-            title="回到目前位置"
+            disabled={!hasUserLocation}
+            aria-label="將地圖移到目前位置"
+            className={`absolute bottom-[104px] right-6 z-[10] p-3 rounded-2xl bg-white/90 dark:bg-neutral-800/90 shadow-xl border border-stone-200 dark:border-neutral-700 hover:scale-110 active:scale-95 transition-[background-color,color,opacity,transform] ${hasUserLocation ? "text-blue-500" : "text-stone-400 opacity-50 cursor-not-allowed"}`}
           >
-            <LocateFixed className="w-5 h-5" />
+            <LocateFixed aria-hidden="true" className="w-5 h-5" />
           </button>
         </div>
 

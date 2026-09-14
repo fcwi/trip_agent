@@ -155,32 +155,36 @@ export default function TripTabPanels({
     )}
   </div>
 
-  {/* --- 頁籤：實用指南，切換時才載入 --- */}
-  {activeTab === "guides" && (
-    <Suspense fallback={<LazyPanelFallback label="載入實用指南中…" />}>
-      <GuidesTab
-        guidesData={guidesData}
-        usefulLinks={usefulLinks}
-        isDarkMode={isDarkMode}
-        theme={theme}
-        currentTheme={currentTheme}
-        componentStyles={componentStyles}
-      />
-    </Suspense>
-  )}
+  {/* --- 頁籤：實用指南，首次造訪後保留閱讀狀態 --- */}
+  <div style={{ display: activeTab === "guides" ? "block" : "none" }}>
+    {(activeTab === "guides" || visitedTabs.has("guides")) && (
+      <Suspense fallback={<LazyPanelFallback label="載入實用指南中…" />}>
+        <GuidesTab
+          guidesData={guidesData}
+          usefulLinks={usefulLinks}
+          isDarkMode={isDarkMode}
+          theme={theme}
+          currentTheme={currentTheme}
+          componentStyles={componentStyles}
+        />
+      </Suspense>
+    )}
+  </div>
 
-  {/* --- 頁籤：商家導覽，切換時才載入 --- */}
-  {activeTab === "shops" && (
-    <Suspense fallback={<LazyPanelFallback label="載入商家指南中…" />}>
-      <ShopsTab
-        shopGuideData={shopGuideData}
-        getMapLink={getMapLink}
-        isDarkMode={isDarkMode}
-        theme={theme}
-        componentStyles={componentStyles}
-      />
-    </Suspense>
-  )}
+  {/* --- 頁籤：商家導覽，首次造訪後保留閱讀狀態 --- */}
+  <div style={{ display: activeTab === "shops" ? "block" : "none" }}>
+    {(activeTab === "shops" || visitedTabs.has("shops")) && (
+      <Suspense fallback={<LazyPanelFallback label="載入商家指南中…" />}>
+        <ShopsTab
+          shopGuideData={shopGuideData}
+          getMapLink={getMapLink}
+          isDarkMode={isDarkMode}
+          theme={theme}
+          componentStyles={componentStyles}
+        />
+      </Suspense>
+    )}
+  </div>
 
   {/* --- 頁籤：AI 導遊，首次造訪時載入 --- */}
   <div style={{ display: activeTab === "ai" ? "block" : "none" }}>

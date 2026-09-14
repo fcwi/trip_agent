@@ -116,3 +116,190 @@ test("opens a deep-linked tab after restoring the session", async ({
   ).toHaveAttribute("aria-current", "page");
   await expect(page).toHaveURL(/\?tab=shops$/);
 });
+
+test("operates the trip tools menu with keyboard focus and opens the calculator", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+
+  const trigger = page.locator('button[aria-controls="trip-tools-panel"]');
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toHaveAccessibleName("關閉旅程工具");
+
+  const shareAction = page.getByRole("button", { name: /分享目前位置/ });
+  await expect(shareAction).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+  await trigger.click();
+  await page.getByRole("button", { name: "開啟匯率計算機" }).click();
+  await expect(page.getByRole("dialog", { name: "計算機" })).toBeVisible();
+});
+
+test("centers selected dates, names icon controls, and renders offline currency as status", async ({
+  context,
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await expect(
+    page.getByRole("button", { name: /更新目前位置天氣/ }),
+  ).toBeVisible();
+
+  const dayButtons = page.locator('button[aria-label^="查看Day"]');
+  await expect(dayButtons.first()).toContainText(/Day 1 · \d{1,2}\/\d{1,2}/);
+  const selectedDay = dayButtons.nth(
+    Math.min(2, (await dayButtons.count()) - 1),
+  );
+  await selectedDay.click();
+  await expect
+    .poll(() =>
+      selectedDay.evaluate((button) => {
+        const container = button.parentElement.getBoundingClientRect();
+        const item = button.getBoundingClientRect();
+        return Math.abs(
+          item.left + item.width / 2 - (container.left + container.width / 2),
+        );
+      }),
+    )
+    .toBeLessThan(36);
+
+  await context.setOffline(true);
+  const offlineStatus = page.getByRole("status").filter({
+    hasText: "離線，保留上次匯率",
+  });
+  await expect(offlineStatus).toBeVisible();
+  await expect(
+    page.locator("a").filter({ hasText: "離線，保留上次匯率" }),
+  ).toHaveCount(0);
+});
+
+test("gives map icon controls accessible names", async ({ page }) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  const title = page.getByRole("button", {
+    name: "行程標題；連續點擊可開啟測試模式",
+  });
+  for (let click = 0; click < 10; click += 1) await title.click();
+  await page.getByRole("button", { name: "進入測試模式" }).click();
+  await expect(page.getByRole("dialog", { name: "測試模式" })).toBeVisible();
+
+  await expect(page.getByRole("button", { name: "放大地圖" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "縮小地圖" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "重置選擇的位置" }),
+  ).toBeVisible();
+});
+
+test("offers common avatars first and exposes an accessible selected state", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.getByRole("button", { name: /^記錄/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "歡迎使用旅程記帳" }),
+  ).toBeVisible();
+
+  const avatarButtons = page.locator(
+    'button[aria-label^="選擇"][aria-label$="頭像"]',
+  );
+  await expect(avatarButtons).toHaveCount(8);
+  await expect(avatarButtons.first()).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: /更多頭像/ }).click();
+  await expect(avatarButtons).toHaveCount(42);
+  await avatarButtons.last().click();
+  await expect(avatarButtons.last()).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("暱稱")).toHaveAttribute("autocomplete", "off");
+});
+
+test("preserves guide expansion and scroll position across tab changes", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.getByRole("button", { name: /^指南/ }).click();
+
+  const firstGuide = page
+    .locator("#panel-guides button[aria-expanded]")
+    .first();
+  await firstGuide.click();
+  await expect(firstGuide).toHaveAttribute("aria-expanded", "true");
+  await page.evaluate(() =>
+    window.scrollTo(0, Math.min(420, document.body.scrollHeight)),
+  );
+  const guideScrollPosition = await page.evaluate(() => window.scrollY);
+
+  await page.getByRole("button", { name: "行程", exact: true }).click();
+  await page.getByRole("button", { name: /^指南/ }).click();
+  await expect(firstGuide).toHaveAttribute("aria-expanded", "true");
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThanOrEqual(Math.max(0, guideScrollPosition - 2));
+});
+
+test("honors reduced motion and keeps the closed tools clear of navigation", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "cached_user_weather",
+      JSON.stringify({
+        temp: 20,
+        desc: "小雨",
+        locationName: "測試位置",
+        weatherCode: 61,
+      }),
+    );
+  });
+  await page.goto("/");
+  await unlockTrip(page);
+  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(1);
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
+
+  const viewports = [
+    { width: 360, height: 800 },
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
+  ];
+  const verifyResponsiveLayout = async () => {
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await expect
+        .poll(() =>
+          page.evaluate(() => ({
+            documentWidth: document.documentElement.scrollWidth,
+            viewportWidth: document.documentElement.clientWidth,
+          })),
+        )
+        .toEqual({
+          documentWidth: viewport.width,
+          viewportWidth: viewport.width,
+        });
+
+      const toolBox = await page
+        .getByRole("button", { name: "開啟旅程工具" })
+        .boundingBox();
+      const navBox = await page
+        .getByRole("navigation", { name: "主要功能" })
+        .boundingBox();
+      expect(toolBox).not.toBeNull();
+      expect(navBox).not.toBeNull();
+      expect(toolBox.y + toolBox.height).toBeLessThanOrEqual(navBox.y);
+    }
+  };
+
+  await verifyResponsiveLayout();
+
+  await page.getByRole("button", { name: "切換到深色模式" }).click();
+  await expect(
+    page.getByRole("button", { name: "切換到亮色模式" }),
+  ).toBeVisible();
+  await verifyResponsiveLayout();
+});

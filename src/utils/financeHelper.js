@@ -1,6 +1,11 @@
 // src/utils/financeHelper.js
 import { getActiveModel } from "./aiHelpers";
 import { fetchJson, HttpError, waitForRetry } from "./api.js";
+import { gasTripContext } from "./gasTripContext.js";
+import {
+  fetchFromGasWithContext,
+  uploadToGasWithContext,
+} from "./gasClient.js";
 
 /**
  * 通用的 Gemini API 呼叫函式 (包含 Retry 機制與錯誤處理)
@@ -117,36 +122,13 @@ export const parseReceiptWithGemini = async (
  * @returns {Promise<Object>} GAS 回傳的結果
  */
 export const uploadToGAS = async (data, gasUrl, gasToken, signal) => {
-  if (!gasUrl || !gasToken)
-    throw new Error("GAS 設定未完成 (URL 或 Token 缺失)");
-
-  const payload = {
-    ...data,
-    token: gasToken, // 關鍵：將 Token 放入 Body 供後端驗證
-  };
-
-  try {
-    // 使用 text/plain 以避免 GAS 觸發 CORS Preflight (OPTIONS) 請求失敗的問題
-    // GAS 的 doPost 可以直接解析 contents
-    const result = await fetchJson(gasUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
-      body: JSON.stringify(payload),
-      signal,
-      timeoutMs: 20000,
-    });
-
-    if (result.status === "error") {
-      throw new Error(result.message);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("GAS Upload Error:", error);
-    throw new Error("雲端同步失敗，請檢查網路或 Token 設定");
-  }
+  return uploadToGasWithContext({
+    data,
+    gasUrl,
+    gasToken,
+    context: gasTripContext,
+    signal,
+  });
 };
 
 /**
@@ -159,51 +141,43 @@ export const fetchFromGAS = async (gasUrl, gasToken, signal) => {
   if (!gasUrl || !gasToken) return [];
 
   try {
-    // GET 請求將參數帶在 URL 上
-    const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getAll`;
-
-    const result = await fetchJson(url, {
-      method: "GET",
+    const records = await fetchFromGasWithContext({
+      gasUrl,
+      gasToken,
+      context: gasTripContext,
       signal,
-      timeoutMs: 20000,
     });
 
-    if (result.status === "success" && Array.isArray(result.data)) {
-      return result.data.map((item) => {
-        // ★ 修正 2：強效解析使用者資料
-        // 目標：解決截圖中顯示 {"name":"阿溫"...} 的問題
-        let parsedUser = { name: "未知", avatar: "👤" };
+    return records.map((item) => {
+      // ★ 修正 2：強效解析使用者資料
+      // 目標：解決截圖中顯示 {"name":"阿溫"...} 的問題
+      let parsedUser = { name: "未知", avatar: "👤" };
 
-        try {
-          // 情況 A: item.user 已經是正確的物件 (GAS 端解析成功)
-          if (typeof item.user === "object" && item.user !== null) {
-            parsedUser = item.user;
-          }
-          // 情況 B: item.user 是 JSON 字串 (GAS 端回傳原始字串)
-          else if (typeof item.user === "string" && item.user.startsWith("{")) {
-            parsedUser = JSON.parse(item.user);
-          }
-          // 情況 C: item.user 是舊資料 (只有純名字字串)
-          else {
-            parsedUser = { name: String(item.user), avatar: "👤" };
-          }
-        } catch {
-          // 解析失敗，當作純名字處理
+      try {
+        // 情況 A: item.user 已經是正確的物件 (GAS 端解析成功)
+        if (typeof item.user === "object" && item.user !== null) {
+          parsedUser = item.user;
+        }
+        // 情況 B: item.user 是 JSON 字串 (GAS 端回傳原始字串)
+        else if (typeof item.user === "string" && item.user.startsWith("{")) {
+          parsedUser = JSON.parse(item.user);
+        }
+        // 情況 C: item.user 是舊資料 (只有純名字字串)
+        else {
           parsedUser = { name: String(item.user), avatar: "👤" };
         }
+      } catch {
+        // 解析失敗，當作純名字處理
+        parsedUser = { name: String(item.user), avatar: "👤" };
+      }
 
-        return {
-          ...item,
-          date: item.date
-            ? new Date(item.date).toISOString().split("T")[0]
-            : "",
-          user: parsedUser,
-        };
-      });
-    }
-    return [];
+      return {
+        ...item,
+        date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
+        user: parsedUser,
+      };
+    });
   } catch (error) {
-    console.error("Fetch GAS Error:", error);
     throw error;
   }
 };

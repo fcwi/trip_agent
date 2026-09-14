@@ -1,6 +1,11 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { fetchGasWithRetry } from "./utils/api";
 import {
+  withGasTripContext,
+  withGasTripContextUrl,
+} from "./utils/gasTripContext.js";
+import { requireGasSuccess } from "./utils/gasResponse.js";
+import {
   getNextAiLoadingText,
   buildAiChatPayload,
   extractAiReplyText,
@@ -26,7 +31,6 @@ import {
   Home,
   Clock,
   Map,
-  Calculator,
   Sparkles,
   Languages,
   Send,
@@ -123,6 +127,7 @@ import { getParticleType, getSkyCondition } from "./utils/weatherHelpers.js";
 
 import SkyObjects from "./components/Background/SkyObjects.jsx";
 import TripHeader from "./components/TripHeader.jsx";
+import TripToolsMenu from "./components/Navigation/TripToolsMenu.jsx";
 
 // 使用 Web Crypto API 實作加密工具，取代外部依賴以提升安全性與效能
 //  FlightInfoCard 組件
@@ -147,6 +152,7 @@ import { useTripShellTheme } from "./hooks/useTripShellTheme.js";
 import { useItineraryDayPager } from "./hooks/useItineraryDayPager.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
+import { useTabScrollRestoration } from "./hooks/useTabScrollRestoration.js";
 import { useGeoPlaces } from "./hooks/useGeoPlaces.js";
 import { useAiInvocation } from "./hooks/useAiInvocation.js";
 import { tripStorage } from "./utils/tripStorage.js";
@@ -262,7 +268,7 @@ const ItineraryApp = ({ authentication }) => {
     activeTab,
     visitedTabs,
     activeModal,
-    changeTab: handleTabChange,
+    changeTab: navigateToTab,
     openModal,
     closeModal,
   } = useTripNavigation();
@@ -270,6 +276,15 @@ const ItineraryApp = ({ authentication }) => {
   const isMapModalOpen = activeModal === "map";
   const showWeatherDetail = activeModal === "weather";
   const isTestMode = activeModal === "testMode";
+  const rememberCurrentTabScroll = useTabScrollRestoration(activeTab);
+  const handleTabChange = React.useCallback(
+    (nextTab) => {
+      if (nextTab === activeTab) return;
+      rememberCurrentTabScroll();
+      navigateToTab(nextTab);
+    },
+    [activeTab, navigateToTab, rememberCurrentTabScroll],
+  );
 
   const handleCalculatorOpen = React.useCallback(
     () => openModal("calculator"),
@@ -301,7 +316,6 @@ const ItineraryApp = ({ authentication }) => {
   );
   const { isOnline, connectionNotice } = useNetworkStatus();
   const {
-    isMobile,
     isIOSSafari,
     showIOSInstallPrompt,
     setShowIOSInstallPrompt,
@@ -1190,7 +1204,7 @@ const ItineraryApp = ({ authentication }) => {
       };
 
       // 4. 準備資料
-      const payload = {
+      const payload = withGasTripContext({
         type: "location",
         token: currentGasToken,
         id: crypto.randomUUID(),
@@ -1200,7 +1214,7 @@ const ItineraryApp = ({ authentication }) => {
         lon: weatherData.lon,
         accuracy: accuracy, // High, Low, Cache
         device: getDeviceInfo(),
-      };
+      });
 
       // 4. 發送 (優化 Fetch 設定)
       try {
@@ -1213,9 +1227,10 @@ const ItineraryApp = ({ authentication }) => {
           },
           body: JSON.stringify(payload),
         })
-          .then(() =>
-            debugLog("📍 Location log sent successfully (with retry)"),
-          )
+          .then((result) => {
+            requireGasSuccess(result, [currentGasToken, currentGasUrl]);
+            debugLog("📍 Location log sent successfully (with retry)");
+          })
           .catch((e) =>
             console.error("Location log send failed after retries", e),
           );
@@ -1240,10 +1255,14 @@ const ItineraryApp = ({ authentication }) => {
       isFetchingLocationsRef.current = true; // 上鎖
       debugLog("📍 [App] 正在獲取其他使用者位置...");
 
-      const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getLocations`;
+      const requestUrl = new URL(gasUrl);
+      requestUrl.searchParams.set("token", gasToken);
+      requestUrl.searchParams.set("action", "getLocations");
+      const url = withGasTripContextUrl(requestUrl.toString());
       const result = await fetchGasWithRetry(url);
+      requireGasSuccess(result, [gasToken, gasUrl]);
 
-      if (result.status === "success" && Array.isArray(result.data)) {
+      if (Array.isArray(result.data)) {
         // 過濾掉自己，避免自己同時出現在「使用者位置」和「其他使用者」
         const me = currentUserRef.current?.name;
         const others = me
@@ -2845,51 +2864,14 @@ const ItineraryApp = ({ authentication }) => {
           theme={currentTheme}
         />
 
-        {/* 分享位置按鈕 (透明度優化) */}
-        <button
-          onClick={handleShareLocation}
-          title={`分享位置（來源：${locationSource === "cache" ? "快取" : locationSource === "low" ? "低精度" : locationSource === "high" ? "高精度" : "未知"}）`}
-          aria-label={`分享位置（來源：${locationSource === "cache" ? "快取" : locationSource === "low" ? "低精度" : locationSource === "high" ? "高精度" : "未知"}）`}
-          aria-busy={isSharing}
-          aria-disabled={isSharing}
-          disabled={isSharing}
-          className={`fixed bottom-60 right-5 w-12 h-12 backdrop-blur-lg border rounded-full shadow-lg flex items-center justify-center z-40 active:scale-90 transition-all duration-300 opacity-60 hover:opacity-100 ${isSharing ? "opacity-80 pointer-events-none scale-95" : ""}
-            ${
-              hasLocationPermission === false
-                ? "bg-red-50/90 border-red-400/60 text-red-500 animate-pulse hover:bg-red-100/90 ring-1 ring-red-400/20"
-                : locationSource === "cache"
-                  ? "bg-red-50/90 border-red-400/60 text-red-500 hover:bg-red-100/90 ring-1 ring-red-400/20"
-                  : locationSource === "low"
-                    ? "bg-sky-50/90 border-sky-400/60 text-sky-600 hover:bg-sky-100/90 ring-1 ring-sky-400/20"
-                    : locationSource === "high"
-                      ? "bg-emerald-50/90 border-emerald-400/60 text-emerald-600 hover:bg-emerald-100/90 ring-1 ring-emerald-400/20"
-                      : isDarkMode
-                        ? "bg-neutral-800/60 border-white/10 text-sky-300 hover:bg-neutral-800/90 ring-1 ring-white/5"
-                        : "bg-white/70 border-white/40 text-[#5D737E] hover:bg-white/90 ring-1 ring-black/5"
-            }`}
-        >
-          {isSharing ? (
-            <Loader className="w-5 h-5 animate-spin" />
-          ) : (
-            <LocateFixed className="w-6 h-6" />
-          )}
-        </button>
-
-        {/* 計算機按鈕 (僅行動裝置顯示) */}
-        {isMobile && (
-          <button
-            onClick={handleCalculatorOpen}
-            className={`fixed bottom-[19rem] right-5 w-12 h-12 backdrop-blur-lg border rounded-full shadow-lg flex items-center justify-center z-40 active:scale-90 transition-all duration-300 opacity-60 hover:opacity-100
-              ${
-                isDarkMode
-                  ? "bg-neutral-800/60 border-white/10 text-neutral-200 hover:bg-neutral-800/90 ring-1 ring-white/5"
-                  : "bg-white/70 border-white/40 text-[#5D737E] hover:bg-white/90 ring-1 ring-black/5"
-              }`}
-            aria-label="開啟計算機"
-          >
-            <Calculator className="w-6 h-6" />
-          </button>
-        )}
+        <TripToolsMenu
+          isDarkMode={isDarkMode}
+          isSharing={isSharing}
+          locationSource={locationSource}
+          hasLocationPermission={hasLocationPermission}
+          onShareLocation={handleShareLocation}
+          onOpenCalculator={handleCalculatorOpen}
+        />
 
         {/* 匯率計算機彈窗 */}
         {isCalculatorOpen && (

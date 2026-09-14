@@ -17,7 +17,6 @@ const BottomNav = ({
   isDarkMode,
   theme,
 }) => {
-  const cBase = theme.colorBase;
   const cAccent = theme.colorAccent;
 
   const getFeaturedClasses = (isActive) => {
@@ -48,7 +47,7 @@ const BottomNav = ({
       <div
         className={`flex h-[60px] items-center gap-1 rounded-full border px-3 shadow-xl backdrop-blur-2xl transition-[background-color,border-color,box-shadow] duration-300 ${
           isDarkMode
-            ? `bg-${cBase}-900/90 border-white/10 ring-1 ring-white/5 shadow-black/40`
+            ? "bg-neutral-950/95 border-white/20 ring-1 ring-white/10 shadow-black/50"
             : "bg-white/90 border-white/40 ring-1 ring-black/5 shadow-black/10"
         }`}
       >
@@ -56,11 +55,11 @@ const BottomNav = ({
           const isActive = activeTab === id;
           const regularClasses = isActive
             ? isDarkMode
-              ? `bg-${cBase}-800 text-${cAccent}-400`
-              : `bg-${cBase}-100 text-${cBase}-900`
+              ? "bg-white/15 text-white"
+              : "bg-stone-100 text-stone-900"
             : isDarkMode
-              ? `text-${cBase}-400 group-hover:bg-white/5`
-              : `text-${cBase}-400 group-hover:bg-black/5`;
+              ? "text-neutral-300 group-hover:bg-white/10 group-hover:text-white"
+              : "text-stone-600 group-hover:bg-black/5 group-hover:text-stone-900";
 
           return (
             <button
@@ -92,12 +91,14 @@ const BottomNav = ({
                 })}
               </span>
               <span
-                className={`mt-1 text-[10px] leading-none transition-colors duration-300 ${featured ? "font-bold" : "font-medium"} ${
+                className={`mt-1 text-xs leading-none transition-colors duration-300 ${featured ? "font-bold" : "font-medium"} ${
                   isActive
                     ? isDarkMode
-                      ? `text-${cAccent}-400`
-                      : `text-${cBase}-900`
-                    : `text-${cBase}-500`
+                      ? "text-white"
+                      : "text-stone-900"
+                    : isDarkMode
+                      ? "text-neutral-300"
+                      : "text-stone-600"
                 }`}
               >
                 {label}

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef, useState, memo } from "react";
 import { tripConfig } from "@trip-data";
+import { WEATHER_PARTICLE_COUNTS } from "../../utils/weatherParticleConfig.js";
 
 class Particle {
   constructor(canvas, ctx, type, isDay) {
@@ -159,18 +160,24 @@ class Particle {
 
 const WeatherParticles = memo(({ type, isDay }) => {
   const canvasRef = useRef(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
-    if (
-      !type ||
-      type === "clouds" ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = (event) => setPrefersReducedMotion(event.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!type || type === "clouds" || prefersReducedMotion) {
       return undefined;
     }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    let animationFrameId;
+    let animationFrameId = null;
     let particles = [];
 
     const resize = () => {
@@ -182,22 +189,14 @@ const WeatherParticles = memo(({ type, isDay }) => {
     window.addEventListener("resize", resize);
     resize();
 
-    const count =
-      type === "rain"
-        ? 150
-        : type === "snow"
-          ? 80
-          : type === "fog"
-            ? 30
-            : type === "lightning"
-              ? 8
-              : 100;
+    const count = WEATHER_PARTICLE_COUNTS[type] ?? 0;
     for (let i = 0; i < count; i++) {
       particles.push(new Particle(canvas, ctx, type, isDay));
     }
 
     const animate = () => {
-      if (!canvas) return;
+      animationFrameId = null;
+      if (!canvas || document.hidden) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach((p) => {
         p.update();
@@ -205,15 +204,39 @@ const WeatherParticles = memo(({ type, isDay }) => {
       });
       animationFrameId = requestAnimationFrame(animate);
     };
-    animate();
+
+    const startAnimation = () => {
+      if (animationFrameId === null && !document.hidden) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    const pauseAnimation = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        pauseAnimation();
+      } else {
+        startAnimation();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    startAnimation();
 
     return () => {
       window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      pauseAnimation();
     };
-  }, [type, isDay]);
+  }, [type, isDay, prefersReducedMotion]);
 
-  if (!type || type === "clouds") return null;
+  if (!type || type === "clouds" || prefersReducedMotion) return null;
   return (
     <canvas
       aria-hidden="true"

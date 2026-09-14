@@ -257,35 +257,37 @@ const ItineraryTab = ({
       {/* 天數導覽列 */}
       <div
         ref={navContainerRef}
-        className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide py-1 px-1 relative z-10"
+        className="horizontal-scroll-fade scrollbar-hide relative z-10 flex snap-x snap-mandatory space-x-2 overflow-x-auto px-3 py-1 pb-1"
       >
         <button
+          type="button"
           ref={(el) => (navItemsRef.current[-1] = el)}
           onClick={() => changeDay(-1)}
-          className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 border backdrop-blur-xl flex items-center gap-1.5 active:scale-95 hover:scale-105
+          className={`flex-shrink-0 snap-center px-4 py-2.5 rounded-xl font-bold text-sm transition-[background-color,border-color,color,box-shadow,transform] duration-300 border backdrop-blur-xl flex items-center gap-1.5 active:scale-95 hover:scale-105
             ${
               activeDay === -1
                 ? `${theme.accentBg} ${theme.accent} ${isDarkMode ? "border-white/10" : "border-amber-300/50"} scale-105 shadow-md`
                 : `${theme.navBtnStyle} ${theme.textSec} hover:bg-stone-200/90 hover:shadow-md`
             }`}
         >
-          <LayoutDashboard className="w-4 h-4" /> 總覽
+          <LayoutDashboard aria-hidden="true" className="w-4 h-4" /> 總覽
         </button>
 
         {itineraryData.map((data, index) => (
           <button
+            type="button"
             key={index}
             ref={(el) => (navItemsRef.current[index] = el)}
             onClick={() => changeDay(index)}
-            aria-label={`查看${data.day}`}
-            className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 border backdrop-blur-xl active:scale-95 hover:scale-105
+            aria-label={`查看${data.day}，${data.date}，${data.title}`}
+            className={`flex-shrink-0 snap-center px-4 py-2.5 rounded-xl font-bold text-sm transition-[background-color,border-color,color,box-shadow,transform] duration-300 border backdrop-blur-xl active:scale-95 hover:scale-105
               ${
                 activeDay === index
                   ? `${theme.accentBg} ${theme.text} ${isDarkMode ? "border-white/10" : "border-amber-300/50"} scale-105 shadow-md`
                   : `${theme.navBtnStyle} ${theme.textSec} hover:bg-stone-200/90 hover:shadow-md`
               }`}
           >
-            {data.day}
+            {data.day} · {data.date?.split(" ")[0] || data.date}
           </button>
         ))}
       </div>

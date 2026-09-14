@@ -103,7 +103,9 @@ export async function fetchGasWithRetry(
 
   const isBusy =
     data.status === "error" &&
-    (data.message === "Busy" || data.message?.includes("Server is busy"));
+    (data.code === "BUSY" ||
+      data.message === "Busy" ||
+      data.message?.includes("Server is busy"));
 
   if (!isBusy) return data;
   if (retries <= 0) throw new Error("GAS busy, max retries reached.");
