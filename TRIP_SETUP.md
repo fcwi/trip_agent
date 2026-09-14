@@ -65,14 +65,23 @@ npm run check
 
 GAS 讀取（記帳 `getAll`、位置 `getLocations`）改為 POST，token 放在 body，不再出現在 URL。Apps Script 的 `doPost` 需能辨識 `{ type: "query", action, token, tripId }`，且不可把這類請求當成新紀錄寫入。
 
-前端每次請求都會帶目前建置的 `VITE_TRIP_ID`（例如 `2026_busan`）。GAS 依 `tripId` 選擇試算表與 Drive 資料夾，請在 Apps Script 的「指令碼屬性」設定：
+前端每次請求都會帶目前建置的 `VITE_TRIP_ID`（例如 `2026_busan`），以及對應的指令碼屬性名稱 `gasPropertyKey`。預設屬性名是 `trip_agent_{VITE_TRIP_ID}`：
 
 ```
-TRIP_2026_busan_SPREADSHEET_ID=...
-TRIP_2026_busan_FOLDER_ID=...
-TRIP_2026_karuizawa_SPREADSHEET_ID=...
-TRIP_2026_karuizawa_FOLDER_ID=...
+名稱：trip_agent_2026_busan
+值：{"spreadsheetId":"試算表ID","folderId":"資料夾ID"}
+
+名稱：trip_agent_2026_karuizawa
+值：{"spreadsheetId":"試算表ID","folderId":"資料夾ID"}
 ```
+
+可以固定成 `trip_agent_{名稱}`，例如 `trip_agent_busan2026`。這不必改旅程資料檔名；在 `.env` 加一行即可：
+
+```env
+VITE_GAS_TRIP_PROPERTY_KEY=trip_agent_busan2026
+```
+
+前端會把這個名稱放進 `gasPropertyKey`。GAS 只接受 `trip_agent_` 開頭的屬性名，避免讀到 `AUTH_TOKEN` 等其他指令碼屬性。`AUTH_TOKEN` 可共用。若沒有對應屬性，才回退到原本的 `SPREADSHEET_ID` / `FOLDER_ID`。
 
 完整可複製的 `doPost` / `doGet` 片段見 `scripts/gas-trip-storage.example.gs`。`handleAdd` 與 `handleBatchAdd` 請改為使用傳入的 `folderId`，不要再用固定的 `CONFIG.FOLDER_ID`。
 

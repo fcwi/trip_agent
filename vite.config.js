@@ -81,6 +81,16 @@ export default defineConfig(({ mode }) => {
     throw new Error(`VITE_TRIP_ID 格式不合法：${tripId}`);
   }
 
+  const gasPropertyKey = String(env.VITE_GAS_TRIP_PROPERTY_KEY || "").trim();
+  if (
+    gasPropertyKey &&
+    !/^trip_agent_[a-z0-9][a-z0-9_-]*$/i.test(gasPropertyKey)
+  ) {
+    throw new Error(
+      `VITE_GAS_TRIP_PROPERTY_KEY 格式不合法：${gasPropertyKey}。請使用 trip_agent_ 開頭，例如 trip_agent_busan2026。`,
+    );
+  }
+
   const tripFilePath = `src/tripdata_${tripId}.jsx`;
   if (!fs.existsSync(path.resolve(__dirname, tripFilePath))) {
     throw new Error(
