@@ -63,7 +63,18 @@ npm run check
 
 解鎖密碼只保留在記憶體中；重新整理頁面、關閉分頁或按下鎖定後都需再輸入。舊版本留在 `sessionStorage`／`localStorage` 的密碼會在載入時清除。
 
-GAS 讀取（記帳 `getAll`、位置 `getLocations`）改為 POST，token 放在 body，不再出現在 URL。Apps Script 的 `doPost` 需能辨識 `{ type: "query", action, token }`，且不可把這類請求當成新紀錄寫入。
+GAS 讀取（記帳 `getAll`、位置 `getLocations`）改為 POST，token 放在 body，不再出現在 URL。Apps Script 的 `doPost` 需能辨識 `{ type: "query", action, token, tripId }`，且不可把這類請求當成新紀錄寫入。
+
+前端每次請求都會帶目前建置的 `VITE_TRIP_ID`（例如 `2026_busan`）。GAS 依 `tripId` 選擇試算表與 Drive 資料夾，請在 Apps Script 的「指令碼屬性」設定：
+
+```
+TRIP_2026_busan_SPREADSHEET_ID=...
+TRIP_2026_busan_FOLDER_ID=...
+TRIP_2026_karuizawa_SPREADSHEET_ID=...
+TRIP_2026_karuizawa_FOLDER_ID=...
+```
+
+完整可複製的 `doPost` / `doGet` 片段見 `scripts/gas-trip-storage.example.gs`。`handleAdd` 與 `handleBatchAdd` 請改為使用傳入的 `folderId`，不要再用固定的 `CONFIG.FOLDER_ID`。
 
 請注意，所有 `VITE_*` 變數都會進入瀏覽器端建置內容。現有加密可避免直接顯示憑證，但不能取代伺服器端秘密管理；正式公開部署時，應限制 Maps／MapTiler Key 的允許網域與配額，Gemini／GAS 則建議改由受驗證的後端代理呼叫。
 

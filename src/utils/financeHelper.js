@@ -2,7 +2,7 @@
 import { getActiveModel } from "./aiHelpers";
 import { fetchJson, HttpError, waitForRetry } from "./api.js";
 import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
-import { fetchGasAction } from "./gasClient.js";
+import { fetchGasAction, withGasTripContext } from "./gasClient.js";
 
 /**
  * 通用的 Gemini API 呼叫函式 (包含 Retry 機制與錯誤處理)
@@ -125,10 +125,10 @@ export const uploadToGAS = async (data, gasUrl, gasToken, signal) => {
   if (!gasUrl || !gasToken)
     throw new Error("GAS 設定未完成 (URL 或 Token 缺失)");
 
-  const payload = {
+  const payload = withGasTripContext({
     ...data,
     token: gasToken, // 關鍵：將 Token 放入 Body 供後端驗證
-  };
+  });
 
   try {
     // 使用 text/plain 以避免 GAS 觸發 CORS Preflight (OPTIONS) 請求失敗的問題

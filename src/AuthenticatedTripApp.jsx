@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { fetchGasWithRetry, HttpError } from "./utils/api";
-import { fetchGasAction } from "./utils/gasClient.js";
+import { fetchGasAction, withGasTripContext } from "./utils/gasClient.js";
 import { reverseGeocode } from "./utils/geocode.js";
 import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
 import { callGeminiAPI } from "./utils/financeHelper";
@@ -1532,7 +1532,7 @@ const ItineraryApp = ({ authentication }) => {
       };
 
       // 4. 準備資料
-      const payload = {
+      const payload = withGasTripContext({
         type: "location",
         token: currentGasToken,
         id: crypto.randomUUID(),
@@ -1542,7 +1542,7 @@ const ItineraryApp = ({ authentication }) => {
         lon: weatherData.lon,
         accuracy: accuracy, // High, Low, Cache
         device: getDeviceInfo(),
-      };
+      });
 
       // 4. 發送 (優化 Fetch 設定)
       try {

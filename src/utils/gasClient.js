@@ -1,7 +1,15 @@
 import { fetchGasWithRetry } from "./api.js";
+import { tripNamespaceId } from "./tripStorage.js";
 
 export const GAS_PLAIN_TEXT_HEADERS = Object.freeze({
   "Content-Type": "text/plain;charset=utf-8",
+});
+
+export const getGasTripId = () => tripNamespaceId;
+
+export const withGasTripContext = (payload = {}) => ({
+  ...payload,
+  tripId: tripNamespaceId,
 });
 
 export const buildGasActionRequest = (gasToken, action, extra = {}) => {
@@ -11,12 +19,14 @@ export const buildGasActionRequest = (gasToken, action, extra = {}) => {
   return {
     method: "POST",
     headers: GAS_PLAIN_TEXT_HEADERS,
-    body: JSON.stringify({
-      type: "query",
-      token: gasToken,
-      action,
-      ...extra,
-    }),
+    body: JSON.stringify(
+      withGasTripContext({
+        type: "query",
+        token: gasToken,
+        action,
+        ...extra,
+      }),
+    ),
   };
 };
 
