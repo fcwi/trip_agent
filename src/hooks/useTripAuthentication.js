@@ -5,6 +5,7 @@ import {
   EMPTY_CREDENTIALS,
 } from "../utils/credentialBundle.js";
 import { tripSessionStorage, tripStorage } from "../utils/tripStorage.js";
+import { shouldAutoUnlockWithoutPassword } from "../utils/authPolicy.js";
 
 const ENCRYPTED_PAYLOADS = Object.freeze({
   apiKey: (import.meta.env?.VITE_ENCODED_KEY || "").trim(),
@@ -71,7 +72,12 @@ export const useTripAuthentication = () => {
 
         if (savedPassword && ENCRYPTED_PAYLOADS.apiKey) {
           await attemptUnlock(savedPassword, true);
-        } else if (!ENCRYPTED_PAYLOADS.apiKey) {
+        } else if (
+          shouldAutoUnlockWithoutPassword(
+            ENCRYPTED_PAYLOADS.apiKey,
+            import.meta.env?.DEV,
+          )
+        ) {
           setIsVerified(true);
         }
       } finally {

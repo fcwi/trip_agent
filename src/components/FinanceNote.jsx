@@ -42,6 +42,7 @@ import {
 } from "../utils/currencyFormatter.js";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import { logger } from "../utils/logger.js";
+import { createRecordId } from "../utils/ids.js";
 
 // 預設頭像列表
 const AVATARS = [
@@ -908,8 +909,6 @@ const FinanceScreen = ({
     setPendingImages([]);
     setReceiptImages((prev) => [...prev, ...imagesToProcess]);
 
-    const startIdx = receiptImages.length; // 這些新圖片在 receiptImages 中的起始索引
-
     try {
       // 逐張辨識以更新進度，避免畫面停頓太久
       for (let i = 0; i < imagesToProcess.length; i++) {
@@ -925,12 +924,11 @@ const FinanceScreen = ({
             tripConfig.currency.source,
             new Date(tripConfig.startDate).getFullYear(),
           );
-          const globalImgIndex = startIdx + i;
 
           let newItems = [];
           if (result && result.items && Array.isArray(result.items)) {
-            newItems = result.items.map((item, itemIdx) => ({
-              id: Date.now() + globalImgIndex * 1000 + itemIdx,
+            newItems = result.items.map((item) => ({
+              id: createRecordId(),
               name: item.name || "未知品項",
               amount: item.amount || 0,
               selected: true,
@@ -938,7 +936,7 @@ const FinanceScreen = ({
             }));
           } else {
             newItems.push({
-              id: Date.now() + globalImgIndex * 1000,
+              id: createRecordId(),
               name: result.store ? `${result.store} 消費` : "消費總額",
               amount: result.amount || 0,
               selected: true,
@@ -984,7 +982,7 @@ const FinanceScreen = ({
 
     // ✅ 圖片儲存到 IndexedDB，state 中先保留以立即顯示
     const newItem = {
-      id: Date.now() + Math.random(),
+      id: createRecordId(),
       type: targetMode,
       date: localDate,
       timestamp: new Date().toISOString(),
@@ -1105,7 +1103,6 @@ const FinanceScreen = ({
       const processedImages = new Set();
 
       let firstRecordTimestamp = null;
-      let globalImgIndex = 0;
 
       for (const item of itemsToImport) {
         const itemImg = item.sourceImage || null;
@@ -1117,8 +1114,7 @@ const FinanceScreen = ({
           processedImages.add(itemImg);
         }
 
-        const newItemId = Date.now() + Math.random() + globalImgIndex;
-        globalImgIndex++;
+        const newItemId = createRecordId();
 
         // 共用欄位
         const commonFields = {

@@ -295,3 +295,21 @@ textarea,
   opacity: 0.5;
   margin-left: 4px !important;
 }
+
+@keyframes orange-ping {
+  75%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.custom-maplibre-popup .maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.custom-maplibre-popup .maplibregl-popup-tip {
+  display: none !important;
+}

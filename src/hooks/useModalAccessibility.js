@@ -16,12 +16,54 @@ export const useModalAccessibility = (isOpen, onClose) => {
 
     const previouslyFocused = document.activeElement;
     const previousOverflow = document.body.style.overflow;
+    const isVisible = (element) =>
+      element.getClientRects().length > 0 &&
+      window.getComputedStyle(element).visibility !== "hidden";
+
+    const getFocusableElements = () => {
+      const root = dialogRef.current;
+      if (!root) return [];
+      return [
+        ...root.querySelectorAll(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        ),
+      ].filter(isVisible);
+    };
+
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
         onCloseRef.current?.();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = getFocusableElements();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || !rootContains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        (active === last || !rootContains(active))
+      ) {
+        event.preventDefault();
+        first.focus();
       }
     };
+
+    const rootContains = (element) =>
+      element instanceof Node && Boolean(dialogRef.current?.contains(element));
 
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", handleKeyDown);

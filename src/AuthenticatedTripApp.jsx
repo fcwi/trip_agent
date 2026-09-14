@@ -1,6 +1,7 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { fetchGasWithRetry } from "./utils/api";
+import { fetchGasWithRetry, HttpError } from "./utils/api";
 import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
+import { callGeminiAPI } from "./utils/financeHelper";
 import {
   Sun,
   CloudSnow,
@@ -165,8 +166,6 @@ import { logger } from "./utils/logger.js";
 const debugLog = (...args) => logger.debug(...args);
 const debugGroup = (...args) => logger.group(...args);
 const debugGroupEnd = (...args) => logger.groupEnd(...args);
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const ItineraryApp = ({ authentication }) => {
   const {
@@ -991,11 +990,17 @@ const ItineraryApp = ({ authentication }) => {
   const [aiMode, setAiMode] = useState("translate");
   // 初始訊息設為空陣列，等待 IndexedDB 載入後再決定
   const [messages, setMessages] = useState([]);
-  const isAiChatLoadedRef = useRef(false); // 追蹤初始載入是否完成
+  const isAiChatLoadedRef = useRef(false);
+  const loadedAiModeRef = useRef(null);
+  const aiChatLoadIdRef = useRef(0);
 
   // 初始化 IndexedDB 並加載聊天記錄
   // 邏輯：先檢查 IndexedDB 是否有快取，沒有才顯示預設歡迎訊息
   useEffect(() => {
+    const loadId = ++aiChatLoadIdRef.current;
+    isAiChatLoadedRef.current = false;
+    loadedAiModeRef.current = null;
+
     const initAndLoad = async () => {
       try {
         const { aiChatDB } = await import("./utils/indexedDBManager.js");
@@ -1057,6 +1062,7 @@ const ItineraryApp = ({ authentication }) => {
               console.warn("Failed to refresh welcome message", e);
             }
           }
+          if (loadId !== aiChatLoadIdRef.current) return;
           setMessages(messagesWithImages);
         } else {
           // IndexedDB 為空，檢查 localStorage 進行遷移
@@ -1073,30 +1079,36 @@ const ItineraryApp = ({ authentication }) => {
                 }));
                 await aiChatDB.saveMessages(aiMode, messagesToSave);
                 tripStorage.removeItem(`chat-history-${aiMode}`);
+                if (loadId !== aiChatLoadIdRef.current) return;
                 setMessages(oldMessages);
                 debugLog(`✅ 已將聊天記錄從 localStorage 遷移至 IndexedDB`);
               } else {
                 // localStorage 也沒有數據，使用默認歡迎消息
                 debugLog("📭 無快取資料，顯示預設歡迎訊息");
+                if (loadId !== aiChatLoadIdRef.current) return;
                 setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
               }
             } catch (error) {
               console.error("遷移 localStorage 數據失敗:", error);
+              if (loadId !== aiChatLoadIdRef.current) return;
               setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
             }
           } else {
             // IndexedDB 和 localStorage 都沒有數據，使用默認歡迎消息
             debugLog("📭 無快取資料，顯示預設歡迎訊息");
+            if (loadId !== aiChatLoadIdRef.current) return;
             setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
           }
         }
 
-        // 標記初始載入完成
+        if (loadId !== aiChatLoadIdRef.current) return;
+        loadedAiModeRef.current = aiMode;
         isAiChatLoadedRef.current = true;
       } catch (error) {
         console.error("初始化 IndexedDB 失敗:", error);
-        // 發生錯誤時也顯示默認歡迎消息
+        if (loadId !== aiChatLoadIdRef.current) return;
         setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
+        loadedAiModeRef.current = aiMode;
         isAiChatLoadedRef.current = true;
       }
     };
@@ -1107,7 +1119,13 @@ const ItineraryApp = ({ authentication }) => {
   // 保存聊天記錄到 IndexedDB
   useEffect(() => {
     // 初始載入完成前不要保存，避免覆蓋已存的資料
-    if (!isAiChatLoadedRef.current || messages.length === 0) return;
+    if (
+      !isAiChatLoadedRef.current ||
+      loadedAiModeRef.current !== aiMode ||
+      messages.length === 0
+    ) {
+      return;
+    }
 
     const debounceTimer = setTimeout(() => {
       const saveMessages = async () => {
@@ -2568,70 +2586,26 @@ const ItineraryApp = ({ authentication }) => {
 
   // --- Gemini API Safe Call Function (New Implementation + AbortController) ---
   const callGeminiSafe = async (payload) => {
-    // 使用解密後的 Key，如果沒有則使用空字串 (會失敗)
-    const currentKey = apiKey;
-
-    const maxRetries = 3;
-    let attempt = 0;
-    // 🔧 使用 aiHelpers 統一管理的模型設定
-    const activeModel = getActiveModel();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
-
-    while (attempt < maxRetries) {
-      try {
-        // 🆕 中止上一個未完成的 Gemini API 請求
-        if (geminiAbortControllerRef.current) {
-          geminiAbortControllerRef.current.abort();
-        }
-        geminiAbortControllerRef.current = new AbortController();
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: geminiAbortControllerRef.current.signal,
-        });
-
-        if (response.ok) {
-          return await response.json();
-        }
-
-        // 處理流量限制 (429) 或服務暫時不可用 (503)
-        if (response.status === 429 || response.status === 503) {
-          console.warn(
-            `API 忙碌中，嘗試進行指數退避... (嘗試 ${attempt + 1}/${maxRetries})`,
-          );
-          attempt++;
-          // 指數退避：2s, 4s, 8s... 避免短時間內重複請求加重伺服器負擔
-          await sleep(2000 * Math.pow(2, attempt));
-          continue;
-        }
-
-        if (response.status === 400) {
-          throw new Error("API 參數錯誤。");
-        }
-        if (response.status === 403) {
-          throw new Error("API Key 無效或過期，請檢查加密設定。");
-        }
-
-        throw new Error(`API Error: ${response.status}`);
-      } catch (error) {
-        // 中止請求通常是使用者切換頁面或手動停止，不視為錯誤
-        if (error.name === "AbortError") {
-          throw new Error("API 請求已被中止");
-        }
-        console.error("Fetch attempt error:", error);
-        if (error.message.includes("API Key")) throw error;
-
-        attempt++;
-        if (attempt < maxRetries) {
-          await sleep(2000 * Math.pow(2, attempt));
-        } else {
-          throw error;
-        }
-      }
+    if (geminiAbortControllerRef.current) {
+      geminiAbortControllerRef.current.abort();
     }
-    throw new Error("API Max retries reached");
+    geminiAbortControllerRef.current = new AbortController();
+
+    try {
+      return await callGeminiAPI(
+        payload,
+        apiKey,
+        geminiAbortControllerRef.current.signal,
+      );
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw new Error("API 請求已被中止");
+      }
+      if (error instanceof HttpError && error.status === 403) {
+        throw new Error("API Key 無效或過期，請檢查加密設定。");
+      }
+      throw error;
+    }
   };
 
   // --- 周邊地標輔助：直接呼叫 Google Maps API ---

@@ -1,6 +1,7 @@
 // src/utils/financeHelper.js
 import { getActiveModel } from "./aiHelpers";
 import { fetchJson, HttpError, waitForRetry } from "./api.js";
+import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
 
 /**
  * 通用的 Gemini API 呼叫函式 (包含 Retry 機制與錯誤處理)
@@ -13,7 +14,10 @@ export const callGeminiAPI = async (payload, apiKey, signal = null) => {
   if (!apiKey) throw new Error("API Key 尚未設定或解密失敗");
 
   const { id: MODEL_NAME } = getActiveModel();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+  const { url, headers } = buildGeminiGenerateContentRequest(
+    MODEL_NAME,
+    apiKey,
+  );
 
   const maxAttempts = 3;
 
@@ -21,7 +25,7 @@ export const callGeminiAPI = async (payload, apiKey, signal = null) => {
     try {
       return await fetchJson(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
         signal,
         timeoutMs: 30000,

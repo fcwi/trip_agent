@@ -8,26 +8,38 @@ const DB_NAME = getTripDatabaseName("images");
 const STORE_NAME = "imageThumbnails";
 const DB_VERSION = 1;
 
+let dbPromise = null;
+
 /**
- * 初始化 IndexedDB
+ * 初始化 IndexedDB（共用同一個連線）
  */
 export const initDB = () => {
-  return new Promise((resolve, reject) => {
+  if (dbPromise) return dbPromise;
+
+  dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
+      dbPromise = null;
       console.error("IndexedDB 初始化失敗:", request.error);
       reject(request.error);
     };
 
     request.onsuccess = () => {
-      resolve(request.result);
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      db.onclose = () => {
+        dbPromise = null;
+      };
+      resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
 
-      // 創建 object store
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
         objectStore.createIndex("timestamp", "timestamp", { unique: false });
@@ -35,6 +47,8 @@ export const initDB = () => {
       }
     };
   });
+
+  return dbPromise;
 };
 
 /**
