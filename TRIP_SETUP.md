@@ -59,7 +59,7 @@ npm run check
 - `VITE_ENCODED_GAS_URL`
 - `VITE_ENCODED_GAS_TOKEN`
 
-`.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。
+`.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。若 `.env` 曾被提交到 Git，請輪替 Gemini、Maps、MapTiler 與 GAS 憑證，因為歷史紀錄仍可能含有密文。
 
 解鎖密碼只保留在目前分頁的 `sessionStorage`；關閉分頁或按下鎖定後需重新輸入。舊版本曾保存於 `localStorage` 的密碼會在首次載入時自動移除。
 

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -28,6 +29,24 @@ const visit = (directory) => {
 visit(sourceRoot);
 
 const findings = [];
+try {
+  const trackedEnvFiles = execFileSync(
+    "git",
+    ["ls-files", "--", ".env", ".env.*"],
+    { encoding: "utf8" },
+  )
+    .split("\n")
+    .map((fileName) => fileName.trim())
+    .filter(Boolean)
+    .filter((fileName) => fileName !== ".env.example");
+
+  for (const fileName of trackedEnvFiles) {
+    findings.push(`${fileName}: tracked env file`);
+  }
+} catch {
+  // 非 git 工作目錄時略過追蹤檢查，仍掃描原始碼。
+}
+
 for (const filePath of sourceFiles) {
   const content = fs.readFileSync(filePath, "utf8");
   for (const { name, pattern } of secretPatterns) {
