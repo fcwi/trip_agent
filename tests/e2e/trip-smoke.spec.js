@@ -10,6 +10,29 @@ const TRANSLATION_TARGETS = {
   "2026_karuizawa": { code: "ja-JP", name: "日文" },
   "2027_tohoku": { code: "ja-JP", name: "日文" },
 };
+const LANDING_SCENARIOS = {
+  "2026_busan": {
+    date: "2026-07-02",
+    time: "11:00",
+    plan: "抵達釜山：豬肉湯飯與西面逛街",
+    next: "交通：機場 → 西面",
+    location: "西面站",
+  },
+  "2026_karuizawa": {
+    date: "2026-01-24",
+    time: "16:00",
+    plan: "抵達與移動：直奔雪國",
+    next: "上野站轉乘與午餐(點心)",
+    location: "JR 上野站",
+  },
+  "2027_tohoku": {
+    date: "2027-01-22",
+    time: "12:00",
+    plan: "仙台空港 → 天童／上山溫泉（低密度）",
+    next: "抵達仙台空港",
+    location: "仙台空港",
+  },
+};
 
 const blockExternalRequests = async (page) => {
   await page.route("**/*", async (route) => {
@@ -169,6 +192,44 @@ test("syncs bottom navigation with the URL and browser history", async ({
   await expect(
     page.getByRole("button", { name: "行程（目前分頁）" }),
   ).toHaveAttribute("aria-current", "page");
+});
+
+test("surfaces today's plan, next location, and needed-now guidance in test mode", async ({
+  page,
+}) => {
+  const scenario = LANDING_SCENARIOS[EXPECTED_TRIP_ID];
+  expect(scenario).toBeDefined();
+
+  await page.goto("/");
+  await unlockTrip(page);
+  await expect(
+    page.locator('section[aria-labelledby="today-overview-heading"]'),
+  ).toBeVisible();
+
+  const title = page.getByRole("button", {
+    name: "行程標題；連續點擊可開啟測試模式",
+  });
+  for (let click = 0; click < 10; click += 1) await title.click();
+  await page.getByRole("button", { name: "進入測試模式" }).click();
+  await page.locator("#testModeDate").fill(scenario.date);
+  await page.locator("#testModeTime").fill(scenario.time);
+  await page.getByRole("button", { name: "儲存變更" }).click();
+  await page.getByRole("button", { name: "凍結設定" }).click();
+  await page.getByRole("button", { name: "關閉測試模式" }).click();
+  await page.getByRole("button", { name: /^總覽/ }).click();
+
+  const overview = page.locator(
+    'section[aria-labelledby="today-overview-heading"]',
+  );
+  await expect(overview.getByText("今天的計畫", { exact: true })).toBeVisible();
+  await expect(
+    overview.getByRole("heading", { name: scenario.plan }),
+  ).toBeVisible();
+  await expect(overview.getByText(scenario.next)).toBeVisible();
+  await expect(
+    overview.getByText(scenario.location, { exact: true }),
+  ).toBeVisible();
+  await expect(overview.getByText("現在需要", { exact: true })).toBeVisible();
 });
 
 test("opens a deep-linked tab after restoring the session", async ({

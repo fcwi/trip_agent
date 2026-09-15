@@ -16,8 +16,6 @@ import {
   Train,
   Map,
   Navigation,
-  Plane,
-  ArrowRight,
   History,
   LayoutDashboard,
 } from "lucide-react";
@@ -26,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import FlightInfoCard from "../FlightInfoCard.jsx";
 import ChecklistCard from "../ChecklistCard.jsx";
 import WeatherCard from "../WeatherCard.jsx";
+import TodayOverviewCard from "../TodayOverviewCard.jsx";
 import { getItineraryChipLabel } from "../../utils/itineraryHelpers.js";
 
 const DayMap = lazy(() => import("../DayMap.jsx"));
@@ -99,6 +98,7 @@ const ItineraryTab = ({
   daysUntilTrip,
   checklistData,
   currentTripDayIndex,
+  temporalContext,
   weatherForecast,
   userWeather,
   displayWeather,
@@ -313,6 +313,18 @@ const ItineraryTab = ({
               exit="exit"
               className="space-y-5"
             >
+              <TodayOverviewCard
+                itineraryData={itineraryData}
+                tripConfig={tripConfig}
+                checklistData={checklistData}
+                temporalContext={temporalContext}
+                changeDay={changeDay}
+                isDarkMode={isDarkMode}
+                theme={theme}
+                componentStyles={componentStyles}
+                currentTheme={currentTheme}
+              />
+
               <WeatherCard
                 isDarkMode={isDarkMode}
                 theme={theme}
@@ -372,102 +384,6 @@ const ItineraryTab = ({
                     colors={colors}
                     initialData={checklistData}
                   />
-                </div>
-              )}
-
-              {tripStatus === "during" && currentTripDayIndex >= 0 && (
-                <div
-                  className={`backdrop-blur-2xl border rounded-[2rem] p-5 ${theme.cardShadow} animate-fadeIn transition-colors duration-300 ${componentStyles.itineraryCard}`}
-                  style={theme.ambientStyle}
-                >
-                  <div
-                    className={`flex items-center justify-between mb-4 border-b pb-3 ${isDarkMode ? "border-neutral-700/50" : "border-stone-200/50"}`}
-                  >
-                    <div>
-                      <div
-                        className={`text-xs font-bold px-2 py-0.5 rounded-full w-fit mb-1 ${theme.accent} ${theme.accentBg}`}
-                      >
-                        旅途中
-                      </div>
-                      <h2
-                        className={`text-2xl font-bold drop-shadow-sm ${theme.text}`}
-                        style={{
-                          textShadow: isDarkMode
-                            ? "0 2px 4px rgba(0,0,0,0.3)"
-                            : "none",
-                        }}
-                      >
-                        今天是 Day {currentTripDayIndex + 1}
-                      </h2>
-                    </div>
-                    <div
-                      className={`p-2.5 rounded-full animate-pulse ${theme.accentBg}`}
-                    >
-                      <Plane className={`w-6 h-6 ${theme.accent}`} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div
-                      className={`bg-gradient-to-r ${isDarkMode ? currentTheme.buttonGradients.primary.dark : currentTheme.buttonGradients.primary.light} text-white p-4 rounded-2xl shadow-lg relative overflow-hidden`}
-                    >
-                      <div className="relative z-10">
-                        <h3 className="text-lg font-bold mb-1 drop-shadow-md">
-                          {itineraryData[currentTripDayIndex].title}
-                        </h3>
-                        <div className="text-stone-200 text-xs flex items-center gap-1.5">
-                          <Hotel className="w-3.5 h-3.5" />
-                          {itineraryData[currentTripDayIndex].stay}
-                        </div>
-                      </div>
-                      <div className="absolute right-0 bottom-0 opacity-10">
-                        <MapPin className="w-20 h-20 text-white" />
-                      </div>
-                    </div>
-
-                    <div
-                      className={`p-4 rounded-2xl border transition-colors backdrop-blur-md ${isDarkMode ? "bg-neutral-800/30 border-neutral-700/60 ring-1 ring-white/5" : "bg-white/60 border-stone-200/60 ring-1 ring-black/5"}`}
-                    >
-                      <h4
-                        className={`text-xs font-bold mb-3 flex items-center gap-1.5 ${theme.textSec}`}
-                      >
-                        <Star className={`w-3.5 h-3.5 ${colors.orange}`} />{" "}
-                        今日亮點快速導覽
-                      </h4>
-                      <div className="space-y-3">
-                        {itineraryData[currentTripDayIndex].events
-                          .filter((e) => e.highlights)
-                          .slice(0, 3)
-                          .map((e, i) => (
-                            <div key={i} className="flex gap-3 items-start">
-                              <div
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded mt-0.5 backdrop-blur-md ${isDarkMode ? "bg-neutral-700/60 text-neutral-300 ring-1 ring-white/5" : "bg-stone-200/70 text-stone-600 ring-1 ring-black/5"}`}
-                              >
-                                {e.time}
-                              </div>
-                              <div>
-                                <div
-                                  className={`text-sm font-bold ${theme.text}`}
-                                >
-                                  {e.title}
-                                </div>
-                                <div
-                                  className={`text-xs mt-0.5 leading-relaxed ${theme.textSec}`}
-                                >
-                                  {e.desc}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                      <button
-                        onClick={() => changeDay(currentTripDayIndex)}
-                        className={`w-full mt-4 py-2.5 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 ${isDarkMode ? "bg-neutral-700 hover:bg-neutral-600 text-neutral-200" : "bg-stone-200 hover:bg-stone-300 text-stone-600"}`}
-                      >
-                        查看今日完整行程 <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 

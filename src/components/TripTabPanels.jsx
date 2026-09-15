@@ -29,6 +29,7 @@ export default function TripTabPanels({
   daysUntilTrip,
   checklistData,
   currentTripDayIndex,
+  temporalContext,
   weatherForecast,
   userWeather,
   displayWeather,
@@ -121,6 +122,7 @@ export default function TripTabPanels({
           daysUntilTrip={daysUntilTrip}
           checklistData={checklistData}
           currentTripDayIndex={currentTripDayIndex}
+          temporalContext={temporalContext}
           weatherForecast={weatherForecast}
           userWeather={userWeather}
           displayWeather={displayWeather}

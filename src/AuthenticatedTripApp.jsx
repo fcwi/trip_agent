@@ -95,6 +95,7 @@ import {
   buildShareTextLogic, // 新增
   getWeatherForecastIndex, // 新增
 } from "./utils/itineraryHelpers.js";
+import { getTripTemporalContext } from "./utils/landingOverview.js";
 import { processFileForHeic } from "./utils/imageUtils";
 // import { financeDB } from "./utils/indexedDBManager.js";
 
@@ -629,6 +630,7 @@ const ItineraryApp = ({ authentication }) => {
     isTestModeRef.current = isTestMode;
   }, [isTestMode]);
   const [testModeClickCount, setTestModeClickCount] = useState(0);
+  const [clockNow, setClockNow] = useState(() => new Date());
   const [testDateTime, setTestDateTime] = useState(new Date());
   const [testLatitude, setTestLatitude] = useState(35.4437);
   const [testLongitude, setTestLongitude] = useState(138.3919);
@@ -639,6 +641,19 @@ const ItineraryApp = ({ authentication }) => {
   const [frozenTestDateTime, setFrozenTestDateTime] = useState(null);
   const [frozenTestWeatherOverride, setFrozenTestWeatherOverride] =
     useState(null);
+
+  useEffect(() => {
+    const updateClock = () => setClockNow(new Date());
+    const intervalId = window.setInterval(updateClock, 60_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") updateClock();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   const freezeTestSettings = () => {
     setFrozenTestDateTime(new Date(testDateTime));
@@ -1022,48 +1037,20 @@ const ItineraryApp = ({ authentication }) => {
     [isDarkMode, cBase, currentTheme],
   );
 
-  const { tripStatus, daysUntilTrip, currentTripDayIndex } =
-    React.useMemo(() => {
-      const tripStartDate = new Date(tripConfig.startDate);
-      const tripEndDate = new Date(tripConfig.endDate);
-      // 優先順序：凍結的測試時間 > 測試模式時間 > 系統當前時間
-      const displayDateTime =
-        frozenTestDateTime || (isTestMode ? testDateTime : new Date());
-
-      debugLog(
-        `🧪 行程狀態計算 - isTestMode=${isTestMode}, isFrozen=${!!frozenTestDateTime}, displayDateTime=${displayDateTime.toLocaleString("zh-TW")}`,
-      );
-
-      let calculatedTripStatus = "before";
-      let calculatedDaysUntilTrip = 0;
-      let calculatedCurrentTripDayIndex = -1;
-
-      if (displayDateTime < tripStartDate) {
-        calculatedTripStatus = "before";
-        const diffTime = Math.abs(tripStartDate - displayDateTime);
-        calculatedDaysUntilTrip = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      } else if (
-        displayDateTime >= tripStartDate &&
-        displayDateTime <= tripEndDate
-      ) {
-        calculatedTripStatus = "during";
-        const diffTime = Math.abs(displayDateTime - tripStartDate);
-        calculatedCurrentTripDayIndex = Math.floor(
-          diffTime / (1000 * 60 * 60 * 24),
-        );
-        debugLog(
-          `🧪 正在行程中 - currentTripDayIndex=${calculatedCurrentTripDayIndex}`,
-        );
-      } else {
-        calculatedTripStatus = "after";
-      }
-
-      return {
-        tripStatus: calculatedTripStatus,
-        daysUntilTrip: calculatedDaysUntilTrip,
-        currentTripDayIndex: calculatedCurrentTripDayIndex,
-      };
-    }, [isTestMode, testDateTime, frozenTestDateTime]);
+  const temporalContext = React.useMemo(() => {
+    // 測試面板輸入的是旅程當地的牆上時間；真實時間則轉換到旅程設定時區。
+    const displayDateTime =
+      frozenTestDateTime || (isTestMode ? testDateTime : clockNow);
+    return getTripTemporalContext({
+      now: displayDateTime,
+      timeZone: tripConfig.timeZone,
+      startDate: tripConfig.startDate,
+      endDate: tripConfig.endDate,
+      itineraryLength: itineraryData.length,
+      treatAsLocal: isTestMode || Boolean(frozenTestDateTime),
+    });
+  }, [clockNow, isTestMode, testDateTime, frozenTestDateTime]);
+  const { tripStatus, daysUntilTrip, currentTripDayIndex } = temporalContext;
 
   const didAutoFocusTripDayRef = useRef(false);
   useEffect(() => {
@@ -2778,6 +2765,7 @@ const ItineraryApp = ({ authentication }) => {
           daysUntilTrip={daysUntilTrip}
           checklistData={checklistData}
           currentTripDayIndex={currentTripDayIndex}
+          temporalContext={temporalContext}
           weatherForecast={weatherForecast}
           userWeather={userWeather}
           displayWeather={displayWeather}
