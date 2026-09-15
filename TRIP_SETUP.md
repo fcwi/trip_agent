@@ -87,6 +87,16 @@ npm run check
 
 若釜山要沿用舊資料，`trip_agent_2026_busan.spreadsheetId` 必須指向原本 `SPREADSHEET_ID` 的同一份試算表。沒有 `tripId` 的舊 PWA 仍可回退到 `SPREADSHEET_ID`／`FOLDER_ID`。
 
-只有在 Script Property 名稱不是預設規則時，才需要在 `.env` 設定 `VITE_GAS_TRIP_PROPERTY_KEY`；空白時不要加入該查詢參數。
+只有在 Script Property 名稱不是預設規則時，才需要在 `.env` 設定 `VITE_GAS_TRIP_PROPERTY_KEY`；空白時不要加入該欄位。
 
-修改 Apps Script 後必須建立**新的 Web App 部署版本**，前端才會打到新程式。`api.gs` 目前被 Git 忽略，請以本機完整檔案更新 Apps Script，不要用片段覆蓋整份後端。
+記帳與位置的讀取改為 POST，token 放在請求本文，不再出現在網址。修改 Apps Script 後必須把本機 `api.gs` **完整貼上**並建立**新的 Web App 部署版本**，前端才會打到新程式。`api.gs` 目前被 Git 忽略，不要用片段覆蓋整份後端。舊版 GET 讀取仍可運作，但新版 PWA 只走 POST。
+
+## 輪替服務金鑰
+
+Git 歷史曾追蹤過 `.env`，密文可能仍留在舊 commit。輪替後請只把新密文寫進本機 `.env`，不要提交。
+
+1. 在 Google AI Studio／Cloud、Maps、MapTiler、Apps Script 分別建立新金鑰／Token，並停用舊的。
+2. Maps、MapTiler 請限制允許網域為 `https://fcwi.github.io/*`。
+3. 打開本機網站，用加密工具把每一把新金鑰加密後寫入 `.env` 對應的 `VITE_ENCODED_*`。
+4. 若也換了 GAS Token，同步更新 Script Property `AUTH_TOKEN`。
+5. 執行 `npm run deploy` 發佈新前端。

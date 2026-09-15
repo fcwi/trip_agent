@@ -41,6 +41,27 @@ test("parseReverseGeoName falls back to road and house number", () => {
   );
 });
 
+test("lookupReverseGeoName identifies Nominatim requests", async () => {
+  const cacheRef = { current: {} };
+  let requestHeaders;
+  const fetchImpl = async (_url, options = {}) => {
+    requestHeaders = options.headers;
+    return jsonResponse({
+      name: "釜山站",
+      address: { city: "釜山" },
+    });
+  };
+
+  await lookupReverseGeoName({
+    latitude: 35.11511,
+    longitude: 129.04119,
+    cacheRef,
+    fetchImpl,
+  });
+
+  assert.match(requestHeaders["User-Agent"], /trip-agent/);
+});
+
 test("lookupReverseGeoName caches Nominatim results by rounded coords", async () => {
   const cacheRef = { current: {} };
   let calls = 0;

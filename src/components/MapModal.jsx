@@ -3,6 +3,12 @@ import { X, RotateCcw, LocateFixed } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
+import { escapeHtml } from "../utils/html.js";
+import {
+  buildEventPopupHtml,
+  buildSharedLocationPopupHtml,
+  toMapLibreRouteCoordinates,
+} from "../utils/mapHelpers.js";
 
 // 輔助函式：計算相對時間
 const getRelativeTime = (timestamp) => {
@@ -247,15 +253,15 @@ const MapModal = ({
         offset: 25,
         closeButton: false,
         className: "custom-maplibre-popup",
-      }).setHTML(`
-          <div class="p-4 rounded-2xl ${isDarkMode ? "bg-[#1a1a1a]/95 border border-neutral-700 text-neutral-200" : "bg-white/95 border border-stone-100 text-stone-800"}">
-            <div class="font-bold text-base mb-2 flex items-center gap-2">
-              <span class="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] font-bold">${idx + 1}</span>
-              ${event.time} ${event.title}
-            </div>
-            <div class="text-sm leading-relaxed">${event.desc}</div>
-          </div>
-        `);
+      }).setHTML(
+        buildEventPopupHtml({
+          index: idx,
+          time: event.time,
+          title: event.title,
+          desc: event.desc,
+          isDarkMode,
+        }),
+      );
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([event.lon, event.lat])
         .setPopup(popup)
@@ -307,7 +313,7 @@ const MapModal = ({
             box-shadow: 0 0 20px rgba(251, 146, 60, 0.7), 0 5px 15px rgba(0,0,0,0.4);
             z-index: 10;
           ">
-            ${currentUser?.avatar || "👤"}
+            ${escapeHtml(currentUser?.avatar || "👤")}
           </div>
         </div>
         <style>
@@ -354,46 +360,24 @@ const MapModal = ({
             font-size: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
           ">
-            ${loc.user?.avatar || "👤"}
+            ${escapeHtml(loc.user?.avatar || "👤")}
           </div>
         `;
         const popup = new maplibregl.Popup({
           offset: 25,
           closeButton: false,
           className: "custom-maplibre-popup",
-        }).setHTML(`
-            <div class="p-4 rounded-2xl shadow-xl border backdrop-blur-md -m-[13px] -mb-[14px] min-w-[150px] ${
-              isDarkMode
-                ? "bg-[#1a1a1a]/95 border-neutral-700 text-neutral-200"
-                : "bg-white/95 border-stone-100 text-stone-800"
-            }">
-              <div class="font-bold text-base mb-2 flex items-center gap-2">
-                <span class="text-xl">
-                  ${loc.user?.avatar || "👤"}
-                </span>
-                ${loc.user?.name}
-              </div>
-              <div
-                class="text-xs font-bold ${
-                  isDarkMode ? "text-blue-400" : "text-blue-600"
-                }"
-              >
-                🕙 ${getRelativeTime(loc.timestamp)}
-              </div>
-              ${loc.device ? `<div class="text-[10px] mt-0.5 ${isDarkMode ? "text-neutral-500" : "text-stone-400"}">📱 ${loc.device}</div>` : ""}
-              <a
-                href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}"
-                class="mt-2.5 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                  isDarkMode
-                    ? "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
-                    : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                }"
-                onclick="event.stopPropagation()"
-              >
-                🧭 導航至此
-              </a>
-            </div>
-          `);
+        }).setHTML(
+          buildSharedLocationPopupHtml({
+            name: loc.user?.name,
+            avatar: loc.user?.avatar,
+            device: loc.device,
+            relativeTime: getRelativeTime(loc.timestamp),
+            lat: loc.lat,
+            lon: loc.lon,
+            isDarkMode,
+          }),
+        );
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([loc.lon, loc.lat])
           .setPopup(popup)
@@ -411,7 +395,7 @@ const MapModal = ({
         type: "Feature",
         geometry: {
           type: "LineString",
-          coordinates: routeCoords.map((coord) => [coord[1], coord[0]]), // MapLibre expects [lon, lat]
+          coordinates: toMapLibreRouteCoordinates(routeCoords),
         },
       };
 

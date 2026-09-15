@@ -53,6 +53,11 @@ export function parseReverseGeoName(geoData) {
   return { city, landmark, isGeneric };
 }
 
+const NOMINATIM_HEADERS = Object.freeze({
+  Accept: "application/json",
+  "User-Agent": "trip-agent/1.0 (family trip PWA; nominatim reverse geocode)",
+});
+
 /**
  * Nominatim reverse geocode with in-memory expiry cache.
  */
@@ -72,7 +77,7 @@ export async function lookupReverseGeoName({
     Date.now() - (cacheRef.current[geoKey]?.timestamp || 0) > cacheExpiryMs
   ) {
     const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-TW&zoom=18`;
-    const geoRes = await fetchImpl(geoUrl);
+    const geoRes = await fetchImpl(geoUrl, { headers: NOMINATIM_HEADERS });
     geoData = await geoRes.json();
 
     cacheRef.current[geoKey] = {

@@ -3,6 +3,8 @@
  * 用於動態控制 Gemini API 的搜尋工具行為，以節省 API 額度。
  */
 
+import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
+
 // =============================================
 // 🔧 模型切換設定 — 修改這裡即可一鍵切換
 // =============================================
@@ -375,11 +377,13 @@ export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * Behavior-equivalent extraction from AuthenticatedTripApp.
  */
 export async function callGeminiSafe({ apiKey, payload, abortControllerRef }) {
-  const currentKey = apiKey;
   const maxRetries = 3;
   let attempt = 0;
   const activeModel = getActiveModel();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
+  const { url, headers } = buildGeminiGenerateContentRequest(
+    activeModel.id,
+    apiKey,
+  );
 
   while (attempt < maxRetries) {
     try {
@@ -390,7 +394,7 @@ export async function callGeminiSafe({ apiKey, payload, abortControllerRef }) {
 
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
         signal: abortControllerRef.current.signal,
       });

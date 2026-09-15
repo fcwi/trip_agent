@@ -84,12 +84,12 @@ test("adds and encodes optional context values in GET URLs", () => {
   );
 });
 
-test("adds tripId to getAll and getLocations URLs without an empty property key", async () => {
+test("adds tripId to getAll and getLocations POST bodies without a query token", async () => {
   const context = createGasTripContext({ tripId: "2026_karuizawa" });
   const captured = [];
 
-  const fetchImpl = async (url) => {
-    captured.push(new URL(url));
+  const fetchImpl = async (url, options) => {
+    captured.push({ url, options });
     return jsonResponse({ status: "success", data: [] });
   };
 
@@ -106,11 +106,15 @@ test("adds tripId to getAll and getLocations URLs without an empty property key"
     fetchImpl,
   });
 
-  assert.equal(captured[0].searchParams.get("action"), "getAll");
-  assert.equal(captured[1].searchParams.get("action"), "getLocations");
-  for (const url of captured) {
-    assert.equal(url.searchParams.get("tripId"), "2026_karuizawa");
-    assert.equal(url.searchParams.has("gasPropertyKey"), false);
+  assert.equal(JSON.parse(captured[0].options.body).action, "getAll");
+  assert.equal(JSON.parse(captured[1].options.body).action, "getLocations");
+  for (const request of captured) {
+    assert.equal(request.options.method, "POST");
+    const body = JSON.parse(request.options.body);
+    assert.equal(body.tripId, "2026_karuizawa");
+    assert.equal(body.token, "private-token");
+    assert.equal("gasPropertyKey" in body, false);
+    assert.equal(new URL(request.url).search, "");
   }
 });
 

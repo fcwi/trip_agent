@@ -10,6 +10,12 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Lock, Unlock, Loader2 } from "lucide-react";
 import MapModal from "./MapModal.jsx";
+import { escapeHtml } from "../utils/html.js";
+import {
+  buildEventPopupHtml,
+  isValidLngLat,
+  toMapLibreRouteCoordinates,
+} from "../utils/mapHelpers.js";
 
 /**
  * DayMap Component with MapLibre GL JS & MapTiler
@@ -175,7 +181,9 @@ const DayMap = ({
         const data = await response.json();
 
         if (data.routes && data.routes[0]) {
-          const coordinates = data.routes[0].geometry.coordinates;
+          const coordinates = toMapLibreRouteCoordinates(
+            data.routes[0].geometry.coordinates,
+          );
           setRouteCoords(coordinates);
         }
       } catch (error) {
@@ -197,19 +205,6 @@ const DayMap = ({
     // 1. 清除現有標記
     markers.current.forEach((m) => m.remove());
     markers.current = [];
-
-    const isValidLngLat = (lng, lat) => {
-      return (
-        typeof lng === "number" &&
-        typeof lat === "number" &&
-        !isNaN(lng) &&
-        !isNaN(lat) &&
-        lng >= -180 &&
-        lng <= 180 &&
-        lat >= -90 &&
-        lat <= 90
-      );
-    };
 
     // 2. 準備邊界計算
     const bounds = new maplibregl.LngLatBounds();
@@ -233,15 +228,16 @@ const DayMap = ({
         offset: 25,
         closeButton: false,
         className: "custom-maplibre-popup",
-      }).setHTML(`
-          <div class="p-3 rounded-xl ${isDarkMode ? "bg-[#1a1a1a] text-neutral-200" : "bg-white text-stone-800"}">
-            <div class="font-bold text-sm mb-1 flex items-center gap-2">
-              <span class="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold">${idx + 1}</span>
-              ${event.time} ${event.title}
-            </div>
-            <div class="text-xs leading-snug ${isDarkMode ? "text-neutral-400" : "text-stone-500"}">${event.desc}</div>
-          </div>
-        `);
+      }).setHTML(
+        buildEventPopupHtml({
+          index: idx,
+          time: event.time,
+          title: event.title,
+          desc: event.desc,
+          isDarkMode,
+          compact: true,
+        }),
+      );
 
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([event.lon, event.lat])
@@ -260,7 +256,7 @@ const DayMap = ({
       el.innerHTML = `
         <div style="position: relative; width: 38px; height: 38px;">
           <div style="position: absolute; top: -10px; left: -10px; width: 58px; height: 58px; background-color: rgba(251, 146, 60, 0.3); border-radius: 50%; animation: orange-ping 2s infinite; z-index: -1;"></div>
-          <div style="width: 38px; height: 38px; background: white; border: 3px solid #fb923c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(251, 146, 60, 0.6);">${currentUser?.avatar || "👤"}</div>
+          <div style="width: 38px; height: 38px; background: white; border: 3px solid #fb923c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(251, 146, 60, 0.6);">${escapeHtml(currentUser?.avatar || "👤")}</div>
         </div>
       `;
       const marker = new maplibregl.Marker({ element: el })
@@ -279,7 +275,7 @@ const DayMap = ({
         const el = document.createElement("div");
         el.className = "custom-other-user-icon";
         el.innerHTML = `
-          <div style="width: 38px; height: 38px; background: white; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">${loc.user?.avatar || "👤"}</div>
+          <div style="width: 38px; height: 38px; background: white; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">${escapeHtml(loc.user?.avatar || "👤")}</div>
         `;
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat([loc.lon, loc.lat])

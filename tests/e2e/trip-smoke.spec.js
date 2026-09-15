@@ -38,6 +38,7 @@ const interceptGasRequests = async (page) => {
       hasPropertyKey: Boolean(
         body.gasPropertyKey || url.searchParams.get("gasPropertyKey"),
       ),
+      hasTokenInUrl: url.searchParams.has("token"),
     });
     await route.fulfill({
       status: 200,
@@ -396,5 +397,7 @@ test("scopes mocked GAS reads and writes to the active trip", async ({
   for (const call of calls) {
     expect(call.tripId).toBe(EXPECTED_TRIP_ID);
     expect(call.hasPropertyKey).toBe(false);
+    expect(call.method).toBe("POST");
+    expect(call.hasTokenInUrl).toBe(false);
   }
 });

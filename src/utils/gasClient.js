@@ -1,8 +1,5 @@
 import { fetchGasWithRetry } from "./api.js";
-import {
-  addGasTripContextToPayload,
-  addGasTripContextToUrl,
-} from "./gasTripContextCore.js";
+import { addGasTripContextToPayload } from "./gasTripContextCore.js";
 import { GasResponseError, requireGasSuccess } from "./gasResponse.js";
 
 const requestGas = async (url, options) => {
@@ -58,16 +55,14 @@ const fetchGasAction = async ({
 }) => {
   if (!gasUrl || !gasToken) return [];
 
-  const requestUrl = new URL(gasUrl);
-  requestUrl.searchParams.set("token", gasToken);
-  requestUrl.searchParams.set("action", action);
-  const url = addGasTripContextToUrl(requestUrl.toString(), context);
-  const result = await requestGas(url, {
-    method: "GET",
+  const result = await uploadToGasWithContext({
+    data: { action },
+    gasUrl,
+    gasToken,
+    context,
     signal,
     fetchImpl,
   });
-  requireGasSuccess(result, [gasToken, gasUrl]);
   if (!Array.isArray(result.data)) {
     throw new GasResponseError({ status: "error", code: "INVALID_PAYLOAD" });
   }
