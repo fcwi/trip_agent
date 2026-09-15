@@ -58,6 +58,30 @@ const isPartialGasError = (error, code) =>
   error.status === "partial" &&
   (!code || error.code === code);
 
+const RecordSyncIndicator = ({ synced, syncing, syncError }) => {
+  if (synced) {
+    return (
+      <span title="已同步" aria-label="已同步">
+        <Check className="w-3 h-3 text-green-500" aria-hidden="true" />
+      </span>
+    );
+  }
+
+  const label = syncing
+    ? "正在同步至雲端"
+    : syncError
+      ? `雲端同步失敗：${syncError}`
+      : "尚未同步，稍後會自動重試";
+  return (
+    <span title={label} aria-label={label} role="status">
+      <RefreshCcw
+        className={`w-3 h-3 text-orange-400 ${syncing ? "animate-spin" : ""}`}
+        aria-hidden="true"
+      />
+    </span>
+  );
+};
+
 const readPendingDeletes = () => {
   try {
     const value = tripStorage.getItem(PENDING_DELETES_STORAGE_KEY);
@@ -559,6 +583,8 @@ const FinanceScreen = ({
                 synced: true,
                 syncAction: null,
                 imageSyncPending: false,
+                syncing: false,
+                syncError: null,
               };
             } catch (error) {
               if (isPartialGasError(error, "IMAGE_UPLOAD_FAILED")) {
@@ -568,10 +594,18 @@ const FinanceScreen = ({
                   synced: false,
                   syncAction: "add",
                   imageSyncPending: true,
+                  syncing: false,
+                  syncError: error.message,
                 };
                 continue;
               }
               logger.debug("本機記錄仍待同步", recordId, error);
+              mergedRecords[index] = {
+                ...record,
+                id: recordId,
+                syncing: false,
+                syncError: error.message,
+              };
             }
           }
 
@@ -706,7 +740,8 @@ const FinanceScreen = ({
         }
       } catch (e) {
         console.error("Sync error:", e);
-        if (!isBackground) showToast("同步失敗，請檢查網路", "error");
+        if (!isBackground)
+          showToast(e.message || "同步失敗，請檢查網路", "error");
       } finally {
         if (!isBackground) setIsSyncing(false);
       }
@@ -733,6 +768,9 @@ const FinanceScreen = ({
           return {
             ...r,
             image: imageValue,
+            // `syncing` is a transient UI state. A reload must never revive
+            // an old spinner after the request has already ended.
+            syncing: false,
             // 🆕 確保保留 hasCloudImage 標記，若原始資料有圖片（base64或URL）也視為有圖片
             hasCloudImage: r.hasCloudImage || !!r.image,
           };
@@ -1144,6 +1182,8 @@ const FinanceScreen = ({
       hasCloudImage: !!imageBase64,
       synced: false,
       syncAction: "add",
+      syncing: Boolean(gasUrl && gasToken),
+      syncError: null,
     };
 
     // ✅ 儲存到 IndexedDB
@@ -1176,7 +1216,13 @@ const FinanceScreen = ({
           setRecords((prev) =>
             prev.map((r) =>
               r.id === newItem.id
-                ? { ...r, synced: true, syncAction: null }
+                ? {
+                    ...r,
+                    synced: true,
+                    syncAction: null,
+                    syncing: false,
+                    syncError: null,
+                  }
                 : r,
             ),
           );
@@ -1191,6 +1237,8 @@ const FinanceScreen = ({
                       synced: false,
                       syncAction: "add",
                       imageSyncPending: true,
+                      syncing: false,
+                      syncError: error.message,
                     }
                   : record,
               ),
@@ -1199,6 +1247,21 @@ const FinanceScreen = ({
             return;
           }
           logger.debug("新增紀錄仍待同步", newItem.id, error);
+          setRecords((prev) =>
+            prev.map((record) =>
+              record.id === newItem.id
+                ? {
+                    ...record,
+                    syncing: false,
+                    syncError: error.message,
+                  }
+                : record,
+            ),
+          );
+          showToast(
+            `已記在本機；${error.message || "雲端同步失敗，稍後會自動重試"}`,
+            "error",
+          );
         });
     }
 
@@ -2135,11 +2198,11 @@ const FinanceScreen = ({
                                       >
                                         {formatTime(record.timestamp)}
                                       </span>
-                                      {record.synced ? (
-                                        <Check className="w-3 h-3 text-green-500" />
-                                      ) : (
-                                        <RefreshCcw className="w-3 h-3 text-orange-400 animate-spin" />
-                                      )}
+                                      <RecordSyncIndicator
+                                        synced={record.synced}
+                                        syncing={record.syncing}
+                                        syncError={record.syncError}
+                                      />
                                     </div>
                                   </div>
 
@@ -2219,11 +2282,11 @@ const FinanceScreen = ({
                                   >
                                     {formatTime(record.timestamp)}
                                   </span>
-                                  {record.synced ? (
-                                    <Check className="w-3 h-3 text-green-500" />
-                                  ) : (
-                                    <RefreshCcw className="w-3 h-3 text-orange-400 animate-spin" />
-                                  )}
+                                  <RecordSyncIndicator
+                                    synced={record.synced}
+                                    syncing={record.syncing}
+                                    syncError={record.syncError}
+                                  />
                                 </div>
                               </>
                             )}

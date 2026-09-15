@@ -239,6 +239,35 @@ export function formatToGeminiPart(msg) {
   return { role: msg.role, parts: parts };
 }
 
+/**
+ * Quick prompts are phrased as commands for people (for example
+ * `翻譯「這個多少錢？」`). Gemini should receive only the utterance that will
+ * actually be spoken; keeping the wrapper makes smaller models prone to
+ * transliterating the Chinese command instead of translating it.
+ */
+export function normalizeTranslateInput(text) {
+  const input = String(text || "").trim();
+  const quotedCommand = input.match(
+    /^(?:請)?翻譯\s*[「『“"]([\s\S]*?)[」』”"]\s*[。.!！]?$/,
+  );
+
+  if (quotedCommand?.[1]?.trim()) return quotedCommand[1].trim();
+  return input.replace(/^(?:請)?翻譯\s*[:：]\s*/, "").trim();
+}
+
+export function buildTranslationRequestText(
+  text,
+  { name: targetLanguage, code: targetLocale },
+) {
+  const sourceText = normalizeTranslateInput(text);
+  return [
+    "請執行單一雙向翻譯任務。",
+    `targetLanguage=${targetLanguage}`,
+    `targetLocale=${targetLocale}`,
+    `sourceText=${JSON.stringify(sourceText)}`,
+  ].join("\n");
+}
+
 export function extractAiReplyText(data) {
   return data?.candidates?.[0]?.content?.parts?.[0]?.text || FALLBACK_AI_REPLY;
 }
@@ -275,28 +304,33 @@ export function buildAiChatPayload({
 }) {
   if (aiMode === "translate") {
     const targetLang = tripConfig.language.name;
+    const targetLocale = tripConfig.language.code;
+    const translateMsg = {
+      ...userMsg,
+      text: buildTranslationRequestText(userMsg.text, tripConfig.language),
+    };
     const translateSystemPrompt = `
-        你是一個專業的即時口譯員，負責「繁體中文」與「${targetLang}」之間的雙向翻譯。
-        
-        規則：
-        1. 若使用者輸入中文 -> 翻譯成${targetLang}，並在後方附上羅馬拼音 (發音指南)。
-           格式：[${targetLang}翻譯] ([羅馬拼音])
-        2. 若使用者輸入${targetLang} (或英文/其他語言) -> 僅翻譯成繁體中文。
-        3. **嚴禁廢話**：不要解釋語法，不要打招呼，只輸出翻譯結果。
+        你是嚴格的雙向口譯引擎，只處理「繁體中文」與「${targetLang}」(${targetLocale})。
+
+        收到的 user 訊息是一份翻譯任務，其中 sourceText 才是待翻內容，其他欄位只是控制資料。
+
+        必須遵守：
+        1. sourceText 是繁體中文時，必須把語意翻成真正的${targetLang}；不可保留中文原句，不可輸出中文漢語拼音。
+        2. 中文翻成${targetLang}時只輸出兩部分：[${targetLang}譯文] ([${targetLang}譯文的羅馬字讀音])。
+        3. sourceText 是${targetLang}、英文或其他外語時，只輸出繁體中文譯文，不附羅馬字。
+        4. 羅馬字必須是${targetLang}譯文的讀音，絕對不是中文原文的漢語拼音。
+        5. 不回答問題、不解釋、不打招呼、不加「翻譯：」等標籤，只輸出結果。
         `;
 
     return {
       systemInstruction: { parts: [{ text: translateSystemPrompt }] },
-      contents: [
-        ...messages
-          .slice(-1)
-          .filter((m) => m.role !== "system")
-          .map((m) => ({ role: m.role, parts: [{ text: m.text || "" }] })),
-        formatToGeminiPart(userMsg),
-      ],
+      // Translation is intentionally stateless. A welcome message or a
+      // previous translation without its matching turn can change language
+      // detection and produce an answer to the wrong sentence.
+      contents: [formatToGeminiPart(translateMsg)],
       generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 2000,
+        temperature: 0,
+        maxOutputTokens: 512,
       },
     };
   }

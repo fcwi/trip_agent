@@ -6,7 +6,7 @@
  * 可樂森吉樹冰團（阿仁／森吉），不是藏王樹冰。
  * 日序以手冊 v11／Top5 B 為準。未擴充 schema。
  *
- * 結構、主題與 `theme.componentStyles` 自 `src/tripdata_2026_karuizawa.jsx`
+ * 結構、主題與 `theme.componentStyles` 自 `src/trip/tripdata_2026_karuizawa.jsx`
  * 整檔複製；僅替換旅程內容。
  *
  * 【匯出項目】
@@ -1176,7 +1176,7 @@ export const tripConfig = {
 
   // ========== 視覺主題 (UI 樣式) ==========
   // 以下 theme（含 componentStyles light/dark）自
-  // src/tripdata_2026_karuizawa.jsx 整段複製，勿拆 light/dark。
+  // src/trip/tripdata_2026_karuizawa.jsx 整段複製，勿拆 light/dark。
   theme: {
     colorBase: "stone",
     colorAccent: "amber",
@@ -1665,9 +1665,9 @@ export const tripConfig = {
   // ========== 語言與語音設定 ==========
   // validator 需要 language.code 與 language.name
   language: {
-    code: "zh-Hant",
-    label: "中",
-    name: "繁體中文",
+    code: "ja-JP",
+    label: "日",
+    name: "日文",
   },
 };
 

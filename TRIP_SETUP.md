@@ -14,12 +14,12 @@ VITE_PUBLIC_SITE_URL=https://example.com/trip_agent/
 
 修改後重新執行 `npm run dev` 或 `npm run build`。
 
-系統會依 ID 載入 `src/tripdata_<旅程 ID>.jsx`，並同步更新畫面內容、主題、PWA 名稱、Meta、時區、幣別與本機資料命名空間。
+系統會依 ID 載入 `src/trip/tripdata_<旅程 ID>.jsx`，並同步更新畫面內容、主題、PWA 名稱、Meta、時區、幣別與本機資料命名空間。完整撰寫範例與檢查清單請參考 [`src/trip/README.md`](src/trip/README.md)。
 
 ## 建立新旅程
 
-1. 複製最接近的現有旅程資料檔，例如 `src/tripdata_2026_busan.jsx`。
-2. 重新命名為 `src/tripdata_<新旅程 ID>.jsx`。
+1. 複製最接近的現有旅程資料檔，例如 `src/trip/tripdata_2026_busan.jsx`。
+2. 重新命名為 `src/trip/tripdata_<新旅程 ID>.jsx`。
 3. 修改檔案內的 `tripConfig`、行程、指南、連結、購物指南與檢查清單。
 4. 在 `.env` 設定相同的 `VITE_TRIP_ID`。
 
@@ -76,7 +76,13 @@ npm run check
 - `trip_agent_2026_busan`
 - `trip_agent_2026_karuizawa`
 
-每個旅程屬性應為：
+第一次收到帶有新 `tripId` 的已驗證請求時，GAS 會自動：
+
+1. 建立 `Trip Agent - <tripId>` 專屬資料夾。
+2. 在資料夾內建立同名試算表及記帳、記事、位置三張工作表。
+3. 將試算表與資料夾 ID 寫入上述 Script Property。
+
+因此新增或切換旅程不需要手動新增 Property，也不需要重新部署 GAS。自動建立後的屬性內容為：
 
 ```json
 {
@@ -85,11 +91,15 @@ npm run check
 }
 ```
 
+預設會在「我的雲端硬碟」尋找或建立名為「旅遊」的共同上層資料夾，再把各旅程資料夾建立於其中。若要改名稱，可設定 Script Property `TRIP_ROOT_FOLDER_NAME`；若要直接指定既有資料夾，則設定其真正的 Google Drive ID 至 `TRIP_ROOT_FOLDER_ID`，此設定會優先於名稱。
+
+已存在的 `trip_agent_<tripId>` 會直接沿用，GAS 不會覆寫或搬動既有試算表與資料夾。若屬性已存在但 JSON 或 ID 不完整，系統會回報設定錯誤，避免意外建立第二套資料。
+
 若釜山要沿用舊資料，`trip_agent_2026_busan.spreadsheetId` 必須指向原本 `SPREADSHEET_ID` 的同一份試算表。沒有 `tripId` 的舊 PWA 仍可回退到 `SPREADSHEET_ID`／`FOLDER_ID`。
 
 只有在 Script Property 名稱不是預設規則時，才需要在 `.env` 設定 `VITE_GAS_TRIP_PROPERTY_KEY`；空白時不要加入該欄位。
 
-記帳與位置的讀取改為 POST，token 放在請求本文，不再出現在網址。修改 Apps Script 後必須把本機 `api.gs` **完整貼上**並建立**新的 Web App 部署版本**，前端才會打到新程式。`api.gs` 目前被 Git 忽略，不要用片段覆蓋整份後端。舊版 GET 讀取仍可運作，但新版 PWA 只走 POST。
+記帳與位置的讀取改為 POST，token 放在請求本文，不再出現在網址。本次加入自動建立功能時，必須把本機 `api.gs` **完整貼上**並建立**一次新的 Web App 部署版本**；之後增加任何 `tripId` 都不必再次部署。`api.gs` 目前被 Git 忽略，不要用片段覆蓋整份後端。舊版 GET 讀取仍可運作，但新版 PWA 只走 POST。
 
 ## 輪替服務金鑰
 

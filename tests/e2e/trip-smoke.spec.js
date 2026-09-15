@@ -5,6 +5,11 @@ const TEST_PASSWORD = "trip-e2e-password";
 const EXPECTED_TRIP_ID = process.env.E2E_TRIP_ID || "2026_busan";
 const pageErrors = new WeakMap();
 const gasCallsByPage = new WeakMap();
+const TRANSLATION_TARGETS = {
+  "2026_busan": { code: "ko-KR", name: "韓文" },
+  "2026_karuizawa": { code: "ja-JP", name: "日文" },
+  "2027_tohoku": { code: "ja-JP", name: "日文" },
+};
 
 const blockExternalRequests = async (page) => {
   await page.route("**/*", async (route) => {
@@ -400,4 +405,45 @@ test("scopes mocked GAS reads and writes to the active trip", async ({
     expect(call.method).toBe("POST");
     expect(call.hasTokenInUrl).toBe(false);
   }
+});
+
+test("sends an explicit destination-language translation task", async ({
+  page,
+}) => {
+  let geminiPayload = null;
+  await page.route(
+    "https://generativelanguage.googleapis.com/**",
+    async (route) => {
+      geminiPayload = JSON.parse(route.request().postData() || "{}");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          candidates: [
+            { content: { parts: [{ text: "テスト訳 (Tesuto-yaku)" }] } },
+          ],
+        }),
+      });
+    },
+  );
+
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.getByRole("button", { name: /^導遊/ }).click();
+  await page
+    .getByRole("button", { name: /^翻譯「/ })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "傳送訊息" }).click();
+
+  await expect(page.getByText("テスト訳 (Tesuto-yaku)")).toBeVisible();
+  const target = TRANSLATION_TARGETS[EXPECTED_TRIP_ID];
+  expect(target).toBeDefined();
+  expect(geminiPayload.systemInstruction.parts[0].text).toContain(target.name);
+  expect(geminiPayload.systemInstruction.parts[0].text).toContain(target.code);
+  expect(geminiPayload.contents).toHaveLength(1);
+  expect(geminiPayload.contents[0].parts[0].text).toContain(
+    `targetLanguage=${target.name}`,
+  );
+  expect(geminiPayload.contents[0].parts[0].text).not.toContain("翻譯「");
 });

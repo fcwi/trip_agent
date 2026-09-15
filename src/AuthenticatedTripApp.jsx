@@ -71,7 +71,6 @@ import {
   guidesData,
   usefulLinks,
   shopGuideData,
-  // } from "./tripdata_2026_karuizawa.jsx";
 } from "@trip-data";
 import { tripConfig, checklistData } from "@trip-data"; // 👈 從這裡切換不同行程資料
 

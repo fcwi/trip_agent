@@ -6,9 +6,31 @@ import {
   extractAiReplyText,
   getAiErrorText,
   buildAiChatPayload,
+  buildTranslationRequestText,
+  normalizeTranslateInput,
   FALLBACK_AI_REPLY,
   GUIDE_LOADING_TEXTS,
 } from "../src/utils/aiHelpers.js";
+
+test("normalizeTranslateInput removes UI command wrappers", () => {
+  assert.equal(normalizeTranslateInput("翻譯「這個多少錢？」"), "這個多少錢？");
+  assert.equal(normalizeTranslateInput("請翻譯：廁所在哪裡？"), "廁所在哪裡？");
+  assert.equal(
+    normalizeTranslateInput("これはいくらですか？"),
+    "これはいくらですか？",
+  );
+});
+
+test("buildTranslationRequestText gives the model an explicit target", () => {
+  const request = buildTranslationRequestText("翻譯「請給我兒童餐具」", {
+    code: "ja-JP",
+    name: "日文",
+  });
+  assert.match(request, /targetLanguage=日文/);
+  assert.match(request, /targetLocale=ja-JP/);
+  assert.match(request, /sourceText="請給我兒童餐具"/);
+  assert.doesNotMatch(request, /翻譯「/);
+});
 
 test("getNextAiLoadingText uses translate copy and cycles guide texts", () => {
   assert.equal(getNextAiLoadingText("translate"), "正在進行雙向翻譯...");
@@ -99,10 +121,35 @@ test("buildAiChatPayload builds translate vs guide payloads equivalently", () =>
     userWeather: { locationName: "定位中...", loading: true },
   });
 
-  assert.equal(translate.generationConfig.temperature, 0.3);
+  assert.equal(translate.generationConfig.temperature, 0);
   assert.match(translate.systemInstruction.parts[0].text, /繁體中文.*韓文/);
-  assert.equal(translate.contents.at(-1).parts[0].text, "附近有推薦嗎");
+  assert.equal(translate.contents.length, 1);
+  assert.match(
+    translate.contents[0].parts[0].text,
+    /sourceText="附近有推薦嗎"/,
+  );
   assert.equal(translate.tools, undefined);
+
+  const quickPrompt = buildAiChatPayload({
+    aiMode: "translate",
+    messages,
+    userMsg: { role: "user", text: "翻譯「這個多少錢？」" },
+    messageText: "翻譯「這個多少錢？」",
+    tripConfig,
+    itineraryData: [],
+    itineraryFlat: "",
+    shopsFlat: "",
+    localTimeStr: "2026/01/01 12:00:00",
+    tz: "Asia/Taipei",
+    isTestMode: false,
+    testDateTime: new Date(),
+    hasLocationPermission: false,
+    userWeather: { locationName: "定位中...", loading: true },
+  });
+  assert.match(
+    quickPrompt.contents[0].parts[0].text,
+    /sourceText="這個多少錢？"/,
+  );
 
   const logs = [];
   const guide = buildAiChatPayload({

@@ -81,7 +81,7 @@ export default defineConfig(({ mode }) => {
     throw new Error(`VITE_TRIP_ID 格式不合法：${tripId}`);
   }
 
-  const tripFilePath = `src/tripdata_${tripId}.jsx`;
+  const tripFilePath = `src/trip/tripdata_${tripId}.jsx`;
   if (!fs.existsSync(path.resolve(__dirname, tripFilePath))) {
     throw new Error(
       `找不到旅程資料檔：${tripFilePath}。請確認 VITE_TRIP_ID 或新增對應檔案。`,
