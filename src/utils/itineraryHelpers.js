@@ -1,16 +1,9 @@
 export const getItineraryChipLabel = (day) => {
-  const datePart = String(day?.date || "")
+  const dayPart = String(day?.day || "").trim();
+  if (dayPart) return dayPart;
+  return String(day?.date || "")
     .split(" ")[0]
     .trim();
-  const title = String(day?.title || "").trim();
-  const shortTitle = title
-    .split(/[：:]/)[0]
-    .split(/[、，,]/)[0]
-    .trim();
-  if (datePart && shortTitle) return `${datePart} · ${shortTitle}`;
-  if (datePart) return datePart;
-  if (shortTitle) return shortTitle;
-  return String(day?.day || "").trim();
 };
 
 /**

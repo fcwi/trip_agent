@@ -185,7 +185,7 @@ test("centers selected dates, names icon controls, and renders offline currency 
   ).toBeVisible();
 
   const dayButtons = page.locator('button[aria-label^="查看Day"]');
-  await expect(dayButtons.first()).toContainText(/\d{1,2}\/\d{1,2} · /);
+  await expect(dayButtons.first()).toHaveText(/^Day \d+$/);
   const selectedDay = dayButtons.nth(
     Math.min(2, (await dayButtons.count()) - 1),
   );
