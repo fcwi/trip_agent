@@ -1,3 +1,18 @@
+export const getItineraryChipLabel = (day) => {
+  const datePart = String(day?.date || "")
+    .split(" ")[0]
+    .trim();
+  const title = String(day?.title || "").trim();
+  const shortTitle = title
+    .split(/[：:]/)[0]
+    .split(/[、，,]/)[0]
+    .trim();
+  if (datePart && shortTitle) return `${datePart} · ${shortTitle}`;
+  if (datePart) return datePart;
+  if (shortTitle) return shortTitle;
+  return String(day?.day || "").trim();
+};
+
 /**
  * 將行程、指南與商店數據扁平化為字串，供 AI 上下文使用
  */
@@ -34,11 +49,16 @@ export const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  */
 export const getWeatherData = (code) => {
   if (code === 0) return { text: "晴朗", advice: "天氣很好，注意防曬。" };
-  if ([1, 2, 3].includes(code)) return { text: "多雲", advice: "舒適，適合戶外。" };
-  if ([45, 48].includes(code)) return { text: "有霧", advice: "能見度低請小心。" };
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { text: "有雨", advice: "請務必攜帶雨具。" };
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return { text: "降雪", advice: "請穿防滑雪靴。" };
-  if ([95, 96, 99].includes(code)) return { text: "雷雨", advice: "請盡量待在室內。" };
+  if ([1, 2, 3].includes(code))
+    return { text: "多雲", advice: "舒適，適合戶外。" };
+  if ([45, 48].includes(code))
+    return { text: "有霧", advice: "能見度低請小心。" };
+  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code))
+    return { text: "有雨", advice: "請務必攜帶雨具。" };
+  if ([71, 73, 75, 77, 85, 86].includes(code))
+    return { text: "降雪", advice: "請穿防滑雪靴。" };
+  if ([95, 96, 99].includes(code))
+    return { text: "雷雨", advice: "請盡量待在室內。" };
   return { text: "晴時多雲", advice: "注意日夜溫差。" };
 };
 
@@ -50,7 +70,7 @@ export const buildShareTextLogic = (latitude, longitude, landmark) => {
   const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
   return {
     baseMessage,
-    fullText: `${baseMessage}\n點擊查看位置：${mapUrl}`
+    fullText: `${baseMessage}\n點擊查看位置：${mapUrl}`,
   };
 };
 
@@ -85,54 +105,58 @@ export const getAiWelcomeTemplate = (mode, tripConfig) => {
 
 /**
  * [新增] 計算天氣預報索引
- * 
+ *
  * 根據行程狀態動態計算應該使用的天氣預報陣列索引
- * 
+ *
  * @param {number} activeDay - 當前查看的行程天數（-1 為總覽頁，0-N 為各天行程）
  * @param {string} tripStatus - 行程狀態（'before' | 'during' | 'after'）
  * @param {number} currentTripDayIndex - 當前行程天數索引（行程中第幾天，從 0 開始）
  * @returns {number} 預報陣列的索引（0=今天，1=明天，2=後天...）
- * 
+ *
  * @example
  * // 行程前：Day 3 顯示行程第 3 天的預報
  * getWeatherForecastIndex(2, 'before', -1) // => 2
- * 
+ *
  * // 行程中第 3 天查看 Day 1：顯示當天天氣
  * getWeatherForecastIndex(0, 'during', 2) // => 0
- * 
+ *
  * // 行程中第 3 天查看 Day 4：顯示明天預報
  * getWeatherForecastIndex(3, 'during', 2) // => 1
- * 
+ *
  * // 行程後查看任何 Day：顯示當天天氣
  * getWeatherForecastIndex(3, 'after', -1) // => 0
  */
-export const getWeatherForecastIndex = (activeDay, tripStatus, currentTripDayIndex) => {
+export const getWeatherForecastIndex = (
+  activeDay,
+  tripStatus,
+  currentTripDayIndex,
+) => {
   // 總覽頁不使用此函式（由其他邏輯處理）
   if (activeDay === -1) {
     return 0;
   }
-  
+
   // 行程前：直接使用 activeDay 作為索引
   // 例如：Day 1 顯示索引 [0]，Day 2 顯示索引 [1]
-  if (tripStatus === 'before') {
+  if (tripStatus === "before") {
     return activeDay;
   }
-  
+
   // 行程中：計算相對於今天的偏移
   // 例如：今天是行程第 3 天（currentTripDayIndex = 2）
   //   - 查看 Day 1: offset = 0 - 2 = -2 => Math.max(0, -2) = 0（當天）
   //   - 查看 Day 3: offset = 2 - 2 = 0 => Math.max(0, 0) = 0（今天）
   //   - 查看 Day 4: offset = 3 - 2 = 1 => Math.max(0, 1) = 1（明天）
-  if (tripStatus === 'during') {
+  if (tripStatus === "during") {
     const offset = activeDay - currentTripDayIndex;
     return Math.max(0, offset);
   }
-  
+
   // 行程後：所有天數都顯示當天天氣
-  if (tripStatus === 'after') {
+  if (tripStatus === "after") {
     return 0;
   }
-  
+
   // 預設回傳 0（保險起見）
   return 0;
 };

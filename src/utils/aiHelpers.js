@@ -82,7 +82,6 @@ export function getSearchTools(message, threshold = 0.7) {
   };
 }
 
-
 // --- 觸發搜尋的關鍵字清單 ---
 // 當使用者訊息包含以下任一關鍵字時，才啟用 Google Search Grounding。
 // 擴充方式：直接新增字串至陣列即可。
@@ -187,4 +186,250 @@ export function shouldEnableSearch(message) {
   return SEARCH_TRIGGER_KEYWORDS.some((keyword) =>
     normalized.includes(keyword.toLowerCase()),
   );
+}
+
+export const GUIDE_LOADING_TEXTS = [
+  "正在翻閱您的行程表...",
+  "正在查詢當地的購物資訊...",
+  "正在比對地圖位置...",
+  "正在組織建議內容...",
+  "正在思考最佳建議...",
+];
+
+export const FALLBACK_AI_REPLY = "抱歉，我沒看清楚，請再試一次。";
+
+/**
+ * Loading copy shown while Gemini is in flight.
+ * Behavior-equivalent extraction from AuthenticatedTripApp.
+ */
+export function getNextAiLoadingText(aiMode, random = Math.random) {
+  if (aiMode === "translate") {
+    return "正在進行雙向翻譯...";
+  }
+  return GUIDE_LOADING_TEXTS[Math.floor(random() * GUIDE_LOADING_TEXTS.length)];
+}
+
+/**
+ * Convert an internal chat message to a Gemini content part.
+ */
+export function formatToGeminiPart(msg) {
+  const parts = [];
+
+  if (msg.text && msg.text.trim()) {
+    parts.push({ text: msg.text });
+  } else if (!msg.image) {
+    parts.push({ text: "" });
+  }
+
+  if (msg.image) {
+    // 圖片可能是對象（包含 data 和 filename）或直接是 base64 字符串
+    const imageData = msg.image.data || msg.image;
+    const [meta, data] = imageData.split(",");
+    const mimeType = meta.match(/:(.*?);/)?.[1] || "image/jpeg";
+    parts.push({
+      inlineData: {
+        mimeType: mimeType,
+        data: data,
+      },
+    });
+  }
+
+  return { role: msg.role, parts: parts };
+}
+
+export function extractAiReplyText(data) {
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || FALLBACK_AI_REPLY;
+}
+
+export function getAiErrorText(error) {
+  let errMsg = "連線發生錯誤或是系統忙碌中，請稍後再試。";
+  if (error?.message?.includes("Key"))
+    errMsg = "API Key 錯誤，請檢查加密設定。";
+  if (error?.message?.includes("413"))
+    errMsg = "圖片檔案過大，請試著縮小圖片後再傳送。";
+  return errMsg;
+}
+
+/**
+ * Build the Gemini generateContent payload for translate or guide mode.
+ * Prompt strings and history slicing are unchanged from AuthenticatedTripApp.
+ */
+export function buildAiChatPayload({
+  aiMode,
+  messages,
+  userMsg,
+  messageText,
+  tripConfig,
+  itineraryData,
+  itineraryFlat,
+  shopsFlat,
+  localTimeStr,
+  tz,
+  isTestMode,
+  testDateTime,
+  hasLocationPermission,
+  userWeather,
+  debugLog = () => {},
+}) {
+  if (aiMode === "translate") {
+    const targetLang = tripConfig.language.name;
+    const translateSystemPrompt = `
+        你是一個專業的即時口譯員，負責「繁體中文」與「${targetLang}」之間的雙向翻譯。
+        
+        規則：
+        1. 若使用者輸入中文 -> 翻譯成${targetLang}，並在後方附上羅馬拼音 (發音指南)。
+           格式：[${targetLang}翻譯] ([羅馬拼音])
+        2. 若使用者輸入${targetLang} (或英文/其他語言) -> 僅翻譯成繁體中文。
+        3. **嚴禁廢話**：不要解釋語法，不要打招呼，只輸出翻譯結果。
+        `;
+
+    return {
+      systemInstruction: { parts: [{ text: translateSystemPrompt }] },
+      contents: [
+        ...messages
+          .slice(-1)
+          .filter((m) => m.role !== "system")
+          .map((m) => ({ role: m.role, parts: [{ text: m.text || "" }] })),
+        formatToGeminiPart(userMsg),
+      ],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 2000,
+      },
+    };
+  }
+
+  // 導遊模式：結合 GPS 位置、行程表與參考指南
+  let locationInstruction = "";
+  const isGpsAvailable =
+    hasLocationPermission &&
+    userWeather.locationName &&
+    !userWeather.loading &&
+    userWeather.locationName !== "定位中...";
+  if (isGpsAvailable) {
+    locationInstruction = `【使用者目前 GPS 位置】：${userWeather.locationName}。\n回答時請優先依據此位置 (例如：附近的超商)。`;
+  } else {
+    locationInstruction = `目前無 GPS，請假設使用者位於行程表中的地點。`;
+  }
+
+  const startDate = new Date(tripConfig.startDate);
+  const displayTime = isTestMode ? testDateTime : new Date();
+  const today = new Date(displayTime.toLocaleString("en-US", { timeZone: tz }));
+  const diffTime = today - startDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  let dayStatus = "";
+  if (diffDays >= 1 && diffDays <= itineraryData.length) {
+    dayStatus = `今天是行程的第 ${diffDays} 天 (Day ${diffDays})。`;
+  } else if (diffDays < 1) {
+    dayStatus = `旅程尚未開始 (預計 ${tripConfig.startDate} 出發)。`;
+  } else {
+    dayStatus = `旅程已經結束。`;
+  }
+
+  const guideSystemContext = `你是這趟「${tripConfig.title}」的專屬 AI 導遊。
+        【目前目的地當地時間】：${localTimeStr} (時區: ${tz})。
+        【行程進度】：${dayStatus}
+        ${locationInstruction}        
+        【行程資訊與商家資料】：
+        ${itineraryFlat}        
+        ${shopsFlat}        
+        【行為規範與決策路徑】：
+        1. 優先本地檢索：當使用者提問時，請先深思熟慮上述提供的「行程資訊」與「商家資料」。若資料足以回答，請直接回覆並嚴格禁止啟動 google_search。
+        2. 搜尋觸發門檻：只有在遇到以下情況，且本地資料完全無法提供事實時，才允許調用 google_search：
+           - 查詢具體的店家樓層、特定品牌有無、或是營業時間變動。
+           - 本地資料中未記載的新景點詳細介紹。
+        3. 誠實與透明：
+           - 若資料庫與搜尋後皆無法確認細節，請回答「資料不足，請以現場導覽圖或櫃檯資訊為準」，嚴禁編造（如虛構樓層或櫃位）。
+           - 使用搜尋獲得的答案，請在末尾加上「(🔍 來自即時搜尋)」。
+        4. 回答風格：簡潔、親切、重點條列式。
+        5. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議。
+        `;
+
+  const history = messages
+    .filter((m) => m.role !== "system")
+    .slice(1)
+    .slice(-4)
+    .map(formatToGeminiPart);
+
+  // 🔍 根據訊息內容與模型能力動態決定是否啟用 Google Search Grounding
+  const searchTools = getSearchTools(messageText);
+  debugLog(
+    `🔍 [Search Filter] model=${getActiveModel().label}, hasTools=${!!searchTools.tools}, message="${messageText.slice(0, 30)}..."`,
+  );
+
+  return {
+    systemInstruction: { parts: [{ text: guideSystemContext }] },
+    contents: [...history, formatToGeminiPart(userMsg)],
+    ...searchTools,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 8000,
+    },
+  };
+}
+
+export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Gemini generateContent with abort + exponential backoff.
+ * Behavior-equivalent extraction from AuthenticatedTripApp.
+ */
+export async function callGeminiSafe({ apiKey, payload, abortControllerRef }) {
+  const currentKey = apiKey;
+  const maxRetries = 3;
+  let attempt = 0;
+  const activeModel = getActiveModel();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
+
+  while (attempt < maxRetries) {
+    try {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      if (response.status === 429 || response.status === 503) {
+        console.warn(
+          `API 忙碌中，嘗試進行指數退避... (嘗試 ${attempt + 1}/${maxRetries})`,
+        );
+        attempt++;
+        await sleep(2000 * Math.pow(2, attempt));
+        continue;
+      }
+
+      if (response.status === 400) {
+        throw new Error("API 參數錯誤。");
+      }
+      if (response.status === 403) {
+        throw new Error("API Key 無效或過期，請檢查加密設定。");
+      }
+
+      throw new Error(`API Error: ${response.status}`);
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("API 請求已被中止");
+      }
+      console.error("Fetch attempt error:", error);
+      if (error.message.includes("API Key")) throw error;
+
+      attempt++;
+      if (attempt < maxRetries) {
+        await sleep(2000 * Math.pow(2, attempt));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error("API Max retries reached");
 }

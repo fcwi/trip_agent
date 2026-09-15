@@ -84,6 +84,7 @@ const WeatherCard = memo(
 
           {/* 手動更新位置與天氣 */}
           <button
+            type="button"
             onClick={() =>
               getUserLocationWeather({
                 isSilent: false,
@@ -91,12 +92,16 @@ const WeatherCard = memo(
               })
             }
             disabled={isUpdatingLocation}
-            className={`p-2 rounded-full border transition-all active:scale-95 flex-shrink-0 backdrop-blur-md shadow-md ${isUpdatingLocation ? "opacity-50" : ""} ${isDarkMode ? "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30 text-white" : "bg-black/5 border-black/10 hover:bg-black/10 hover:border-black/20 text-stone-600"}`}
+            aria-label={
+              isUpdatingLocation ? "正在更新目前位置天氣" : "更新目前位置天氣"
+            }
+            aria-busy={isUpdatingLocation}
+            className={`p-2 rounded-full border transition-[background-color,border-color,opacity,transform] active:scale-95 flex-shrink-0 backdrop-blur-md shadow-md ${isUpdatingLocation ? "opacity-50" : ""} ${isDarkMode ? "bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30 text-white" : "bg-black/5 border-black/10 hover:bg-black/10 hover:border-black/20 text-stone-600"}`}
           >
             {isUpdatingLocation ? (
-              <Loader className="w-4 h-4 animate-spin" />
+              <Loader aria-hidden="true" className="w-4 h-4 animate-spin" />
             ) : (
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw aria-hidden="true" className="w-4 h-4" />
             )}
           </button>
         </div>

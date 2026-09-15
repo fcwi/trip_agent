@@ -42,56 +42,85 @@ import {
 } from "../utils/currencyFormatter.js";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import { logger } from "../utils/logger.js";
+import {
+  enqueuePendingDelete,
+  mergeFinanceRecords,
+  normalizeFinanceRecordId,
+  removePendingDelete,
+} from "../utils/financeSync.js";
+import { shouldSubmitTextInput } from "../utils/keyboard.js";
+import { GasResponseError } from "../utils/gasResponse.js";
 
-// 預設頭像列表
-const AVATARS = [
-  // 動物
-  "🐶",
-  "🐱",
-  "🐰",
-  "🦊",
-  "🐼",
-  "🐨",
-  "🐯",
-  "🦁",
-  "🐮",
-  "🐷",
-  "🐸",
-  "🐵",
-  "🦄",
-  "🦖",
-  "🐧",
-  "🦉",
-  "🐤",
-  "🦋",
-  // 更多動物
-  "🐻",
-  "🐺",
-  "🦝",
-  "🦔",
-  "🦚",
-  "🦜",
-  "🐦",
-  "🐬",
-  "🐳",
-  "🦈",
-  "🐙",
-  "🦀",
-  // 人物
-  "👻",
-  "👽",
-  "🤖",
-  "👾",
-  "🧑‍🚀",
-  "🧑‍🍳",
-  // 其他
-  "🌸",
-  "🌻",
-  "🌿",
-  "🌟",
-  "🌞",
-  "🌙",
-];
+const PENDING_DELETES_STORAGE_KEY = "finance-pending-deletes";
+
+const isPartialGasError = (error, code) =>
+  error instanceof GasResponseError &&
+  error.status === "partial" &&
+  (!code || error.code === code);
+
+const readPendingDeletes = () => {
+  try {
+    const value = tripStorage.getItem(PENDING_DELETES_STORAGE_KEY);
+    return value ? JSON.parse(value) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writePendingDeletes = (queue) => {
+  if (queue.length === 0) {
+    tripStorage.removeItem(PENDING_DELETES_STORAGE_KEY);
+    return;
+  }
+  tripStorage.setItem(PENDING_DELETES_STORAGE_KEY, JSON.stringify(queue));
+};
+
+const AVATAR_OPTIONS = [
+  ["🐶", "狗狗"],
+  ["🐱", "貓咪"],
+  ["🐰", "兔子"],
+  ["🦊", "狐狸"],
+  ["🐼", "熊貓"],
+  ["🐨", "無尾熊"],
+  ["🐯", "老虎"],
+  ["🦁", "獅子"],
+  ["🐮", "乳牛"],
+  ["🐷", "小豬"],
+  ["🐸", "青蛙"],
+  ["🐵", "猴子"],
+  ["🦄", "獨角獸"],
+  ["🦖", "恐龍"],
+  ["🐧", "企鵝"],
+  ["🦉", "貓頭鷹"],
+  ["🐤", "小雞"],
+  ["🦋", "蝴蝶"],
+  ["🐻", "小熊"],
+  ["🐺", "野狼"],
+  ["🦝", "浣熊"],
+  ["🦔", "刺蝟"],
+  ["🦚", "孔雀"],
+  ["🦜", "鸚鵡"],
+  ["🐦", "小鳥"],
+  ["🐬", "海豚"],
+  ["🐳", "鯨魚"],
+  ["🦈", "鯊魚"],
+  ["🐙", "章魚"],
+  ["🦀", "螃蟹"],
+  ["👻", "幽靈"],
+  ["👽", "外星人"],
+  ["🤖", "機器人"],
+  ["👾", "遊戲怪獸"],
+  ["🧑‍🚀", "太空人"],
+  ["🧑‍🍳", "廚師"],
+  ["🌸", "櫻花"],
+  ["🌻", "向日葵"],
+  ["🌿", "綠葉"],
+  ["🌟", "星星"],
+  ["🌞", "太陽"],
+  ["🌙", "月亮"],
+].map(([emoji, label]) => ({ emoji, label }));
+
+const INITIAL_AVATAR_COUNT = 8;
 
 // 時間格式化小工具（年/月/日 + 時:分:秒，24小時制）
 const formatTime = (isoString) => {
@@ -185,9 +214,11 @@ const FinanceScreen = ({
   // --- 1. 基礎狀態 ---
   const [user, setUser] = useState(null);
   const [setupName, setSetupName] = useState("");
-  const [setupAvatar, setSetupAvatar] = useState(AVATARS[0]);
+  const [setupAvatar, setSetupAvatar] = useState(AVATAR_OPTIONS[0].emoji);
+  const [showAllAvatars, setShowAllAvatars] = useState(false);
   const [mode, setMode] = useState("finance");
   const [records, setRecords] = useState([]);
+  const recordsRef = useRef(records);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false); // 🆕 頭像選單狀態
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 }); // 🆕 選單位置
@@ -200,6 +231,10 @@ const FinanceScreen = ({
     showLocationConsent,
     () => setShowLocationConsent(false),
   );
+
+  useEffect(() => {
+    recordsRef.current = records;
+  }, [records]);
 
   // --- 1.5 位置追蹤狀態 ---
   const [enableLocationTracking, setEnableLocationTracking] = useState(() => {
@@ -411,6 +446,31 @@ const FinanceScreen = ({
       if (!isBackground) setIsSyncing(true);
 
       try {
+        let pendingDeletes = readPendingDeletes();
+        for (const pendingDelete of pendingDeletes) {
+          try {
+            await uploadToGAS(
+              { action: "delete", ...pendingDelete },
+              gasUrl,
+              gasToken,
+            );
+            pendingDeletes = removePendingDelete(
+              pendingDeletes,
+              pendingDelete.id,
+            );
+          } catch (error) {
+            if (isPartialGasError(error, "IMAGE_DELETE_FAILED")) {
+              pendingDeletes = removePendingDelete(
+                pendingDeletes,
+                pendingDelete.id,
+              );
+              continue;
+            }
+            logger.debug("待刪除記錄仍無法同步", pendingDelete.id, error);
+          }
+        }
+        writePendingDeletes(pendingDeletes);
+
         const cloudRecords = await fetchFromGAS(gasUrl, gasToken);
         if (cloudRecords && Array.isArray(cloudRecords)) {
           // 將日期轉換為本地時間 YYYY/M/D 格式
@@ -446,18 +506,88 @@ const FinanceScreen = ({
           formatted.sort(
             (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
           );
-          setRecords(formatted);
+          let mergedRecords = mergeFinanceRecords({
+            cloudRecords: formatted,
+            localRecords: recordsRef.current,
+            pendingDeletes,
+          });
+          const cloudRecordIds = new Set(
+            formatted.map((record) => normalizeFinanceRecordId(record.id)),
+          );
+
+          for (let index = 0; index < mergedRecords.length; index += 1) {
+            const record = mergedRecords[index];
+            if (record.synced === true) continue;
+
+            const recordId = normalizeFinanceRecordId(record.id);
+            const action = record.imageSyncPending
+              ? "add"
+              : cloudRecordIds.has(recordId)
+                ? "edit"
+                : "add";
+            let imageBase64 =
+              typeof record.image === "string" &&
+              record.image.startsWith("data:image")
+                ? record.image
+                : null;
+
+            if (action === "add" && !imageBase64 && record.hasCloudImage) {
+              const cachedImages =
+                await financeDB.getImagesByRecordId(recordId);
+              imageBase64 = cachedImages?.[0]?.data || null;
+            }
+
+            try {
+              await uploadToGAS(
+                {
+                  ...record,
+                  id: recordId,
+                  action,
+                  image: undefined,
+                  imageBase64,
+                  item: record.content,
+                  store: record.content?.split("-")[0]?.trim() || "",
+                  userName: record.user?.name || user?.name || "未知",
+                  userAvatar: record.user?.avatar || user?.avatar || "👤",
+                },
+                gasUrl,
+                gasToken,
+              );
+              mergedRecords[index] = {
+                ...record,
+                id: recordId,
+                synced: true,
+                syncAction: null,
+                imageSyncPending: false,
+              };
+            } catch (error) {
+              if (isPartialGasError(error, "IMAGE_UPLOAD_FAILED")) {
+                mergedRecords[index] = {
+                  ...record,
+                  id: recordId,
+                  synced: false,
+                  syncAction: "add",
+                  imageSyncPending: true,
+                };
+                continue;
+              }
+              logger.debug("本機記錄仍待同步", recordId, error);
+            }
+          }
+
+          recordsRef.current = mergedRecords;
+          setRecords(mergedRecords);
 
           // 同時保存到 IndexedDB
           try {
-            await financeDB.saveRecords(formatted);
+            await financeDB.saveRecords(mergedRecords);
 
             // 🆕 清理孤立的圖片快取（被刪除記錄的圖片）
-            const validRecordIds = formatted.map((r) => r.id);
+            const validRecordIds = mergedRecords.map((r) => r.id);
             await financeDB.cleanOrphanedImages(validRecordIds);
 
             // 🆕 快取圖片到 IndexedDB（背景執行，快取完成後立即更新 UI）
-            const recordsWithImages = formatted.filter(
+            const recordsWithImages = mergedRecords.filter(
               (r) =>
                 r.image &&
                 typeof r.image === "string" &&
@@ -562,7 +692,17 @@ const FinanceScreen = ({
             console.error("保存到 IndexedDB 失敗:", error);
           }
 
-          if (!isBackground) showToast("資料同步完成");
+          if (!isBackground) {
+            const unsyncedCount = mergedRecords.filter(
+              (record) => record.synced !== true,
+            ).length;
+            showToast(
+              unsyncedCount > 0
+                ? `雲端資料已更新，仍有 ${unsyncedCount} 筆本機變更待同步`
+                : "資料同步完成",
+              unsyncedCount > 0 ? "info" : "success",
+            );
+          }
         }
       } catch (e) {
         console.error("Sync error:", e);
@@ -571,12 +711,12 @@ const FinanceScreen = ({
         if (!isBackground) setIsSyncing(false);
       }
     },
-    [gasUrl, gasToken, showToast, fetchImageAsBase64],
+    [gasUrl, gasToken, showToast, fetchImageAsBase64, user],
   );
 
   // 保存記錄到 IndexedDB（主要存儲）
   useEffect(() => {
-    if (!isDBReady || records.length === 0) return;
+    if (!isDBReady) return;
 
     const debounceTimer = setTimeout(() => {
       try {
@@ -1003,6 +1143,7 @@ const FinanceScreen = ({
       image: imageBase64, // 臨時顯示，等 IndexedDB 儲存完成
       hasCloudImage: !!imageBase64,
       synced: false,
+      syncAction: "add",
     };
 
     // ✅ 儲存到 IndexedDB
@@ -1033,10 +1174,32 @@ const FinanceScreen = ({
       )
         .then(() => {
           setRecords((prev) =>
-            prev.map((r) => (r.id === newItem.id ? { ...r, synced: true } : r)),
+            prev.map((r) =>
+              r.id === newItem.id
+                ? { ...r, synced: true, syncAction: null }
+                : r,
+            ),
           );
         })
-        .catch((err) => console.error("Upload failed", err));
+        .catch((error) => {
+          if (isPartialGasError(error, "IMAGE_UPLOAD_FAILED")) {
+            setRecords((prev) =>
+              prev.map((record) =>
+                record.id === newItem.id
+                  ? {
+                      ...record,
+                      synced: false,
+                      syncAction: "add",
+                      imageSyncPending: true,
+                    }
+                  : record,
+              ),
+            );
+            showToast(error.message, "info");
+            return;
+          }
+          logger.debug("新增紀錄仍待同步", newItem.id, error);
+        });
     }
 
     // 返回 timestamp 以供後續使用（如滾動）
@@ -1192,22 +1355,50 @@ const FinanceScreen = ({
           gasToken,
         )
           .then((res) => {
-            if (res.status === "success") {
+            setRecords((prev) =>
+              prev.map((record) => {
+                const matched = localItems.find(
+                  (localItem) => localItem.id === record.id,
+                );
+                return matched
+                  ? {
+                      ...record,
+                      synced: true,
+                      syncAction: null,
+                      imageSyncPending: false,
+                    }
+                  : record;
+              }),
+            );
+            showToast(
+              `雲端同步完成 (新增 ${res.createdCount ?? itemsToImport.length} 筆)`,
+            );
+          })
+          .catch((error) => {
+            if (isPartialGasError(error, "IMAGE_UPLOAD_FAILED")) {
+              const failedIds = new Set(
+                (error.response.imageFailureIds || []).map(String),
+              );
               setRecords((prev) =>
-                prev.map((r) => {
-                  const matched = localItems.find((l) => l.id === r.id);
-                  return matched ? { ...r, synced: true } : r;
+                prev.map((record) => {
+                  const matched = localItems.find(
+                    (localItem) => localItem.id === record.id,
+                  );
+                  if (!matched) return record;
+                  const imageSyncPending = failedIds.has(String(record.id));
+                  return {
+                    ...record,
+                    synced: !imageSyncPending,
+                    syncAction: imageSyncPending ? "add" : null,
+                    imageSyncPending,
+                  };
                 }),
               );
-              showToast(`雲端同步完成 (新增 ${itemsToImport.length} 筆)`);
-            } else {
-              console.error("Batch upload returned error:", res);
-              showToast("雲端同步部分失敗: " + res.message, "error");
+              showToast(error.message, "info");
+              return;
             }
-          })
-          .catch((err) => {
-            console.error("Batch upload failed", err);
-            showToast("雲端同步失敗，請檢查網路", "error");
+            logger.debug("批次紀錄仍待同步", error);
+            showToast(error.message || "雲端同步失敗，請稍後重試", "error");
           });
       }
 
@@ -1243,6 +1434,17 @@ const FinanceScreen = ({
   const handleDelete = async (id, type) => {
     if (!window.confirm("確定要刪除這筆紀錄嗎？(連動雲端刪除)")) return;
 
+    const normalizedId = normalizeFinanceRecordId(id);
+    const record = recordsRef.current.find(
+      (item) => normalizeFinanceRecordId(item.id) === normalizedId,
+    );
+    const shouldDeleteFromCloud = record?.syncAction !== "add";
+    if (shouldDeleteFromCloud) {
+      writePendingDeletes(
+        enqueuePendingDelete(readPendingDeletes(), { id: normalizedId, type }),
+      );
+    }
+
     // ✅ 刪除 IndexedDB 中的記錄和圖片
     try {
       await financeDB.deleteRecord(id);
@@ -1250,13 +1452,33 @@ const FinanceScreen = ({
       console.error("從 IndexedDB 刪除失敗:", err);
     }
 
-    setRecords((prev) => prev.filter((r) => r.id !== id));
-    if (gasUrl && gasToken) {
-      uploadToGAS(
-        { action: "delete", id: id, type: type },
-        gasUrl,
-        gasToken,
-      ).catch(() => showToast("雲端刪除失敗", "error"));
+    setRecords((prev) => {
+      const nextRecords = prev.filter(
+        (item) => normalizeFinanceRecordId(item.id) !== normalizedId,
+      );
+      recordsRef.current = nextRecords;
+      return nextRecords;
+    });
+    if (gasUrl && gasToken && shouldDeleteFromCloud) {
+      try {
+        await uploadToGAS(
+          { action: "delete", id: normalizedId, type },
+          gasUrl,
+          gasToken,
+        );
+        writePendingDeletes(
+          removePendingDelete(readPendingDeletes(), normalizedId),
+        );
+      } catch (error) {
+        if (isPartialGasError(error, "IMAGE_DELETE_FAILED")) {
+          writePendingDeletes(
+            removePendingDelete(readPendingDeletes(), normalizedId),
+          );
+          showToast(error.message, "info");
+        } else {
+          showToast("已從本機刪除，恢復連線後會重試雲端刪除", "error");
+        }
+      }
     }
   };
 
@@ -1298,6 +1520,7 @@ const FinanceScreen = ({
           twdAmount: newTwdAmount,
           targetAmount: newTwdAmount,
           synced: false,
+          syncAction: r.syncAction === "add" ? "add" : "edit",
         };
       }
       return r;
@@ -1327,7 +1550,9 @@ const FinanceScreen = ({
 
         setRecords((prev) =>
           prev.map((r) =>
-            r.id === editingRecord.id ? { ...r, synced: true } : r,
+            r.id === editingRecord.id
+              ? { ...r, synced: true, syncAction: null }
+              : r,
           ),
         );
         showToast("同步更新成功");
@@ -1356,32 +1581,56 @@ const FinanceScreen = ({
               請設定您的暱稱與頭像以識別紀錄
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2 max-h-[30vh] overflow-y-auto p-2 scrollbar-hide">
-            {AVATARS.map((av) => (
+          <div className="flex flex-wrap justify-center gap-2 p-2">
+            {(showAllAvatars
+              ? AVATAR_OPTIONS
+              : AVATAR_OPTIONS.slice(0, INITIAL_AVATAR_COUNT)
+            ).map(({ emoji, label }) => (
               <button
-                key={av}
-                onClick={() => setSetupAvatar(av)}
-                className={`text-2xl p-2 rounded-lg border transition-all ${setupAvatar === av ? (isDarkMode ? "bg-sky-600/30 border-sky-500 scale-110 shadow-md" : "bg-sky-100 border-sky-400 scale-110 shadow-md") : isDarkMode ? "border-neutral-700 hover:bg-neutral-800/50" : "border-transparent hover:bg-black/5"}`}
+                key={emoji}
+                type="button"
+                aria-label={`選擇${label}頭像`}
+                aria-pressed={setupAvatar === emoji}
+                onClick={() => setSetupAvatar(emoji)}
+                className={`flex min-h-11 min-w-11 items-center justify-center rounded-lg border p-2 text-2xl transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${setupAvatar === emoji ? (isDarkMode ? "bg-sky-600/30 border-sky-500 scale-110 shadow-md" : "bg-sky-100 border-sky-400 scale-110 shadow-md") : isDarkMode ? "border-neutral-700 hover:bg-neutral-800/50" : "border-transparent hover:bg-black/5"}`}
               >
-                {av}
+                {emoji}
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            aria-expanded={showAllAvatars}
+            onClick={() => setShowAllAvatars((current) => !current)}
+            className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${isDarkMode ? "text-sky-300 hover:bg-white/10" : "text-sky-700 hover:bg-sky-50"}`}
+          >
+            {showAllAvatars
+              ? "收合頭像"
+              : `更多頭像（${AVATAR_OPTIONS.length - INITIAL_AVATAR_COUNT}）`}
+          </button>
           <div className="space-y-4">
+            <label
+              htmlFor="userSetupName"
+              className={`block text-sm font-bold ${theme.text}`}
+            >
+              暱稱
+            </label>
             <input
               type="text"
               id="userSetupName"
               name="userSetupName"
-              placeholder="輸入您的暱稱"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="例如：爸爸…"
               value={setupName}
               onChange={(e) => setSetupName(e.target.value)}
               style={{ fontSize: "16px" }}
-              className={`w-full p-3 rounded-lg border text-center font-bold outline-none focus:ring-2 transition-all ${isDarkMode ? "bg-neutral-800 border-neutral-700 text-white focus:border-sky-500 focus:ring-sky-500/20" : "bg-stone-50 border-stone-300 text-stone-800 focus:border-[#5D737E] focus:ring-[#5D737E]/20"}`}
+              className={`w-full rounded-lg border p-3 text-center font-bold transition-[border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 ${isDarkMode ? "bg-neutral-800 border-neutral-700 text-white focus-visible:border-sky-500 focus-visible:ring-sky-500/20" : "bg-stone-50 border-stone-300 text-stone-800 focus-visible:border-[#5D737E] focus-visible:ring-[#5D737E]/20"}`}
             />
             <button
               onClick={handleUserSetup}
               disabled={!setupName}
-              className={`w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 
+              className={`w-full py-3 rounded-lg font-bold text-white shadow-lg transition-[background-color,box-shadow,opacity,transform] active:scale-95
                 ${setupName ? (isDarkMode ? "bg-sky-600 hover:bg-sky-700" : "bg-[#5D737E] hover:bg-[#4A606A]") : "bg-stone-300 cursor-not-allowed"}`}
             >
               開始記錄
@@ -1985,16 +2234,20 @@ const FinanceScreen = ({
                         {record.user.name === user.name && (
                           <div className="flex flex-col justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button
+                              type="button"
                               onClick={() => startEditing(record)}
+                              aria-label="編輯紀錄"
                               className={`p-2 rounded-full border transition-colors shadow-sm ${isDarkMode ? "bg-neutral-800 border-neutral-700 hover:text-sky-400 hover:border-sky-500" : "bg-white border-stone-200 hover:text-sky-600 hover:border-sky-400"}`}
                               title="編輯"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() =>
                                 handleDelete(record.id, record.type)
                               }
+                              aria-label="刪除紀錄"
                               className={`p-2 rounded-full border transition-colors shadow-sm ${isDarkMode ? "bg-neutral-800 border-neutral-700 hover:text-red-400 hover:border-red-500" : "bg-white border-stone-200 hover:text-red-600 hover:border-red-400"}`}
                               title="刪除"
                             >
@@ -2102,16 +2355,14 @@ const FinanceScreen = ({
                     e.target.style.height = `${Math.min(e.target.scrollHeight, 40)}px`;
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
+                    if (shouldSubmitTextInput(e)) {
                       e.preventDefault();
                       handleManualSubmit();
                       e.target.style.height = "auto";
                     }
                   }}
                   rows={1}
-                  placeholder={
-                    mode === "finance" ? "項目說明..." : "記事內容..."
-                  }
+                  placeholder={mode === "finance" ? "項目說明…" : "記事內容…"}
                   style={{ fontSize: "16px" }}
                   className={`flex-1 min-w-0 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 resize-none max-h-[40px] leading-snug
                             ${isDarkMode ? "text-white placeholder:text-neutral-400" : "text-stone-700 placeholder:text-stone-400"}`}
@@ -2120,6 +2371,8 @@ const FinanceScreen = ({
 
               {/* 發送按鈕 */}
               <button
+                type="button"
+                aria-label="送出紀錄"
                 onClick={() => {
                   handleManualSubmit();
                   const textarea = document.querySelector("textarea");

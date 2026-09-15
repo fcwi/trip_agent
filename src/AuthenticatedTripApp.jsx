@@ -1,6 +1,16 @@
 ﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { fetchGasWithRetry } from "./utils/api";
-import { getActiveModel, getSearchTools } from "./utils/aiHelpers";
+import {
+  fetchLocationsFromGasWithContext,
+  uploadToGasWithContext,
+} from "./utils/gasClient.js";
+import { gasTripContext } from "./utils/gasTripContext.js";
+import {
+  getNextAiLoadingText,
+  buildAiChatPayload,
+  extractAiReplyText,
+  getAiErrorText,
+} from "./utils/aiHelpers.js";
+import { resolveShareLandmark } from "./utils/geoPlaces.js";
 import {
   Sun,
   CloudSnow,
@@ -20,7 +30,6 @@ import {
   Home,
   Clock,
   Map,
-  Calculator,
   Sparkles,
   Languages,
   Send,
@@ -106,40 +115,18 @@ const tabModuleLoaders = {
   shops: () => import("./components/Tabs/ShopsTab.jsx"),
 };
 
-const ItineraryTab = lazy(tabModuleLoaders.itinerary);
-const FinanceTab = lazy(tabModuleLoaders.finance);
-const AIPanel = lazy(tabModuleLoaders.ai);
-const GuidesTab = lazy(tabModuleLoaders.guides);
-const ShopsTab = lazy(tabModuleLoaders.shops);
-
 const preloadTab = (tabId) => {
   tabModuleLoaders[tabId]?.().catch(() => {
     // 預載失敗時交由 React.lazy 在真正切換頁籤時顯示錯誤邊界。
   });
 };
 
-const LazyPanelFallback = ({ label = "載入功能中…", overlay = false }) => (
-  <div
-    role="status"
-    aria-live="polite"
-    className={`${
-      overlay
-        ? "fixed inset-0 z-[998] bg-black/30 backdrop-blur-sm"
-        : "min-h-[40vh]"
-    } flex items-center justify-center p-6`}
-  >
-    <div className="flex items-center gap-3 rounded-2xl border border-white/20 bg-neutral-900/80 px-5 py-3 text-sm font-bold text-white shadow-xl">
-      <Loader aria-hidden="true" className="h-5 w-5 animate-spin" />
-      <span>{label}</span>
-    </div>
-  </div>
-);
-
 import WeatherParticles from "./components/Background/WeatherParticles.jsx";
 import { getParticleType, getSkyCondition } from "./utils/weatherHelpers.js";
 
 import SkyObjects from "./components/Background/SkyObjects.jsx";
 import TripHeader from "./components/TripHeader.jsx";
+import TripToolsMenu from "./components/Navigation/TripToolsMenu.jsx";
 
 // 使用 Web Crypto API 實作加密工具，取代外部依賴以提升安全性與效能
 //  FlightInfoCard 組件
@@ -151,22 +138,28 @@ import WeatherCard from "./components/WeatherCard.jsx";
 
 // BottomNav 組件
 import BottomNav from "./components/Navigation/BottomNav.jsx";
+import TripTabPanels from "./components/TripTabPanels.jsx";
+import { LazyPanelFallback } from "./components/LazyPanelFallback.jsx";
 
 // 提取主題設定
-import { useThemeConfig } from "./config/ThemeConfig.jsx";
 
 // 自定義 Hook：匯率管理
 import { useCurrency } from "./hooks/useCurrency.js";
+import { useNetworkStatus } from "./hooks/useNetworkStatus.js";
+import { useDeviceChrome } from "./hooks/useDeviceChrome.js";
+import { useTripShellTheme } from "./hooks/useTripShellTheme.js";
+import { useItineraryDayPager } from "./hooks/useItineraryDayPager.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
+import { useTabScrollRestoration } from "./hooks/useTabScrollRestoration.js";
+import { useGeoPlaces } from "./hooks/useGeoPlaces.js";
+import { useAiInvocation } from "./hooks/useAiInvocation.js";
 import { tripStorage } from "./utils/tripStorage.js";
 import { logger } from "./utils/logger.js";
 
 const debugLog = (...args) => logger.debug(...args);
 const debugGroup = (...args) => logger.group(...args);
 const debugGroupEnd = (...args) => logger.groupEnd(...args);
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const ItineraryApp = ({ authentication }) => {
   const {
@@ -270,12 +263,11 @@ const ItineraryApp = ({ authentication }) => {
     if (isVerified) setIsAppReady(true);
   }, [isVerified]);
 
-  const [isMobile, setIsMobile] = useState(false);
   const {
     activeTab,
     visitedTabs,
     activeModal,
-    changeTab: handleTabChange,
+    changeTab: navigateToTab,
     openModal,
     closeModal,
   } = useTripNavigation();
@@ -283,6 +275,15 @@ const ItineraryApp = ({ authentication }) => {
   const isMapModalOpen = activeModal === "map";
   const showWeatherDetail = activeModal === "weather";
   const isTestMode = activeModal === "testMode";
+  const rememberCurrentTabScroll = useTabScrollRestoration(activeTab);
+  const handleTabChange = React.useCallback(
+    (nextTab) => {
+      if (nextTab === activeTab) return;
+      rememberCurrentTabScroll();
+      navigateToTab(nextTab);
+    },
+    [activeTab, navigateToTab, rememberCurrentTabScroll],
+  );
 
   const handleCalculatorOpen = React.useCallback(
     () => openModal("calculator"),
@@ -312,139 +313,15 @@ const ItineraryApp = ({ authentication }) => {
     () => closeModal("testMode"),
     [closeModal],
   );
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [connectionNotice, setConnectionNotice] = useState(() =>
-    navigator.onLine ? null : "offline",
-  );
-  const [isIOSSafari, setIsIOSSafari] = useState(false);
-
-  // iOS PWA 安裝提示
-  const [showIOSInstallPrompt, setShowIOSInstallPrompt] = useState(false);
-
-  // 螢幕方向鎖定警告
-  const [showOrientationWarning, setShowOrientationWarning] = useState(false);
-  const orientationDialogRef = useModalAccessibility(
+  const { isOnline, connectionNotice } = useNetworkStatus();
+  const {
+    isIOSSafari,
+    showIOSInstallPrompt,
+    setShowIOSInstallPrompt,
     showOrientationWarning,
-    () => setShowOrientationWarning(false),
-  );
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const ua = navigator.userAgent || navigator.vendor || window.opera;
-      const isAndroid = /android/i.test(ua);
-      const isIOSLike =
-        /iPad|iPhone|iPod/.test(ua) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      const isWindowsTouch =
-        /Windows/i.test(ua) && navigator.maxTouchPoints > 0;
-      const byViewport = window.innerWidth < 768;
-      setIsMobile(isAndroid || isIOSLike || isWindowsTouch || byViewport);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // 偵測 iOS Safari（iPadOS 也涵蓋）以提供友善提示
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isIOSDevice =
-      /iPad|iPhone|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const isSafariEngine =
-      /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
-    setIsIOSSafari(isIOSDevice && isSafariEngine);
-
-    // iOS PWA 安裝提示邏輯
-    if (isIOSDevice && isSafariEngine) {
-      // 檢查是否已在獨立模式運行（已加入主畫面）
-      const isStandalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true;
-
-      // 檢查用戶是否已關閉過提示
-      const hasClosedPrompt = tripStorage.getItem("ios-install-prompt-closed", [
-        "trip_agent_ios_install_prompt_closed",
-        "ios_install_prompt_closed",
-      ]);
-
-      // 只在非獨立模式且未關閉過提示時顯示
-      if (!isStandalone && !hasClosedPrompt) {
-        // 延遲 3 秒顯示，避免初次載入時過於干擾
-        const timer = setTimeout(() => {
-          setShowIOSInstallPrompt(true);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, []);
-
-  // 螢幕方向鎖定監聽
-  useEffect(() => {
-    const handleOrientationChange = () => {
-      // 檢測是否為橫向
-      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-
-      if (isLandscape && isMobile) {
-        setShowOrientationWarning(true);
-
-        // 3 秒後自動隱藏警告
-        const timer = setTimeout(() => {
-          setShowOrientationWarning(false);
-        }, 3000);
-
-        return () => clearTimeout(timer);
-      } else {
-        setShowOrientationWarning(false);
-      }
-    };
-
-    // 初始檢查
-    handleOrientationChange();
-
-    // 監聽方向變化（同時支援舊版和新版 API）
-    window.addEventListener("orientationchange", handleOrientationChange);
-    window.addEventListener("resize", handleOrientationChange);
-
-    // 使用 Screen Orientation API（較新的瀏覽器）
-    if (screen.orientation) {
-      screen.orientation.addEventListener("change", handleOrientationChange);
-    }
-
-    return () => {
-      window.removeEventListener("orientationchange", handleOrientationChange);
-      window.removeEventListener("resize", handleOrientationChange);
-      if (screen.orientation) {
-        screen.orientation.removeEventListener(
-          "change",
-          handleOrientationChange,
-        );
-      }
-    };
-  }, [isMobile]);
-
-  useEffect(() => {
-    let recoveryTimer;
-
-    const handleOnline = () => {
-      clearTimeout(recoveryTimer);
-      setIsOnline(true);
-      setConnectionNotice("online");
-      recoveryTimer = setTimeout(() => setConnectionNotice(null), 3000);
-    };
-    const handleOffline = () => {
-      clearTimeout(recoveryTimer);
-      setIsOnline(false);
-      setConnectionNotice("offline");
-    };
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      clearTimeout(recoveryTimer);
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+    setShowOrientationWarning,
+    orientationDialogRef,
+  } = useDeviceChrome();
 
   // 使用自定義 Hook 簡化狀態管理
   const { code, target } = tripConfig.currency;
@@ -620,60 +497,19 @@ const ItineraryApp = ({ authentication }) => {
     copyToClipboard(text, `已複製：${text}`);
   };
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const {
+    isDarkMode,
+    setIsDarkMode,
+    toggleTheme,
+    currentTheme,
+    componentStyles,
+    cBase,
+    cAccent,
+    containerStyle,
+    colors,
+  } = useTripShellTheme();
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 17 || hour < 6) {
-      setIsDarkMode(true);
-    }
-  }, []);
-
-  // 🆕 動態更新 PWA 狀態列顏色 (解決 Android 狀態列黑色問題)
-  useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    // 使用 ThemeConfig 中的背景色基調 (#FDFBF7) 而非純白，讓狀態列與背景融合更自然
-    const color = isDarkMode ? "#020617" : "#FDFBF7";
-    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
-
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", color);
-    } else {
-      // 如果找不到，動態創建一個
-      const meta = document.createElement("meta");
-      meta.name = "theme-color";
-      meta.content = color;
-      document.head.appendChild(meta);
-    }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
-
-  const { currentTheme, componentStyles } = useThemeConfig(isDarkMode);
-
-  const cBase = currentTheme.colorBase;
-  const cAccent = currentTheme.colorAccent;
-
-  const containerStyle = React.useMemo(
-    () => ({
-      "--bg-texture": currentTheme.bgTexture,
-    }),
-    [currentTheme.bgTexture],
-  );
-
-  const colors = React.useMemo(() => {
-    const sc = currentTheme.semanticColors;
-    return {
-      blue: isDarkMode ? sc.blue.dark : sc.blue.light,
-      green: isDarkMode ? sc.green.dark : sc.green.light,
-      red: isDarkMode ? sc.red.dark : sc.red.light,
-      orange: isDarkMode ? sc.orange.dark : sc.orange.light,
-      pink: isDarkMode ? sc.pink.dark : sc.pink.light,
-    };
-  }, [isDarkMode, currentTheme.semanticColors]);
-
-  // activeDay: -1 for Overview, 0-5 for Day 1-6
-  const [activeDay, setActiveDay] = useState(-1);
+  // activeDay + day swipe/pull-to-refresh live in useItineraryDayPager
   const [expandedItems, setExpandedItems] = useState({});
   const [availableVoices, setAvailableVoices] = useState([]);
   const [isFlightInfoExpanded, setIsFlightInfoExpanded] = useState(false);
@@ -691,175 +527,30 @@ const ItineraryApp = ({ authentication }) => {
     }
   }, []);
 
-  // 導覽列自動捲動用的 Ref
-  const navContainerRef = useRef(null);
-  const navItemsRef = useRef({}); // 用物件來存每一顆按鈕的 ref
+  const dayPagerDepsRef = useRef({});
 
-  useEffect(() => {
-    // 取得當前 activeDay 對應的按鈕 DOM 元素
-    const currentTab = navItemsRef.current[activeDay];
-
-    if (currentTab) {
-      // 使用原生 API 讓它平滑捲動到視野中央
-      currentTab.scrollIntoView({
-        behavior: "smooth", // 平滑動畫
-        block: "nearest", // 垂直方向不動
-        inline: "center", // 水平方向置中 (關鍵！)
-      });
-    }
-  }, [activeDay]);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: 0,
-        behavior: "smooth", // 使用平滑捲動
-      });
-    }
-  }, [activeDay]); // 💡 偵測 activeDay 的變化
-
-  // 新增：滑動手勢偵測 State 與函式
-  const [touchStart, setTouchStart] = useState(null);
-  // Pull to Refresh logic
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const pullThreshold = 80;
-  const startYRef = useRef(0);
-
-  const handleMainTouchStart = (e) => {
-    if (window.scrollY === 0) {
-      startYRef.current = e.touches[0].pageY;
-    }
-  };
-
-  const handleMainTouchMove = (e) => {
-    if (startYRef.current === 0) return;
-    const currentY = e.touches[0].pageY;
-    const diff = currentY - startYRef.current;
-    if (diff > 0 && window.scrollY === 0) {
-      setPullDistance(Math.min(diff * 0.4, pullThreshold + 20));
-    }
-  };
-
-  const handleMainTouchEnd = () => {
-    if (pullDistance > pullThreshold) {
-      triggerRefresh();
-    }
-    setPullDistance(0);
-    startYRef.current = 0;
-  };
-
-  const triggerRefresh = async () => {
-    if (isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        getUserLocationWeather({ isSilent: true, highAccuracy: false }),
-      ]);
-      showToast("資訊已更新 ✨");
-      if (navigator.vibrate) navigator.vibrate(50);
-    } catch (err) {
-      console.error("更新失敗:", err);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const [[, direction], setPage] = useState([activeDay, 0]);
-
-  const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? "100%" : "-100%",
-      opacity: 0,
-      position: "absolute",
-      width: "100%",
-      z: 0,
-      willChange: "transform, opacity",
-      backfaceVisibility: "hidden",
-      WebkitFontSmoothing: "antialiased",
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      position: "relative",
-      z: 0,
-      zIndex: 1,
-      willChange: "auto",
-      transition: {
-        duration: 0.3,
-        ease: [0.23, 1, 0.32, 1],
-        opacity: { duration: 0.3, ease: [0.23, 1, 0.32, 1] },
-      },
-    },
-    exit: (direction) => ({
-      x: direction < 0 ? "100%" : "-100%",
-      opacity: 0,
-      position: "absolute",
-      width: "100%",
-      willChange: "transform, opacity",
-      backfaceVisibility: "hidden",
-      transition: {
-        duration: 0.2,
-        ease: "easeIn",
-        opacity: { duration: 0.15 },
-      },
-    }),
-  };
-
-  const onTouchStart = (e) => {
-    setTouchStart({
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY,
-    });
-  };
-
-  const onTouchEnd = (e) => {
-    if (!touchStart) return;
-
-    // 如果任何全螢幕彈窗開啟中，則完全停用滑動換頁功能
-    if (showWeatherDetail || isCalculatorOpen || isMapModalOpen) {
-      setTouchStart(null);
-      return;
-    }
-
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-
-    const distanceX = touchStart.x - endX;
-    const distanceY = touchStart.y - endY;
-
-    const absX = Math.abs(distanceX);
-    const absY = Math.abs(distanceY);
-
-    const minSwipeDistance = 75;
-    const slopeThreshold = 2.5;
-
-    // 判斷是否為有效的水平滑動，並排除垂直捲動的干擾
-    if (absX > minSwipeDistance && absX > absY * slopeThreshold) {
-      if (testModeClickCount > 0) {
-        setTestModeClickCount(0);
-        showToast("連續點擊計數已重置，請重新開始", "info");
-      }
-
-      if (distanceX > 0) {
-        if (activeDay < itineraryData.length - 1) {
-          changeDay(activeDay + 1);
-        }
-      } else {
-        if (activeDay > -1) {
-          changeDay(activeDay - 1);
-        }
-      }
-    }
-
-    setTouchStart(null);
-  };
-
-  const changeDay = (newDay) => {
-    const newDirection = newDay > activeDay ? 1 : -1;
-    setPage([newDay, newDirection]);
-    setActiveDay(newDay);
-  };
+  const {
+    activeDay,
+    navContainerRef,
+    navItemsRef,
+    pullDistance,
+    isRefreshing,
+    handleMainTouchStart,
+    handleMainTouchMove,
+    handleMainTouchEnd,
+    direction,
+    slideVariants,
+    onTouchStart,
+    onTouchEnd,
+    changeDay,
+  } = useItineraryDayPager({
+    itineraryLength: itineraryData.length,
+    scrollContainerRef,
+    showWeatherDetail,
+    isCalculatorOpen,
+    isMapModalOpen,
+    depsRef: dayPagerDepsRef,
+  });
 
   const [weatherForecast, setWeatherForecast] = useState(() => ({
     ...Object.fromEntries(tripConfig.locations.map(({ key }) => [key, null])),
@@ -913,7 +604,7 @@ const ItineraryApp = ({ authentication }) => {
     return () => {
       delete window.setTestWeather;
     };
-  }, []);
+  }, [setIsDarkMode]);
 
   const [locationSource, setLocationSource] = useState(() => {
     try {
@@ -978,15 +669,12 @@ const ItineraryApp = ({ authentication }) => {
         setIsDarkMode(false);
       }
     }
-  }, [isTestMode, testDateTime]);
+  }, [isTestMode, testDateTime, setIsDarkMode]);
 
-  const geminiAbortControllerRef = useRef(null);
-  const mapsAbortControllerRef = useRef(null);
-
-  const googlePlacesCacheRef = useRef({});
-  const geoNamesCacheRef = useRef({});
-  const CACHE_MAX_SIZE = 50;
-  const CACHE_EXPIRY_MS = 3600000;
+  const { getBestPOI, lookupReverseGeoName, abortPlacesRequests } =
+    useGeoPlaces({ mapsApiKey });
+  const { callGeminiSafe, abortAiRequests } = useAiInvocation({ apiKey });
+  const forecastAbortControllerRef = useRef(null);
 
   const [aiMode, setAiMode] = useState("translate");
   // 初始訊息設為空陣列，等待 IndexedDB 載入後再決定
@@ -1378,6 +1066,14 @@ const ItineraryApp = ({ authentication }) => {
       };
     }, [isTestMode, testDateTime, frozenTestDateTime]);
 
+  const didAutoFocusTripDayRef = useRef(false);
+  useEffect(() => {
+    if (didAutoFocusTripDayRef.current) return;
+    if (tripStatus !== "during" || currentTripDayIndex < 0) return;
+    didAutoFocusTripDayRef.current = true;
+    changeDay(currentTripDayIndex);
+  }, [changeDay, currentTripDayIndex, tripStatus]);
+
   // 🆕 使用者狀態 (用於後台定位記錄)
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRef = useRef(null);
@@ -1514,29 +1210,22 @@ const ItineraryApp = ({ authentication }) => {
         }
       };
 
-      // 4. 準備資料
-      const payload = {
-        type: "location",
-        token: currentGasToken,
-        id: crypto.randomUUID(),
-        userName: user.name,
-        userAvatar: user.avatar,
-        lat: weatherData.lat,
-        lon: weatherData.lon,
-        accuracy: accuracy, // High, Low, Cache
-        device: getDeviceInfo(),
-      };
-
-      // 4. 發送 (優化 Fetch 設定)
       try {
-        // 使用 fetchGasWithRetry 處理 GAS 的 Busy 狀態與重試
-        fetchGasWithRetry(currentGasUrl, {
-          method: "POST",
-          redirect: "follow",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8",
+        uploadToGasWithContext({
+          data: {
+            action: "add",
+            type: "location",
+            id: crypto.randomUUID(),
+            userName: user.name,
+            userAvatar: user.avatar,
+            lat: weatherData.lat,
+            lon: weatherData.lon,
+            accuracy: accuracy,
+            device: getDeviceInfo(),
           },
-          body: JSON.stringify(payload),
+          gasUrl: currentGasUrl,
+          gasToken: currentGasToken,
+          context: gasTripContext,
         })
           .then(() =>
             debugLog("📍 Location log sent successfully (with retry)"),
@@ -1565,18 +1254,17 @@ const ItineraryApp = ({ authentication }) => {
       isFetchingLocationsRef.current = true; // 上鎖
       debugLog("📍 [App] 正在獲取其他使用者位置...");
 
-      const url = `${gasUrl}?token=${encodeURIComponent(gasToken)}&action=getLocations`;
-      const result = await fetchGasWithRetry(url);
-
-      if (result.status === "success" && Array.isArray(result.data)) {
-        // 過濾掉自己，避免自己同時出現在「使用者位置」和「其他使用者」
-        const me = currentUserRef.current?.name;
-        const others = me
-          ? result.data.filter((loc) => loc.user?.name !== me)
-          : result.data;
-        debugLog("✅ [App] 獲取其他使用者位置成功:", others.length);
-        setOtherUsersLocations(others);
-      }
+      const locations = await fetchLocationsFromGasWithContext({
+        gasUrl,
+        gasToken,
+        context: gasTripContext,
+      });
+      const me = currentUserRef.current?.name;
+      const others = me
+        ? locations.filter((loc) => loc.user?.name !== me)
+        : locations;
+      debugLog("✅ [App] 獲取其他使用者位置成功:", others.length);
+      setOtherUsersLocations(others);
     } catch (e) {
       console.error("📍 [App] 獲取其他使用者位置失敗:", e);
     } finally {
@@ -1638,50 +1326,11 @@ const ItineraryApp = ({ authentication }) => {
 
           if (!city) {
             try {
-              // 使用座標作為 Key 進行地名快取，避免重複查詢 Nominatim API
-              const geoKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
-              let geoData = geoNamesCacheRef.current[geoKey]?.data;
-
-              if (
-                !geoData ||
-                Date.now() -
-                  (geoNamesCacheRef.current[geoKey]?.timestamp || 0) >
-                  CACHE_EXPIRY_MS
-              ) {
-                const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-TW&zoom=18`;
-                const geoRes = await fetch(geoUrl);
-                geoData = await geoRes.json();
-
-                geoNamesCacheRef.current[geoKey] = {
-                  data: geoData,
-                  timestamp: Date.now(),
-                };
-                debugLog(`🌍 [地名查詢] 新查詢: ${geoKey}`);
-              } else {
-                debugLog(`🌍 [地名快取命中] ${geoKey}`);
-              }
-
-              if (geoData) {
-                const addr = geoData.address || {};
-                city =
-                  addr.city ||
-                  addr.town ||
-                  addr.village ||
-                  addr.county ||
-                  addr.state ||
-                  "您的位置";
-
-                // 判斷是否為具體地標（如建築物名稱），若無則回退至路名
-                if (geoData.name) {
-                  landmark = geoData.name;
-                  isGeneric = false;
-                } else {
-                  isGeneric = true;
-                  if (addr.road) {
-                    landmark = addr.road;
-                    if (addr.house_number) landmark += ` ${addr.house_number}`;
-                  }
-                }
+              const geo = await lookupReverseGeoName(latitude, longitude);
+              if (geo.geoData) {
+                city = geo.city;
+                landmark = geo.landmark;
+                isGeneric = geo.isGeneric;
               }
             } catch (e) {
               console.warn("Geo lookup failed:", e);
@@ -1892,6 +1541,7 @@ const ItineraryApp = ({ authentication }) => {
       testLatitude,
       testLongitude,
       logLocationToSheet,
+      lookupReverseGeoName,
     ],
   );
 
@@ -1940,6 +1590,15 @@ const ItineraryApp = ({ authentication }) => {
     userWeather.temp,
     userWeather.locationName,
   ]);
+
+  // Keep day-pager late deps in sync (refresh + toast + test-mode click reset)
+  dayPagerDepsRef.current = {
+    onPullRefresh: () =>
+      getUserLocationWeather({ isSilent: true, highAccuracy: false }),
+    showToast,
+    testModeClickCount,
+    setTestModeClickCount,
+  };
 
   const handleShareLocation = async () => {
     // 測試模式優先處理：直接使用測試設定的位置分享，不觸發實際定位
@@ -2243,6 +1902,8 @@ const ItineraryApp = ({ authentication }) => {
   };
 
   useEffect(() => {
+    const forecastControllerRef = forecastAbortControllerRef;
+
     return () => {
       // 組件卸載時立即停止語音與 API 請求，避免記憶體洩漏或狀態更新錯誤
       if ("speechSynthesis" in window) {
@@ -2254,20 +1915,78 @@ const ItineraryApp = ({ authentication }) => {
         }
       }
 
-      if (geminiAbortControllerRef.current) {
-        geminiAbortControllerRef.current.abort();
-      }
-      if (mapsAbortControllerRef.current) {
-        mapsAbortControllerRef.current.abort();
-      }
+      abortAiRequests();
+      abortPlacesRequests();
+      forecastControllerRef.current?.abort();
     };
-  }, []);
+  }, [abortAiRequests, abortPlacesRequests]);
+
+  const fetchWeatherForecast = React.useCallback(
+    async ({ showLoading = false } = {}) => {
+      if (!isVerified) return false;
+
+      forecastAbortControllerRef.current?.abort();
+      const controller = new AbortController();
+      forecastAbortControllerRef.current = controller;
+
+      if (showLoading) {
+        setWeatherForecast((prev) => ({ ...prev, loading: true }));
+      }
+
+      try {
+        const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
+
+        const results = await Promise.all(
+          tripConfig.locations.map(async (loc) => {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
+            const response = await fetch(url, { signal: controller.signal });
+            if (!response.ok) {
+              throw new Error(`Weather API HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.error) {
+              throw new Error(data.reason || `Weather API error: ${loc.key}`);
+            }
+
+            if (data.timezone) setAutoTimeZone(data.timezone);
+            return {
+              key: loc.key,
+              data: { ...data.daily, hourly: data.hourly },
+            };
+          }),
+        );
+
+        if (controller.signal.aborted) return false;
+
+        const updatedAt = Date.now();
+        const newForecast = Object.fromEntries(
+          results.map(({ key, data }) => [key, data]),
+        );
+        const nextForecast = { ...newForecast, loading: false, updatedAt };
+
+        tripStorage.setItem(
+          "weather-forecast",
+          JSON.stringify({ ...newForecast, updatedAt }),
+        );
+        setWeatherForecast(nextForecast);
+        return true;
+      } catch (error) {
+        if (error?.name === "AbortError") return false;
+        console.error("Failed to fetch weather:", error);
+        setWeatherForecast((prev) => ({ ...prev, loading: false }));
+        return false;
+      } finally {
+        if (forecastAbortControllerRef.current === controller) {
+          forecastAbortControllerRef.current = null;
+        }
+      }
+    },
+    [isVerified],
+  );
 
   useEffect(() => {
     if (!isVerified) return;
-
-    const controller = new AbortController();
-    let cancelled = false;
 
     const loadCachedForecast = () => {
       try {
@@ -2286,61 +2005,12 @@ const ItineraryApp = ({ authentication }) => {
 
     loadCachedForecast();
 
-    const fetchWeather = async () => {
-      try {
-        const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
-
-        const weatherPromises = tripConfig.locations.map(async (loc) => {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
-          const res = await fetch(url, { signal: controller.signal });
-          const data = await res.json();
-
-          if (data.error) {
-            console.error(`Weather API error for ${loc.key}:`, data.reason);
-            return { key: loc.key, data: null };
-          }
-
-          if (!cancelled && data.timezone) {
-            setAutoTimeZone(data.timezone);
-          }
-          return {
-            key: loc.key,
-            data: {
-              ...data.daily,
-              hourly: data.hourly,
-            },
-          };
-        });
-
-        const results = await Promise.all(weatherPromises);
-
-        if (cancelled) return;
-
-        const newForecast = {};
-        results.forEach((item) => {
-          newForecast[item.key] = item.data;
-        });
-
-        tripStorage.setItem("weather-forecast", JSON.stringify(newForecast));
-
-        setWeatherForecast({
-          ...newForecast,
-          loading: false,
-        });
-      } catch (error) {
-        if (error?.name === "AbortError") return;
-        console.error("Failed to fetch weather:", error);
-        setWeatherForecast((prev) => ({ ...prev, loading: false }));
-      }
-    };
-
-    fetchWeather();
+    fetchWeatherForecast();
 
     return () => {
-      cancelled = true;
-      controller.abort();
+      forecastAbortControllerRef.current?.abort();
     };
-  }, [isVerified]);
+  }, [fetchWeatherForecast, isVerified]);
 
   useEffect(() => {
     const updateVoices = () => {
@@ -2472,193 +2142,6 @@ const ItineraryApp = ({ authentication }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const fetchGooglePlaces = async (lat, lng, initialRadius = 100) => {
-    const performSearch = async (radius) => {
-      const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)},${radius}`;
-      const cached = googlePlacesCacheRef.current[cacheKey];
-      if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_MS) {
-        return cached.data;
-      }
-
-      if (!mapsApiKey) return null;
-
-      const url = `https://places.googleapis.com/v1/places:searchNearby`;
-      const validTypes = [
-        "restaurant",
-        "cafe",
-        "convenience_store",
-        "tourist_attraction",
-        "park",
-        "store",
-        "lodging",
-        "transit_station",
-        "museum",
-        "shopping_mall",
-      ];
-
-      const body = {
-        includedTypes: validTypes,
-        maxResultCount: 1,
-        locationRestriction: {
-          circle: {
-            center: { latitude: Number(lat), longitude: Number(lng) },
-            radius: Number(radius),
-          },
-        },
-        languageCode: "zh-TW",
-      };
-
-      try {
-        if (mapsAbortControllerRef.current)
-          mapsAbortControllerRef.current.abort();
-        mapsAbortControllerRef.current = new AbortController();
-
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": mapsApiKey,
-            "X-Goog-FieldMask": "places.displayName,places.addressDescriptor",
-          },
-          body: JSON.stringify(body),
-          signal: mapsAbortControllerRef.current.signal,
-        });
-
-        if (!res.ok) return null;
-
-        const data = await res.json();
-        let foundName = "";
-
-        if (data.places && data.places.length > 0) {
-          const firstPlace = data.places[0];
-          const landmarks = firstPlace.addressDescriptor?.landmarks;
-          // 優先取地標描述，次取店名
-          foundName =
-            landmarks?.[0]?.displayName?.text ||
-            firstPlace.displayName?.text ||
-            "";
-        }
-
-        if (foundName) {
-          googlePlacesCacheRef.current[cacheKey] = {
-            data: foundName,
-            timestamp: Date.now(),
-          };
-        }
-        return foundName;
-      } catch (error) {
-        if (error.name === "AbortError") return null;
-        console.error(`❌ [Maps API] 錯誤:`, error);
-        return null;
-      }
-    };
-
-    // 2. 核心重試邏輯
-    // 第一跳：嘗試精準半徑 (預設 100m)
-    let placeName = await performSearch(initialRadius);
-
-    // 第二跳：如果沒結果，且初次搜尋半徑小於 300m，則擴大範圍再試一次
-    if (!placeName && initialRadius < 300) {
-      debugLog(`🔍 [Maps API] ${initialRadius}m 無結果，擴大至 300m 重試...`);
-      placeName = await performSearch(300);
-    }
-
-    return placeName || "";
-  };
-
-  // --- Gemini API Safe Call Function (New Implementation + AbortController) ---
-  const callGeminiSafe = async (payload) => {
-    // 使用解密後的 Key，如果沒有則使用空字串 (會失敗)
-    const currentKey = apiKey;
-
-    const maxRetries = 3;
-    let attempt = 0;
-    // 🔧 使用 aiHelpers 統一管理的模型設定
-    const activeModel = getActiveModel();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel.id}:generateContent?key=${currentKey}`;
-
-    while (attempt < maxRetries) {
-      try {
-        // 🆕 中止上一個未完成的 Gemini API 請求
-        if (geminiAbortControllerRef.current) {
-          geminiAbortControllerRef.current.abort();
-        }
-        geminiAbortControllerRef.current = new AbortController();
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: geminiAbortControllerRef.current.signal,
-        });
-
-        if (response.ok) {
-          return await response.json();
-        }
-
-        // 處理流量限制 (429) 或服務暫時不可用 (503)
-        if (response.status === 429 || response.status === 503) {
-          console.warn(
-            `API 忙碌中，嘗試進行指數退避... (嘗試 ${attempt + 1}/${maxRetries})`,
-          );
-          attempt++;
-          // 指數退避：2s, 4s, 8s... 避免短時間內重複請求加重伺服器負擔
-          await sleep(2000 * Math.pow(2, attempt));
-          continue;
-        }
-
-        if (response.status === 400) {
-          throw new Error("API 參數錯誤。");
-        }
-        if (response.status === 403) {
-          throw new Error("API Key 無效或過期，請檢查加密設定。");
-        }
-
-        throw new Error(`API Error: ${response.status}`);
-      } catch (error) {
-        // 中止請求通常是使用者切換頁面或手動停止，不視為錯誤
-        if (error.name === "AbortError") {
-          throw new Error("API 請求已被中止");
-        }
-        console.error("Fetch attempt error:", error);
-        if (error.message.includes("API Key")) throw error;
-
-        attempt++;
-        if (attempt < maxRetries) {
-          await sleep(2000 * Math.pow(2, attempt));
-        } else {
-          throw error;
-        }
-      }
-    }
-    throw new Error("API Max retries reached");
-  };
-
-  // --- 周邊地標輔助：直接呼叫 Google Maps API ---
-  const getBestPOI = async (latitude, longitude) => {
-    if (!mapsApiKey) {
-      debugLog("🗺️ [Google Maps] 略過：未設定 API Key");
-      return null;
-    }
-
-    try {
-      debugLog(
-        `🗺️ [Google Maps] 查詢周邊 POI... (Lat: ${latitude}, Lng: ${longitude})`,
-      );
-      // 預設搜尋半徑 100m，優先尋找最接近的具體地標
-      const places = await fetchGooglePlaces(latitude, longitude, 100);
-      debugLog("🗺️ [Google Maps] API 回傳結果:", places);
-
-      if (places) {
-        debugLog(`🗺️ [Google Maps] 找到最佳地標: "${places}"`);
-        return { name: places, source: "maps-direct" };
-      }
-    } catch (e) {
-      console.warn("getBestPOI 執行失敗:", e);
-    }
-    return null;
-  };
-
   // --- 建立分享文字 (決策核心) ---
   const buildShareText = async (
     latitude,
@@ -2667,42 +2150,26 @@ const ItineraryApp = ({ authentication }) => {
     locationName,
     isGeneric,
   ) => {
-    debugGroup("🚀 [分享流程決策樹]");
-    debugLog("1. 狀態輸入:", {
-      landmark: currentLandmark || "(無)",
-      isGeneric: isGeneric,
-      city: locationName,
+    const { finalLandmark, tag, updatedFromPoi } = await resolveShareLandmark({
+      currentLandmark,
+      isGeneric,
+      locationName,
+      latitude,
+      longitude,
+      getBestPOIImpl: getBestPOI,
+      debugLog,
+      debugGroup,
+      debugGroupEnd,
     });
 
-    let finalLandmark = currentLandmark || "";
-    let tag = currentLandmark ? "Street(OSM)" : "Unknown";
-
-    // 決策邏輯：若 OSM 提供的地標為空，或是被判定為通用路名 (isGeneric)，則呼叫 Google Maps 補強
-    if (!finalLandmark || isGeneric === true) {
-      debugLog("2. 判定需要補強 (無地標或僅有路名)，呼叫 Google Maps...");
-
-      const poi = await getBestPOI(latitude, longitude);
-
-      if (poi && poi.name) {
-        finalLandmark = poi.name;
-        tag = "POI(GoogleMaps)";
-        debugLog("3. Google Maps 救援成功！更新為:", finalLandmark);
-
-        // 同步更新 UI 上的地標資訊，讓使用者看到更精準的結果
-        setUserWeather((prev) => ({
-          ...prev,
-          landmark: finalLandmark,
-          isGeneric: false,
-        }));
-      } else {
-        debugLog("3. Google Maps 無結果，維持 OSM 路名。");
-      }
-    } else {
-      debugLog("2. OSM 已是精準地標，跳過 Google Maps。");
+    if (updatedFromPoi) {
+      // 同步更新 UI 上的地標資訊，讓使用者看到更精準的結果
+      setUserWeather((prev) => ({
+        ...prev,
+        landmark: finalLandmark,
+        isGeneric: false,
+      }));
     }
-
-    debugLog(`🏁 [最終輸出] Landmark: "${finalLandmark}"`);
-    debugGroupEnd();
 
     const { baseMessage, fullText } = buildShareTextLogic(
       latitude,
@@ -2754,8 +2221,8 @@ const ItineraryApp = ({ authentication }) => {
       setTestModeClickCount(0);
       showToast("🩷 進入測試模式！", "success");
     } else {
-      geminiAbortControllerRef.current?.abort();
-      mapsAbortControllerRef.current?.abort();
+      abortAiRequests();
+      abortPlacesRequests();
       gasUrlRef.current = "";
       gasTokenRef.current = "";
       setOtherUsersLocations([]);
@@ -2793,21 +2260,7 @@ const ItineraryApp = ({ authentication }) => {
     });
 
     // 根據模式設定隨機的 Loading 提示，增加互動感
-    let nextLoadingText = "";
-    if (aiMode === "translate") {
-      nextLoadingText = "正在進行雙向翻譯...";
-    } else {
-      const guideLoadingTexts = [
-        "正在翻閱您的行程表...",
-        "正在查詢當地的購物資訊...",
-        "正在比對地圖位置...",
-        "正在組織建議內容...",
-        "正在思考最佳建議...",
-      ];
-      nextLoadingText =
-        guideLoadingTexts[Math.floor(Math.random() * guideLoadingTexts.length)];
-    }
-    setLoadingText(nextLoadingText);
+    setLoadingText(getNextAiLoadingText(aiMode));
 
     // 🔧 【重要】先清空輸入框，避免語音識別的異步更新覆蓋
     const messageText = inputMessage;
@@ -2831,136 +2284,26 @@ const ItineraryApp = ({ authentication }) => {
     setIsLoading(true);
 
     try {
-      // 將內部訊息格式轉換為 Gemini API 要求的格式 (支援多模態)
-      const formatToGeminiPart = (msg) => {
-        const parts = [];
-
-        if (msg.text && msg.text.trim()) {
-          parts.push({ text: msg.text });
-        } else if (!msg.image) {
-          parts.push({ text: "" });
-        }
-
-        if (msg.image) {
-          // 圖片可能是對象（包含 data 和 filename）或直接是 base64 字符串
-          const imageData = msg.image.data || msg.image;
-          const [meta, data] = imageData.split(",");
-          const mimeType = meta.match(/:(.*?);/)?.[1] || "image/jpeg";
-          parts.push({
-            inlineData: {
-              mimeType: mimeType,
-              data: data,
-            },
-          });
-        }
-
-        return { role: msg.role, parts: parts };
-      };
-
-      let payload;
-
-      if (aiMode === "translate") {
-        const targetLang = tripConfig.language.name;
-        const translateSystemPrompt = `
-        你是一個專業的即時口譯員，負責「繁體中文」與「${targetLang}」之間的雙向翻譯。
-        
-        規則：
-        1. 若使用者輸入中文 -> 翻譯成${targetLang}，並在後方附上羅馬拼音 (發音指南)。
-           格式：[${targetLang}翻譯] ([羅馬拼音])
-        2. 若使用者輸入${targetLang} (或英文/其他語言) -> 僅翻譯成繁體中文。
-        3. **嚴禁廢話**：不要解釋語法，不要打招呼，只輸出翻譯結果。
-        `;
-
-        payload = {
-          systemInstruction: { parts: [{ text: translateSystemPrompt }] },
-          contents: [
-            ...messages
-              .slice(-1)
-              .filter((m) => m.role !== "system")
-              .map((m) => ({ role: m.role, parts: [{ text: m.text || "" }] })),
-            formatToGeminiPart(userMsg),
-          ],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2000,
-          },
-        };
-      } else {
-        // 導遊模式：結合 GPS 位置、行程表與參考指南
-        let locationInstruction = "";
-        const isGpsAvailable =
-          hasLocationPermission &&
-          userWeather.locationName &&
-          !userWeather.loading &&
-          userWeather.locationName !== "定位中...";
-        if (isGpsAvailable) {
-          locationInstruction = `【使用者目前 GPS 位置】：${userWeather.locationName}。\n回答時請優先依據此位置 (例如：附近的超商)。`;
-        } else {
-          locationInstruction = `目前無 GPS，請假設使用者位於行程表中的地點。`;
-        }
-
-        const startDate = new Date(tripConfig.startDate);
-        const displayTime = isTestMode ? testDateTime : new Date();
-        const today = new Date(
-          displayTime.toLocaleString("en-US", { timeZone: tz }),
-        );
-        const diffTime = today - startDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        let dayStatus = "";
-        if (diffDays >= 1 && diffDays <= itineraryData.length) {
-          dayStatus = `今天是行程的第 ${diffDays} 天 (Day ${diffDays})。`;
-        } else if (diffDays < 1) {
-          dayStatus = `旅程尚未開始 (預計 ${tripConfig.startDate} 出發)。`;
-        } else {
-          dayStatus = `旅程已經結束。`;
-        }
-
-        const guideSystemContext = `你是這趟「${tripConfig.title}」的專屬 AI 導遊。
-        【目前目的地當地時間】：${localTimeStr} (時區: ${tz})。
-        【行程進度】：${dayStatus}
-        ${locationInstruction}        
-        【行程資訊與商家資料】：
-        ${itineraryFlat}        
-        ${shopsFlat}        
-        【行為規範與決策路徑】：
-        1. 優先本地檢索：當使用者提問時，請先深思熟慮上述提供的「行程資訊」與「商家資料」。若資料足以回答，請直接回覆並嚴格禁止啟動 google_search。
-        2. 搜尋觸發門檻：只有在遇到以下情況，且本地資料完全無法提供事實時，才允許調用 google_search：
-           - 查詢具體的店家樓層、特定品牌有無、或是營業時間變動。
-           - 本地資料中未記載的新景點詳細介紹。
-        3. 誠實與透明：
-           - 若資料庫與搜尋後皆無法確認細節，請回答「資料不足，請以現場導覽圖或櫃檯資訊為準」，嚴禁編造（如虛構樓層或櫃位）。
-           - 使用搜尋獲得的答案，請在末尾加上「(🔍 來自即時搜尋)」。
-        4. 回答風格：簡潔、親切、重點條列式。
-        5. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議。
-        `;
-
-        const history = messages
-          .filter((m) => m.role !== "system")
-          .slice(1)
-          .slice(-4)
-          .map(formatToGeminiPart);
-
-        // 🔍 根據訊息內容與模型能力動態決定是否啟用 Google Search Grounding
-        const searchTools = getSearchTools(messageText);
-        debugLog(
-          `🔍 [Search Filter] model=${getActiveModel().label}, hasTools=${!!searchTools.tools}, message="${messageText.slice(0, 30)}..."`,
-        );
-
-        payload = {
-          systemInstruction: { parts: [{ text: guideSystemContext }] },
-          contents: [...history, formatToGeminiPart(userMsg)],
-          ...searchTools,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8000,
-          },
-        };
-      }
+      const payload = buildAiChatPayload({
+        aiMode,
+        messages,
+        userMsg,
+        messageText,
+        tripConfig,
+        itineraryData,
+        itineraryFlat,
+        shopsFlat,
+        localTimeStr,
+        tz,
+        isTestMode,
+        testDateTime,
+        hasLocationPermission,
+        userWeather,
+        debugLog,
+      });
 
       const data = await callGeminiSafe(payload);
-      const aiText =
-        data.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "抱歉，我沒看清楚，請再試一次。";
+      const aiText = extractAiReplyText(data);
       setMessages((prev) => [
         ...prev,
         {
@@ -2971,11 +2314,7 @@ const ItineraryApp = ({ authentication }) => {
       ]);
     } catch (error) {
       console.error("AI Error:", error);
-      let errMsg = "連線發生錯誤或是系統忙碌中，請稍後再試。";
-      if (error.message.includes("Key"))
-        errMsg = "API Key 錯誤，請檢查加密設定。";
-      if (error.message.includes("413"))
-        errMsg = "圖片檔案過大，請試著縮小圖片後再傳送。";
+      const errMsg = getAiErrorText(error);
 
       setMessages((prev) => [
         ...prev,
@@ -3209,6 +2548,7 @@ const ItineraryApp = ({ authentication }) => {
       hourly: forecast.hourly,
       daily: forecast,
       loading: weatherForecast.loading,
+      updatedAt: weatherForecast.updatedAt,
     };
   }, [activeDay, userWeather, weatherForecast]);
 
@@ -3421,206 +2761,113 @@ const ItineraryApp = ({ authentication }) => {
         />
 
         {/* --- 分頁內容 --- */}
-
-        {/* 1. 行程分頁：首次造訪時載入，之後保留狀態 */}
-        <div style={{ display: activeTab === "itinerary" ? "block" : "none" }}>
-          {(activeTab === "itinerary" || visitedTabs.has("itinerary")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入行程內容中…" />}>
-              <ItineraryTab
-                activeDay={activeDay}
-                changeDay={changeDay}
-                direction={direction}
-                slideVariants={slideVariants}
-                navContainerRef={navContainerRef}
-                navItemsRef={navItemsRef}
-                itineraryData={itineraryData}
-                isDarkMode={isDarkMode}
-                theme={theme}
-                componentStyles={componentStyles}
-                tripConfig={tripConfig}
-                tripStatus={tripStatus}
-                daysUntilTrip={daysUntilTrip}
-                checklistData={checklistData}
-                currentTripDayIndex={currentTripDayIndex}
-                weatherForecast={weatherForecast}
-                userWeather={userWeather}
-                displayWeather={displayWeather}
-                isFlightInfoExpanded={isFlightInfoExpanded}
-                setIsFlightInfoExpanded={setIsFlightInfoExpanded}
-                handleCopy={handleCopy}
-                expandedItems={expandedItems}
-                toggleExpand={toggleExpand}
-                getMapLink={getMapLink}
-                colors={colors}
-                currentTheme={currentTheme}
-                handleWeatherDetailOpen={handleWeatherDetailOpen}
-                isUpdatingLocation={isUpdatingLocation}
-                isTestMode={isTestMode}
-                testDateTime={testDateTime}
-                getWeatherInfo={getWeatherInfo}
-                getUserLocationWeather={getUserLocationWeather}
-                handleMapModalToggle={handleMapModalToggle}
-                scrollContainerRef={scrollContainerRef}
-                onTouchStart={onTouchStart}
-                onTouchEnd={onTouchEnd}
-                pullDistance={pullDistance}
-                isRefreshing={isRefreshing}
-                current={current}
-                currentLocation={currentLocation}
-                dayMapEvents={dayMapEvents}
-                otherUsersLocations={otherUsersLocations}
-                currentUser={currentUser}
-                maptilerKey={maptilerKey}
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* --- 頁籤：實用指南，切換時才載入 --- */}
-        {activeTab === "guides" && (
-          <Suspense fallback={<LazyPanelFallback label="載入實用指南中…" />}>
-            <GuidesTab
-              guidesData={guidesData}
-              usefulLinks={usefulLinks}
-              isDarkMode={isDarkMode}
-              theme={theme}
-              currentTheme={currentTheme}
-              componentStyles={componentStyles}
-            />
-          </Suspense>
-        )}
-
-        {/* --- 頁籤：商家導覽，切換時才載入 --- */}
-        {activeTab === "shops" && (
-          <Suspense fallback={<LazyPanelFallback label="載入商家指南中…" />}>
-            <ShopsTab
-              shopGuideData={shopGuideData}
-              getMapLink={getMapLink}
-              isDarkMode={isDarkMode}
-              theme={theme}
-              componentStyles={componentStyles}
-            />
-          </Suspense>
-        )}
-
-        {/* --- 頁籤：AI 導遊，首次造訪時載入 --- */}
-        <div style={{ display: activeTab === "ai" ? "block" : "none" }}>
-          {(activeTab === "ai" || visitedTabs.has("ai")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入 AI 導遊中…" />}>
-              <AIPanel
-                isDarkMode={isDarkMode}
-                theme={theme}
-                currentTheme={currentTheme}
-                componentStyles={componentStyles}
-                aiMode={aiMode}
-                handleSwitchMode={handleSwitchMode}
-                isSpeaking={isSpeaking}
-                setIsSpeaking={setIsSpeaking}
-                showAiSearch={showAiSearch}
-                setShowAiSearch={setShowAiSearch}
-                aiSearchQuery={aiSearchQuery}
-                setAiSearchQuery={setAiSearchQuery}
-                getSearchResults={getSearchResults}
-                scrollToMessage={scrollToMessage}
-                handleClearChat={handleClearChat}
-                messages={messages}
-                renderMessage={renderMessage}
-                handleSpeak={handleSpeak}
-                isLoading={isLoading}
-                loadingText={loadingText}
-                chatEndRef={chatEndRef}
-                setFullPreviewImage={setFullPreviewImage}
-                expandedMessages={expandedMessages}
-                toggleMessageExpand={toggleMessageExpand}
-                messageRefs={messageRefs}
-                tripConfig={tripConfig}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                listeningLang={listeningLang}
-                toggleListening={toggleListening}
-                fileInputRef={fileInputRef}
-                handleImageSelect={handleImageSelect}
-                selectedImage={selectedImage}
-                clearImage={clearImage}
-                handleSendMessage={handleSendMessage}
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* --- 頁籤：記帳/記事，首次造訪時載入 --- */}
-        <div style={{ display: activeTab === "finance" ? "block" : "none" }}>
-          {(activeTab === "finance" || visitedTabs.has("finance")) && (
-            <Suspense fallback={<LazyPanelFallback label="載入記帳資料中…" />}>
-              <FinanceTab
-                isDarkMode={isDarkMode}
-                theme={theme}
-                rateData={rateData} // 傳遞匯率資料
-                gasUrl={gasUrl} // 傳遞 GAS URL
-                gasToken={gasToken} // 傳遞 Token
-                apiKey={apiKey} // 傳遞 Gemini API Key
-                setFullPreviewImage={setFullPreviewImage} // 複用 App.jsx 的圖片預覽遮罩
-                showToast={showToast} // 複用 Toast 提示
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* --- 底部導覽列 (Bottom Navigation) --- */}
-        <BottomNav
+        <TripTabPanels
           activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onTabPreload={preloadTab}
-          handleInterruptClick={() => {}} // 空函式，因為原函式不存在
+          visitedTabs={visitedTabs}
+          activeDay={activeDay}
+          changeDay={changeDay}
+          direction={direction}
+          slideVariants={slideVariants}
+          navContainerRef={navContainerRef}
+          navItemsRef={navItemsRef}
+          itineraryData={itineraryData}
           isDarkMode={isDarkMode}
-          theme={currentTheme}
+          theme={theme}
+          componentStyles={componentStyles}
+          tripConfig={tripConfig}
+          tripStatus={tripStatus}
+          daysUntilTrip={daysUntilTrip}
+          checklistData={checklistData}
+          currentTripDayIndex={currentTripDayIndex}
+          weatherForecast={weatherForecast}
+          userWeather={userWeather}
+          displayWeather={displayWeather}
+          isFlightInfoExpanded={isFlightInfoExpanded}
+          setIsFlightInfoExpanded={setIsFlightInfoExpanded}
+          handleCopy={handleCopy}
+          expandedItems={expandedItems}
+          toggleExpand={toggleExpand}
+          getMapLink={getMapLink}
+          colors={colors}
+          currentTheme={currentTheme}
+          handleWeatherDetailOpen={handleWeatherDetailOpen}
+          isUpdatingLocation={isUpdatingLocation}
+          isTestMode={isTestMode}
+          testDateTime={testDateTime}
+          getWeatherInfo={getWeatherInfo}
+          getUserLocationWeather={getUserLocationWeather}
+          handleMapModalToggle={handleMapModalToggle}
+          scrollContainerRef={scrollContainerRef}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          current={current}
+          currentLocation={currentLocation}
+          dayMapEvents={dayMapEvents}
+          otherUsersLocations={otherUsersLocations}
+          currentUser={currentUser}
+          maptilerKey={maptilerKey}
+          guidesData={guidesData}
+          usefulLinks={usefulLinks}
+          shopGuideData={shopGuideData}
+          aiMode={aiMode}
+          handleSwitchMode={handleSwitchMode}
+          isSpeaking={isSpeaking}
+          setIsSpeaking={setIsSpeaking}
+          showAiSearch={showAiSearch}
+          setShowAiSearch={setShowAiSearch}
+          aiSearchQuery={aiSearchQuery}
+          setAiSearchQuery={setAiSearchQuery}
+          getSearchResults={getSearchResults}
+          scrollToMessage={scrollToMessage}
+          handleClearChat={handleClearChat}
+          messages={messages}
+          renderMessage={renderMessage}
+          handleSpeak={handleSpeak}
+          isLoading={isLoading}
+          loadingText={loadingText}
+          chatEndRef={chatEndRef}
+          setFullPreviewImage={setFullPreviewImage}
+          expandedMessages={expandedMessages}
+          toggleMessageExpand={toggleMessageExpand}
+          messageRefs={messageRefs}
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          listeningLang={listeningLang}
+          toggleListening={toggleListening}
+          fileInputRef={fileInputRef}
+          handleImageSelect={handleImageSelect}
+          selectedImage={selectedImage}
+          clearImage={clearImage}
+          handleSendMessage={handleSendMessage}
+          rateData={rateData}
+          gasUrl={gasUrl}
+          gasToken={gasToken}
+          apiKey={apiKey}
+          showToast={showToast}
         />
 
-        {/* 分享位置按鈕 (透明度優化) */}
-        <button
-          onClick={handleShareLocation}
-          title={`分享位置（來源：${locationSource === "cache" ? "快取" : locationSource === "low" ? "低精度" : locationSource === "high" ? "高精度" : "未知"}）`}
-          aria-label={`分享位置（來源：${locationSource === "cache" ? "快取" : locationSource === "low" ? "低精度" : locationSource === "high" ? "高精度" : "未知"}）`}
-          aria-busy={isSharing}
-          aria-disabled={isSharing}
-          disabled={isSharing}
-          className={`fixed bottom-60 right-5 w-12 h-12 backdrop-blur-lg border rounded-full shadow-lg flex items-center justify-center z-40 active:scale-90 transition-all duration-300 opacity-60 hover:opacity-100 ${isSharing ? "opacity-80 pointer-events-none scale-95" : ""}
-            ${
-              hasLocationPermission === false
-                ? "bg-red-50/90 border-red-400/60 text-red-500 animate-pulse hover:bg-red-100/90 ring-1 ring-red-400/20"
-                : locationSource === "cache"
-                  ? "bg-red-50/90 border-red-400/60 text-red-500 hover:bg-red-100/90 ring-1 ring-red-400/20"
-                  : locationSource === "low"
-                    ? "bg-sky-50/90 border-sky-400/60 text-sky-600 hover:bg-sky-100/90 ring-1 ring-sky-400/20"
-                    : locationSource === "high"
-                      ? "bg-emerald-50/90 border-emerald-400/60 text-emerald-600 hover:bg-emerald-100/90 ring-1 ring-emerald-400/20"
-                      : isDarkMode
-                        ? "bg-neutral-800/60 border-white/10 text-sky-300 hover:bg-neutral-800/90 ring-1 ring-white/5"
-                        : "bg-white/70 border-white/40 text-[#5D737E] hover:bg-white/90 ring-1 ring-black/5"
-            }`}
-        >
-          {isSharing ? (
-            <Loader className="w-5 h-5 animate-spin" />
-          ) : (
-            <LocateFixed className="w-6 h-6" />
-          )}
-        </button>
-
-        {/* 計算機按鈕 (僅行動裝置顯示) */}
-        {isMobile && (
-          <button
-            onClick={handleCalculatorOpen}
-            className={`fixed bottom-[19rem] right-5 w-12 h-12 backdrop-blur-lg border rounded-full shadow-lg flex items-center justify-center z-40 active:scale-90 transition-all duration-300 opacity-60 hover:opacity-100
-              ${
-                isDarkMode
-                  ? "bg-neutral-800/60 border-white/10 text-neutral-200 hover:bg-neutral-800/90 ring-1 ring-white/5"
-                  : "bg-white/70 border-white/40 text-[#5D737E] hover:bg-white/90 ring-1 ring-black/5"
-              }`}
-            aria-label="開啟計算機"
-          >
-            <Calculator className="w-6 h-6" />
-          </button>
-        )}
+        <div className="fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-end gap-2">
+            <BottomNav
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onTabPreload={preloadTab}
+              handleInterruptClick={() => {}}
+              isDarkMode={isDarkMode}
+              theme={currentTheme}
+            />
+            <TripToolsMenu
+              isDarkMode={isDarkMode}
+              isSharing={isSharing}
+              locationSource={locationSource}
+              hasLocationPermission={hasLocationPermission}
+              onShareLocation={handleShareLocation}
+              onOpenCalculator={handleCalculatorOpen}
+            />
+          </div>
+        </div>
 
         {/* 匯率計算機彈窗 */}
         {isCalculatorOpen && (
@@ -3954,6 +3201,8 @@ const ItineraryApp = ({ authentication }) => {
 
         {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
         <div
+          aria-hidden={!showWeatherDetail || !detailWeatherData}
+          inert={!showWeatherDetail || !detailWeatherData}
           className={`fixed inset-0 z-[999] flex flex-col items-center justify-center overscroll-contain bg-black/60 backdrop-blur-sm p-4 transition-[opacity] duration-300 ${
             showWeatherDetail && detailWeatherData
               ? "opacity-100 pointer-events-auto"
@@ -3997,11 +3246,19 @@ const ItineraryApp = ({ authentication }) => {
                     isDarkMode={isDarkMode}
                     theme={currentTheme}
                     onClose={handleWeatherDetailClose}
-                    onRefresh={() => {
+                    onRefresh={async () => {
                       if (activeDay === -1) {
-                        getUserLocationWeather({ isSilent: false });
+                        await getUserLocationWeather({ isSilent: false });
                       } else {
-                        showToast("已更新預報資訊");
+                        const refreshed = await fetchWeatherForecast({
+                          showLoading: true,
+                        });
+                        showToast(
+                          refreshed
+                            ? "天氣預報已更新"
+                            : "無法更新天氣預報，已保留原有資料",
+                          refreshed ? "success" : "error",
+                        );
                       }
                     }}
                     advice={(() => {

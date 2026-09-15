@@ -59,10 +59,34 @@ npm run check
 - `VITE_ENCODED_GAS_URL`
 - `VITE_ENCODED_GAS_TOKEN`
 
-`.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。
+`.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。若 `.env` 曾被提交到 Git，請輪替 Gemini、Maps、MapTiler 與 GAS 憑證，因為歷史紀錄仍可能含有密文。
 
 解鎖密碼只保留在目前分頁的 `sessionStorage`；關閉分頁或按下鎖定後需重新輸入。舊版本曾保存於 `localStorage` 的密碼會在首次載入時自動移除。
 
 請注意，所有 `VITE_*` 變數都會進入瀏覽器端建置內容。現有加密可避免直接顯示憑證，但不能取代伺服器端秘密管理；正式公開部署時，應限制 Maps／MapTiler Key 的允許網域與配額，Gemini／GAS 則建議改由受驗證的後端代理呼叫。
 
 不同 `tripConfig.id`／`VITE_TRIP_ID` 的清單、天氣、聊天、記帳與圖片資料會分開儲存，不會互相覆蓋。
+
+## GAS 多旅程儲存
+
+前端會把目前旅程的 `tripId` 加進記帳、記事與位置的 GAS 請求。`tripId` 只用來選擇試算表與 Drive 資料夾，**不會寫入 Sheet 欄位**。
+
+預設 Script Property 名稱為 `trip_agent_${tripId}`，例如：
+
+- `trip_agent_2026_busan`
+- `trip_agent_2026_karuizawa`
+
+每個旅程屬性應為：
+
+```json
+{
+  "spreadsheetId": "...",
+  "folderId": "..."
+}
+```
+
+若釜山要沿用舊資料，`trip_agent_2026_busan.spreadsheetId` 必須指向原本 `SPREADSHEET_ID` 的同一份試算表。沒有 `tripId` 的舊 PWA 仍可回退到 `SPREADSHEET_ID`／`FOLDER_ID`。
+
+只有在 Script Property 名稱不是預設規則時，才需要在 `.env` 設定 `VITE_GAS_TRIP_PROPERTY_KEY`；空白時不要加入該查詢參數。
+
+修改 Apps Script 後必須建立**新的 Web App 部署版本**，前端才會打到新程式。`api.gs` 目前被 Git 忽略，請以本機完整檔案更新 Apps Script，不要用片段覆蓋整份後端。

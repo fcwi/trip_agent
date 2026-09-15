@@ -371,7 +371,7 @@ const AIPanel = ({
 
         {/* 快速建議問題：根據當前模式動態切換 */}
         <div
-          className={`px-4 py-3 border-t flex gap-2.5 overflow-x-auto scrollbar-hide backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? "bg-black/15 border-white/20 ring-1 ring-white/5" : "bg-[#F9F9F6]/70 border-stone-200/60 ring-1 ring-black/5"}`}
+          className={`horizontal-scroll-fade scrollbar-hide flex snap-x snap-mandatory gap-2.5 overflow-x-auto border-t px-5 py-3 backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? "bg-black/15 border-white/20 ring-1 ring-white/5" : "bg-[#F9F9F6]/70 border-stone-200/60 ring-1 ring-black/5"}`}
         >
           {(aiMode === "translate"
             ? tripConfig.translationQuestions || [
@@ -387,7 +387,7 @@ const AIPanel = ({
               onClick={() => {
                 setInputMessage(q);
               }}
-              className={`flex-shrink-0 text-xs px-3 py-2 rounded-full border backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 ${isDarkMode ? "bg-neutral-700/60 hover:bg-neutral-600/80 text-neutral-300 hover:text-sky-200 border-white/10 ring-1 ring-white/5 shadow-md" : "bg-white/80 hover:bg-white/95 text-stone-600 hover:text-[#556B2F] border-white/40 ring-1 ring-black/5 shadow-sm hover:shadow-md"}`}
+              className={`flex-shrink-0 snap-start rounded-full border px-3 py-2 text-xs backdrop-blur-md transition-[background-color,color,box-shadow,transform] duration-300 hover:scale-105 active:scale-95 ${isDarkMode ? "bg-neutral-700/60 hover:bg-neutral-600/80 text-neutral-300 hover:text-sky-200 border-white/10 ring-1 ring-white/5 shadow-md" : "bg-white/80 hover:bg-white/95 text-stone-600 hover:text-[#556B2F] border-white/40 ring-1 ring-black/5 shadow-sm hover:shadow-md"}`}
             >
               {q}
             </button>

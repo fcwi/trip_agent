@@ -39,7 +39,7 @@ const TripHeader = ({
           </button>
         </h1>
         <p
-          className={`mt-0.5 whitespace-nowrap text-[10px] font-medium tracking-widest opacity-70 ${theme.textSec}`}
+          className={`mt-0.5 whitespace-nowrap text-xs font-medium tracking-wide opacity-80 ${theme.textSec}`}
         >
           {tripConfig.subTitle}
         </p>

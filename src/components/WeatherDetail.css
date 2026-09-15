@@ -27,10 +27,10 @@
   border: 1px solid var(--wc-border);
   border-radius: 32px;
   /* ⬇️ 內距再縮小 */
-  padding: 14px 16px; 
+  padding: 14px 16px;
   width: 100%;
   max-width: 360px; /* 寬度稍微縮窄，讓視覺更集中 */
-  max-height: 85vh; 
+  max-height: 85vh;
   overflow-y: auto;
   /* iOS 滾動優化 */
   -webkit-overflow-scrolling: touch;
@@ -41,7 +41,7 @@
   display: flex;
   flex-direction: column;
   /* ⬇️ 關鍵：大幅縮小區塊間距 (原本16px) */
-  gap: 8px; 
+  gap: 8px;
   box-sizing: border-box;
   /* 🆕 Pro Max: 添加增強版 ring 效果 */
   outline: 1px solid rgba(0, 0, 0, 0.05);
@@ -53,7 +53,9 @@
   outline: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.weather-card::-webkit-scrollbar { display: none; }
+.weather-card::-webkit-scrollbar {
+  display: none;
+}
 
 /* --- Compact Header --- */
 .wc-header-compact {
@@ -78,7 +80,13 @@
   font-weight: 700;
   color: var(--wc-text-primary);
 }
-.text-accent { color: #007aff; }
+.wc-updated-at {
+  color: var(--wc-text-secondary);
+  font-size: 10px;
+}
+.text-accent {
+  color: #007aff;
+}
 
 .wc-temp-row {
   display: flex;
@@ -88,7 +96,7 @@
 
 .wc-temp-big {
   /* ⬇️ 大溫度縮小，節省高度 */
-  font-size: 38px; 
+  font-size: 38px;
   font-weight: 400;
   line-height: 1;
   letter-spacing: -1px;
@@ -134,8 +142,20 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-.wc-icon-btn:hover { background: rgba(0,0,0,0.1); }
-.wc-icon-btn.close { background: rgba(0,0,0,0.05); }
+.wc-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+.wc-icon-btn:focus-visible {
+  outline: 2px solid #007aff;
+  outline-offset: 2px;
+}
+.wc-icon-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.wc-icon-btn.close {
+  background: rgba(0, 0, 0, 0.05);
+}
 
 /* --- Grid --- */
 .wc-grid {
@@ -162,7 +182,10 @@
   gap: 2px;
   white-space: nowrap;
 }
-.wc-grid-value { font-size: 14px; font-weight: 600; }
+.wc-grid-value {
+  font-size: 14px;
+  font-weight: 600;
+}
 
 /* --- Hourly --- */
 .wc-section-title {
@@ -170,7 +193,7 @@
   font-weight: 600;
   color: var(--wc-text-secondary);
   /* ⬇️ 標題下邊距縮小 */
-  margin-bottom: 4px; 
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -185,7 +208,9 @@
   scrollbar-width: none;
   height: 85px; /* 固定高度防止撐開 */
 }
-.wc-hourly-scroll::-webkit-scrollbar { display: none; }
+.wc-hourly-scroll::-webkit-scrollbar {
+  display: none;
+}
 
 .wc-hour-item {
   display: flex;
@@ -194,27 +219,58 @@
   min-width: 44px;
   gap: 1px;
 }
-.wc-h-time { font-size: 12px; color: var(--wc-text-secondary); font-weight: 500; }
-.wc-h-icon-wrapper { height: 24px; display: flex; align-items: center; justify-content: center; }
-.wc-h-desc { font-size: 11px; color: var(--wc-text-secondary); font-weight: 500; } 
-.wc-h-temp { font-size: 14px; font-weight: 600; margin-top: 1px; }
-.wc-h-pop { font-size: 11px; color: #0a84ff; font-weight: 700; }
+.wc-h-time {
+  font-size: 12px;
+  color: var(--wc-text-secondary);
+  font-weight: 500;
+}
+.wc-h-icon-wrapper {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wc-h-desc {
+  font-size: 11px;
+  color: var(--wc-text-secondary);
+  font-weight: 500;
+}
+.wc-h-temp {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 1px;
+}
+.wc-h-pop {
+  font-size: 11px;
+  color: #0a84ff;
+  font-weight: 700;
+}
 
 /* --- Daily --- */
 /* ⬇️ 這是最佔空間的列表，大幅壓縮 */
-.wc-daily-list { display: flex; flex-direction: column; gap: 2px; }
+.wc-daily-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
 .wc-day-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   /* ⬇️ 行高縮小 */
-  padding: 2px 0; 
+  padding: 2px 0;
   border-bottom: 1px solid var(--wc-divider);
 }
-.wc-day-row:last-child { border-bottom: none; }
+.wc-day-row:last-child {
+  border-bottom: none;
+}
 
-.wc-day-name { width: 42px; font-size: 13px; font-weight: 500; }
+.wc-day-name {
+  width: 42px;
+  font-size: 13px;
+  font-weight: 500;
+}
 
 .wc-day-status {
   width: 110px;
@@ -223,27 +279,53 @@
   gap: 6px;
   padding-left: 4px;
 }
-.wc-day-desc { font-size: 12px; color: var(--wc-text-secondary); font-weight: 500; flex: 1; }
-.wc-day-pop { 
-  font-size: 9px; color: #007aff; background: rgba(0,122,255,0.1); 
-  padding: 1px 4px; border-radius: 4px; font-weight: 600; 
-  display: flex; align-items: center; gap: 2px;
+.wc-day-desc {
+  font-size: 12px;
+  color: var(--wc-text-secondary);
+  font-weight: 500;
+  flex: 1;
+}
+.wc-day-pop {
+  font-size: 9px;
+  color: #007aff;
+  background: rgba(0, 122, 255, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-.wc-day-temp { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  flex: 1; 
-  justify-content: flex-end; 
+.wc-day-temp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
   /* ⬇️ 增加與左側狀態欄的間距 */
-  padding-left: 16px; 
+  padding-left: 16px;
 }
-.wc-temp-min { font-size: 13px; color: var(--wc-text-secondary); width: 30px; text-align: right; font-weight: 600; }
-.wc-temp-high { font-size: 13px; font-weight: 600; width: 30px; text-align: left; }
-.wc-temp-bar { 
-  flex: 1; height: 4px; background: var(--wc-bar-bg); border-radius: 2px; 
-  position: relative; overflow: visible;
+.wc-temp-min {
+  font-size: 13px;
+  color: var(--wc-text-secondary);
+  width: 30px;
+  text-align: right;
+  font-weight: 600;
+}
+.wc-temp-high {
+  font-size: 13px;
+  font-weight: 600;
+  width: 30px;
+  text-align: left;
+}
+.wc-temp-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--wc-bar-bg);
+  border-radius: 2px;
+  position: relative;
+  overflow: visible;
 }
 .wc-temp-bar-inner {
   position: absolute;
@@ -258,16 +340,16 @@
   height: 6px;
   background: #fff;
   border-radius: 50%;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   transform: translate(-50%, -50%);
   z-index: 2;
-  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
 }
 
 /* --- Footer --- */
 .wc-footer {
   /* ⬇️ 上邊距縮小 */
-  margin-top: 6px; 
+  margin-top: 6px;
   padding-top: 8px;
   border-top: 1px solid var(--wc-divider);
   font-size: 12px;

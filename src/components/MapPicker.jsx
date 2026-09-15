@@ -201,36 +201,42 @@ const MapPicker = ({
             }`}
           >
             <button
+              type="button"
               onClick={handleZoomIn}
+              aria-label="放大地圖"
               className={`p-2.5 transition-colors flex items-center justify-center border-b active:bg-black/10 ${
                 isDarkMode
                   ? "hover:bg-neutral-700/80 text-white border-neutral-700/50"
                   : "hover:bg-stone-100/80 text-stone-700 border-stone-200/50"
               }`}
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn aria-hidden="true" className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={handleZoomOut}
+              aria-label="縮小地圖"
               className={`p-2.5 transition-colors flex items-center justify-center active:bg-black/10 ${
                 isDarkMode
                   ? "hover:bg-neutral-700/80 text-white"
                   : "hover:bg-stone-100/80 text-stone-700"
               }`}
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut aria-hidden="true" className="w-4 h-4" />
             </button>
           </div>
 
           <button
+            type="button"
             onClick={handleReset}
+            aria-label="重置選擇的位置"
             className={`p-2.5 rounded-xl border shadow-lg transition-colors flex items-center justify-center backdrop-blur-md active:scale-95 ${
               isDarkMode
                 ? "bg-black/60 border-neutral-700/80 hover:bg-neutral-700/80 text-white"
                 : "bg-white/80 border-stone-200/80 hover:bg-stone-100/80 text-stone-700"
             }`}
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw aria-hidden="true" className="w-4 h-4" />
           </button>
         </div>
       </div>
