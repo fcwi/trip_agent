@@ -15,6 +15,8 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
     setPassword,
     authError,
     isAuthLoading,
+    rememberDevice,
+    setRememberDevice,
     showEncryptTool,
     setShowEncryptTool,
     toolKey,
@@ -96,6 +98,22 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             aria-describedby={authError ? "authentication-error" : undefined}
             className={`${fieldClasses} text-center text-lg tracking-widest placeholder:tracking-normal`}
           />
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200/70 bg-white/70 px-4 py-3 text-left dark:border-neutral-700/70 dark:bg-neutral-900/60">
+            <input
+              type="checkbox"
+              checked={rememberDevice}
+              onChange={(event) => setRememberDevice(event.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-stone-300 text-sky-600 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-800"
+            />
+            <span>
+              <span className="block text-sm font-bold text-stone-700 dark:text-neutral-200">
+                在此裝置保持登入
+              </span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-neutral-400">
+                重開瀏覽器或 PWA 後自動解鎖，僅建議用於私人裝置。
+              </span>
+            </span>
+          </label>
           <button
             type="submit"
             disabled={isAuthLoading || !password}

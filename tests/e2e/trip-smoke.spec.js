@@ -107,6 +107,33 @@ test("reports a wrong password and unlocks with the test credential", async ({
   await expect(page).toHaveURL(/\?tab=itinerary$/);
 });
 
+test("remembers an opted-in unlock and clears it when the trip is locked", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByLabel("通關密碼").fill(TEST_PASSWORD);
+  await page.getByLabel("在此裝置保持登入").check();
+  await page.getByRole("button", { name: "解鎖行程" }).click();
+  await expect(
+    page.getByRole("button", { name: "行程標題；連續點擊可開啟測試模式" }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "行程標題；連續點擊可開啟測試模式" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "鎖定行程" }).click();
+  await expect(
+    page.getByRole("heading", { name: "行程表已鎖定" }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "行程表已鎖定" }),
+  ).toBeVisible();
+});
+
 test("generates and copies an encrypted credential", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /設定／加密 API Key/ }).click();
