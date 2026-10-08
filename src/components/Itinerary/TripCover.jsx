@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import JournalIllustration from "./JournalIllustration.jsx";
 
 export default function TripCover({
   tripConfig,
@@ -17,7 +18,7 @@ export default function TripCover({
 
   return (
     <section className="travel-cover" aria-labelledby="trip-cover-title">
-      {cover?.src && (
+      {cover?.src ? (
         <div className="travel-cover__image">
           <img
             src={cover.src}
@@ -28,10 +29,14 @@ export default function TripCover({
             }}
           />
         </div>
+      ) : (
+        <div className="travel-cover__drawing">
+          <JournalIllustration tripId={tripConfig.id} />
+        </div>
       )}
       <div className="travel-cover__body">
         <div className="travel-cover__topline">
-          <p className="travel-eyebrow">The Travel Journal</p>
+          <p className="travel-eyebrow">一起出發 · 旅行手帳</p>
           <span className="travel-badge">{status}</span>
         </div>
         <h2 id="trip-cover-title">{tripConfig.title}</h2>

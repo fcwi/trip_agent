@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import { Loader } from "lucide-react";
 import "./index.css";
 import "./styles/travel.css";
+import "./styles/journal.css";
 import App from "./App.jsx";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt.jsx";

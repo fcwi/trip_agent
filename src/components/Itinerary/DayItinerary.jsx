@@ -1,5 +1,6 @@
 import { AlertCircle, ArrowUpRight, Hotel, Navigation } from "lucide-react";
 import TimelineEvent from "./TimelineEvent.jsx";
+import JournalIllustration from "./JournalIllustration.jsx";
 
 export default function DayItinerary({
   day,
@@ -22,22 +23,37 @@ export default function DayItinerary({
       className={`travel-day-layout ${day.routeInfo ? "travel-day-layout--with-route" : ""}`}
     >
       <div className="travel-day-main">
-        <header className="travel-day-heading">
-          <p className="travel-eyebrow">
-            {day.day} · {day.date}
-          </p>
-          <h2>{day.title}</h2>
-          <p className="travel-muted">{locationName}</p>
-          {day.stay && !day.stay.includes("溫暖的家") && (
-            <a
-              className="travel-text-button"
-              href={getMapLink(day.stay.split("(")[0])}
-            >
-              <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
-              {day.stay}
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4 flex-none" />
-            </a>
-          )}
+        <header
+          className="travel-day-heading"
+          data-journal-tone={activeDay % 3}
+        >
+          <div className="journal-day-picture">
+            <JournalIllustration
+              tripId={tripConfig.id}
+              miniature
+              variant={activeDay}
+            />
+          </div>
+          <div className="journal-day-title">
+            <p className="travel-eyebrow">
+              {day.day} · {day.date}
+            </p>
+            <h2>{day.title}</h2>
+            <p className="travel-muted">{locationName}</p>
+            {day.stay && !day.stay.includes("溫暖的家") && (
+              <a
+                className="travel-text-button"
+                href={getMapLink(day.stay.split("(")[0])}
+              >
+                <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
+                {day.stay}
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="h-4 w-4 flex-none"
+                />
+              </a>
+            )}
+          </div>
         </header>
         <button
           type="button"

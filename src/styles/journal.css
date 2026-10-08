@@ -1,0 +1,430 @@
+/* Third-wave travel journal: original illustrations, ink outlines and pastel paper.
+   The visual treatment stays on the homepage and daily itinerary. */
+.travel-shell[data-editorial="true"] {
+  --travel-page: #faf8f0;
+  --travel-surface: #fffefd;
+  --travel-subtle: #f4eedc;
+  --travel-text: #343330;
+  --travel-muted: #6b6861;
+  --travel-line: #d5cec0;
+  --travel-accent: #3c6472;
+  --travel-on-accent: #fffefd;
+  --journal-ink: #383633;
+  --journal-pink: #efa69b;
+  --journal-blue: #a5cede;
+  --journal-yellow: #f3d07a;
+  --journal-green: #d5e4c5;
+  --travel-radius: 24px;
+  --travel-shadow: none;
+  font-family: "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+}
+
+.travel-shell[data-editorial="true"][data-theme="dark"] {
+  --travel-page: #242322;
+  --travel-surface: #302f2d;
+  --travel-subtle: #3c3831;
+  --travel-text: #f5efdf;
+  --travel-muted: #c3bcac;
+  --travel-line: #635e53;
+  --travel-accent: #a5cede;
+  --travel-on-accent: #242322;
+  --journal-ink: #ded5c2;
+  --journal-pink: #985d56;
+  --journal-blue: #456773;
+  --journal-yellow: #806a3a;
+  --journal-green: #53644a;
+}
+
+.travel-shell[data-editorial="true"] .travel-header {
+  border-bottom: 3px solid var(--journal-ink);
+}
+
+.travel-shell[data-editorial="true"] .travel-panel {
+  border: 3px solid var(--journal-ink);
+  border-radius: 24px 26px 22px 25px;
+}
+
+.travel-shell[data-editorial="true"]
+  :is(.travel-icon-button, .travel-tools-trigger) {
+  border: 2px solid var(--journal-ink);
+  border-radius: 12px;
+  color: var(--travel-text);
+}
+
+.travel-shell[data-editorial="true"] .travel-nav {
+  border: 2px solid var(--journal-ink);
+  border-radius: 20px;
+}
+
+.travel-shell[data-editorial="true"] .travel-nav button[aria-current="page"] {
+  background: var(--journal-pink);
+  color: var(--travel-text);
+}
+
+.travel-shell[data-editorial="true"] .travel-cover {
+  border: 3px solid var(--journal-ink);
+  border-radius: 30px 25px 28px 26px;
+  background: var(--travel-surface);
+}
+
+.travel-cover__drawing {
+  overflow: hidden;
+  border-bottom: 3px solid var(--journal-ink);
+  background: var(--travel-page);
+}
+
+.journal-illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.travel-shell[data-editorial="true"] .travel-cover__body {
+  padding: 24px;
+  text-align: center;
+}
+
+.travel-shell[data-editorial="true"] .travel-cover h2 {
+  max-width: none;
+  font-family: inherit;
+  font-size: clamp(28px, 6vw, 42px);
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+}
+
+.travel-shell[data-editorial="true"] .travel-cover__topline {
+  justify-content: center;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.travel-shell[data-editorial="true"] .travel-badge {
+  padding: 6px 14px;
+  border: 2px solid var(--journal-ink);
+  border-radius: 22px 20px 24px 19px;
+  background: var(--journal-yellow);
+  color: var(--travel-text);
+  font-size: 14px;
+}
+
+.travel-shell[data-editorial="true"] .travel-cover__places {
+  justify-content: center;
+}
+
+.travel-shell[data-editorial="true"] .travel-section-heading h2 {
+  font-size: 20px;
+}
+
+.travel-shell[data-editorial="true"] .travel-primary-button {
+  border: 2px solid var(--journal-ink);
+  border-radius: 18px 15px 19px 16px;
+  background: var(--journal-yellow);
+  color: var(--travel-text);
+}
+
+.travel-shell[data-editorial="true"] .travel-primary-button:hover {
+  background: var(--journal-pink);
+}
+
+.travel-shell[data-editorial="true"] .travel-today__needs {
+  background: var(--journal-green);
+  border: 2px solid var(--journal-ink);
+  border-radius: 16px 18px 15px 19px;
+}
+
+.travel-shell[data-editorial="true"] .travel-weather-summary {
+  background: var(--journal-blue);
+}
+
+.travel-shell[data-editorial="true"] .travel-day-index__number {
+  align-self: flex-start;
+  padding-top: 2px;
+}
+
+.travel-shell[data-editorial="true"] .travel-day-index__content strong {
+  text-decoration: underline;
+  text-decoration-color: var(--journal-blue);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 5px;
+}
+
+.travel-shell[data-editorial="true"] .travel-date-selector {
+  gap: 0;
+  padding: 14px 0 18px;
+}
+
+.travel-shell[data-editorial="true"] .travel-date-selector > button {
+  position: relative;
+  display: flex;
+  min-width: 56px;
+  flex: 1 0 56px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--travel-text);
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-date-selector
+  > button:first-child {
+  flex: 0 0 60px;
+  min-width: 60px;
+  justify-content: center;
+  margin-right: 8px;
+  border: 2px solid var(--journal-ink);
+  border-radius: 18px;
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-date-selector
+  > button:first-child[aria-pressed="true"] {
+  background: var(--journal-yellow);
+}
+
+.journal-date-node {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  margin: 0 0 42px;
+  border: 3px solid var(--journal-ink);
+  border-radius: 50%;
+  background: var(--travel-page);
+  z-index: 1;
+}
+
+.travel-date-selector > button:not(:first-child):not(:last-child)::after {
+  position: absolute;
+  top: 17px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--journal-ink);
+  content: "";
+}
+
+.journal-date-car {
+  position: absolute;
+  top: 8px;
+  left: -16px;
+  width: 44px;
+  height: 48px;
+}
+
+.journal-date-label {
+  padding: 2px 8px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.travel-date-selector > button[aria-pressed="true"] .journal-date-label {
+  background: var(--journal-pink);
+}
+
+.travel-date-selector small {
+  color: var(--travel-muted);
+  font-size: 12px;
+}
+
+.travel-shell[data-editorial="true"] .travel-day-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 3px solid var(--journal-ink);
+  border-radius: 25px 28px 23px 26px;
+  background: var(--journal-blue);
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-day-heading[data-journal-tone="1"] {
+  background: var(--journal-yellow);
+}
+.travel-shell[data-editorial="true"]
+  .travel-day-heading[data-journal-tone="2"] {
+  background: var(--journal-green);
+}
+
+.journal-day-picture {
+  flex: 0 0 88px;
+  overflow: hidden;
+  border: 3px solid var(--journal-ink);
+  border-radius: 20px 18px 21px 17px;
+  background: var(--travel-surface);
+}
+
+.journal-illustration--mini {
+  width: 220px;
+  max-width: none;
+  height: 88px;
+  margin-left: -64px;
+}
+
+.journal-day-title {
+  min-width: 0;
+}
+.travel-shell[data-editorial="true"] .travel-day-heading h2 {
+  margin: 8px 0;
+  font-size: 24px;
+}
+
+.travel-shell[data-editorial="true"] .travel-timeline {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.travel-shell[data-editorial="true"] .travel-timeline > ol::before {
+  width: 0;
+  border-left: 3px dotted var(--journal-ink);
+  background: transparent;
+}
+
+.travel-shell[data-editorial="true"] .travel-timeline-event::before {
+  left: 53px;
+  width: 17px;
+  height: 17px;
+  border: 3px solid var(--journal-ink);
+  background: var(--travel-page);
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event
+  + .travel-timeline-event {
+  border: 0;
+}
+
+.travel-shell[data-editorial="true"] .travel-timeline-event__body {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 3px solid var(--journal-ink);
+  border-radius: 22px 25px 20px 24px;
+  background: var(--travel-surface);
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-timeline-event__body {
+  border-color: transparent;
+  background: transparent;
+}
+
+.travel-shell[data-editorial="true"] .travel-event-category {
+  padding: 2px 9px;
+  border: 2px solid var(--journal-ink);
+  border-radius: 18px;
+  background: var(--journal-green);
+  color: var(--travel-text);
+}
+
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-event-category {
+  background: var(--journal-yellow);
+}
+.travel-shell[data-editorial="true"] .travel-timeline-event__time {
+  color: var(--travel-text);
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event__heading
+  h3
+  button
+  span {
+  text-decoration: underline;
+  text-decoration-color: var(--journal-blue);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-timeline-event__heading
+  h3
+  button
+  span {
+  text-decoration: none;
+}
+
+.travel-shell[data-editorial="true"] .travel-day-weather {
+  border: 2px solid var(--journal-ink);
+  border-radius: 16px;
+  background: var(--travel-surface);
+}
+.travel-shell[data-editorial="true"]
+  .travel-checklist
+  input[type="checkbox"]
+  + span {
+  border: 2px solid var(--journal-ink);
+  border-radius: 6px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-checklist
+  input[type="checkbox"]:checked
+  + span {
+  background: var(--journal-green);
+  color: var(--travel-text);
+}
+
+@media (min-width: 1024px) {
+  .travel-cover__drawing .journal-illustration {
+    max-height: 280px;
+  }
+  .journal-day-picture {
+    flex-basis: 108px;
+  }
+  .journal-illustration--mini {
+    height: 108px;
+    width: 288px;
+    margin-left: -87px;
+  }
+}
+
+@media (max-width: 479px) {
+  .travel-shell[data-editorial="true"] .travel-day-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px;
+    gap: 12px;
+  }
+  .journal-day-picture {
+    width: 100%;
+    flex-basis: auto;
+  }
+  .journal-illustration--mini {
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+  .travel-shell[data-editorial="true"] .travel-day-heading h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 374px) {
+  .travel-shell[data-editorial="true"] .travel-timeline-event::before {
+    left: 41px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event__body {
+    padding: 10px;
+  }
+}
+
+/* Keep the cover first in the homepage's visual hierarchy. */
+.travel-shell[data-editorial="true"]
+  .travel-date-selector[data-overview="true"] {
+  padding-top: 0;
+  padding-bottom: 4px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-date-selector[data-overview="true"]
+  > button {
+  justify-content: center;
+  min-height: 44px;
+  padding-block: 6px;
+}
+.travel-date-selector[data-overview="true"] .journal-date-node,
+.travel-date-selector[data-overview="true"] small,
+.travel-date-selector[data-overview="true"] > button::after {
+  display: none;
+}

@@ -18,8 +18,8 @@ export const useTripShellTheme = (activeTab = "itinerary") => {
     const color =
       activeTab === "itinerary"
         ? isDarkMode
-          ? "#191C1A"
-          : "#F7F5F0"
+          ? "#242322"
+          : "#FAF8F0"
         : isDarkMode
           ? "#020617"
           : "#FDFBF7";
