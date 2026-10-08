@@ -472,6 +472,63 @@
   font-size: 13px;
 }
 
+.travel-weather-summary__reading > span svg {
+  width: 24px;
+  height: 24px;
+  color: var(--travel-accent);
+}
+
+.travel-flight-info__grid > div {
+  min-width: 0;
+  background: var(--travel-subtle);
+  border-color: var(--travel-line);
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow-wrap: anywhere;
+}
+
+.travel-flight-info h2 svg {
+  color: var(--travel-accent);
+}
+
+.travel-flight-info__address {
+  min-height: 44px;
+  align-items: center;
+  color: var(--travel-accent);
+  text-align: left;
+  border-radius: 4px;
+}
+
+.travel-checklist input[type="text"] {
+  background: var(--travel-surface);
+  border-color: var(--travel-line);
+  color: var(--travel-text);
+}
+
+.travel-checklist input[type="text"]:focus {
+  border-color: var(--travel-accent);
+  box-shadow: 0 0 0 2px var(--travel-subtle);
+}
+
+.travel-checklist button[type="submit"] {
+  background: var(--travel-subtle);
+  border-color: var(--travel-line);
+  color: var(--travel-accent);
+}
+
+.travel-checklist input[type="checkbox"]:checked + span {
+  background: var(--travel-accent);
+  border-color: var(--travel-accent);
+  color: var(--travel-on-accent);
+  transform: none;
+}
+
+.travel-checklist input[type="checkbox"]:focus-visible + span {
+  outline: 2px solid var(--travel-accent);
+  outline-offset: 4px;
+  box-shadow: none;
+}
+
 .travel-text-button {
   display: flex;
   min-height: 44px;
@@ -730,6 +787,47 @@
   font-size: 12px;
 }
 
+.travel-timeline-event__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.travel-timeline-event__meta .travel-event-category {
+  margin: 0;
+}
+
+.travel-day-route .travel-map-preview {
+  border-radius: 12px;
+  background: var(--travel-subtle);
+  border-color: var(--travel-line);
+  box-shadow: none;
+}
+
+.travel-day-route .travel-map-preview__open {
+  min-height: 44px;
+  border-radius: 8px;
+  background: var(--travel-surface);
+  border-color: var(--travel-line);
+  color: var(--travel-accent);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.travel-day-route .travel-map-preview__open span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+@media (max-width: 479px) {
+  .travel-flight-info__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .travel-timeline-event__description {
   color: var(--travel-muted);
   font-size: 15px;
@@ -761,7 +859,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+}
+
+.travel-transport-summary p:first-child span {
+  color: var(--travel-muted);
 }
 
 .travel-transport-summary p + p {
@@ -827,6 +929,28 @@
 }
 
 @media (max-width: 374px) {
+  .travel-timeline {
+    padding-inline: 16px;
+  }
+
+  .travel-timeline-event {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .travel-timeline > ol::before {
+    left: 48px;
+  }
+
+  .travel-timeline-event::before {
+    left: 44px;
+  }
+
+  .travel-timeline-event__heading h3 button {
+    font-size: 16px;
+    gap: 6px;
+  }
+
   .travel-header {
     margin-inline: 16px;
     column-gap: 8px;

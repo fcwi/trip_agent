@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, ChevronUp, MapPin, Train } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Navigation } from "lucide-react";
 
 const CATEGORY_LABELS = {
   transport: "交通",
@@ -55,6 +55,11 @@ export default function TimelineEvent({
               )}
             </button>
           </h3>
+        </div>
+        <div className="travel-timeline-event__meta">
+          <span className="travel-event-category">
+            {CATEGORY_LABELS[category]}
+          </span>
           <a
             className="travel-icon-button"
             href={getMapLink(event.mapQuery || event.title)}
@@ -64,9 +69,6 @@ export default function TimelineEvent({
             <MapPin aria-hidden="true" className="h-4 w-4" />
           </a>
         </div>
-        <span className="travel-event-category">
-          {CATEGORY_LABELS[category]}
-        </span>
         {event.desc && (
           <p
             className={`travel-timeline-event__description ${isOpen ? "" : "travel-timeline-event__description--collapsed"}`}
@@ -77,10 +79,10 @@ export default function TimelineEvent({
         {event.transport && (
           <div className="travel-transport-summary">
             <p>
-              <Train aria-hidden="true" className="h-4 w-4 flex-none" />
+              <Navigation aria-hidden="true" className="h-4 w-4 flex-none" />
               <strong>{event.transport.mode}</strong>
               {event.transport.duration && (
-                <span> · {event.transport.duration}</span>
+                <span>{event.transport.duration}</span>
               )}
             </p>
             {event.transport.route && <p>{event.transport.route}</p>}

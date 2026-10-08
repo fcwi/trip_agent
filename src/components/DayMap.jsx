@@ -355,7 +355,7 @@ const DayMap = ({
 
   return (
     <div
-      className={`relative w-full h-64 rounded-[2rem] overflow-hidden border z-0 group transition-all duration-300
+      className={`travel-map-preview relative w-full h-64 rounded-[2rem] overflow-hidden border z-0 group transition-all duration-300
       ${
         isDarkMode
           ? "border-neutral-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.3)] bg-[#1a1a1a]"
@@ -369,7 +369,7 @@ const DayMap = ({
           setIsModalOpen(true);
           setShowHint(false);
         }}
-        className={`absolute top-4 right-4 z-[10] flex items-center gap-1.5 px-4 py-2 rounded-full backdrop-blur-md shadow-lg border transition-[background-color,border-color,color,box-shadow,transform] duration-300 active:scale-95
+        className={`travel-map-preview__open absolute top-4 right-4 z-[10] flex items-center gap-1.5 px-4 py-2 rounded-full backdrop-blur-md shadow-lg border transition-[background-color,border-color,color,box-shadow,transform] duration-300 active:scale-95
           ${
             isDarkMode
               ? "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30"

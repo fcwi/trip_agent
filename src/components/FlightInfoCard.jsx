@@ -56,7 +56,7 @@ const FlightInfoCard = memo(
 
         {isFlightInfoExpanded && (
           <div id="flight-info-details" className="animate-fadeIn">
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="travel-flight-info__grid grid grid-cols-2 gap-4 mb-4">
               {/* 航班資訊 */}
               <div
                 className={`rounded-xl p-3 border flex flex-col gap-2 backdrop-blur-md ${isDarkMode ? "bg-neutral-800/30 border-neutral-700/60 ring-1 ring-white/5" : "bg-white/60 border-stone-200/60 ring-1 ring-black/5"}`}
@@ -93,8 +93,10 @@ const FlightInfoCard = memo(
                         <a href={`tel:${hotel.phone}`}>{hotel.phone}</a>
                       </div>
                       <button
+                        type="button"
+                        aria-label={`複製${hotel.name}地址`}
                         onClick={() => handleCopy(hotel.address)}
-                        className="text-xs flex items-start gap-1.5"
+                        className="travel-flight-info__address text-xs flex items-start gap-1.5"
                       >
                         <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         <span className="underline decoration-dotted">
