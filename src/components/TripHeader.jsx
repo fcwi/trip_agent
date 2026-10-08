@@ -10,6 +10,7 @@ const TripHeader = ({
   onToggleTheme,
   rateData,
   isOnline,
+  isOverview = false,
 }) => {
   const lockLabel = testModeClickCount === 10 ? "進入測試模式" : "鎖定行程";
   return (
@@ -22,10 +23,12 @@ const TripHeader = ({
             aria-label="行程標題；連續點擊可開啟測試模式"
             onClick={onTitleClick}
           >
-            {tripConfig.title}
+            {isOverview ? "旅行手帳" : tripConfig.title}
           </button>
         </h1>
-        <p className="travel-header__dates">{tripConfig.subTitle}</p>
+        {!isOverview && (
+          <p className="travel-header__dates">{tripConfig.subTitle}</p>
+        )}
       </div>
       <div className="travel-header__actions">
         <button

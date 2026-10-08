@@ -171,10 +171,19 @@ export const getLandingOverview = ({
     status: tripStatus,
     day,
     dayIndex,
+    nextDayIndex: next?.dayIndex ?? dayIndex,
+    actionLabel: isAfter
+      ? "回顧每日行程"
+      : isBefore
+        ? "查看首日完整行程"
+        : next?.dayIndex > dayIndex
+          ? "查看明日完整行程"
+          : "查看今日完整行程",
     eyebrow: isBefore ? "下一個行程日" : isAfter ? "旅程回顧" : "今天的計畫",
     locationName: location?.name || day?.stay || "地點待確認",
     nextEvent: next?.event || null,
-    nextTiming: next?.timing || "今日行程已完成",
+    nextTiming:
+      next?.timing || (isAfter ? "旅程已結束" : "今天的安排已告一段落"),
     nextLocation:
       next?.event?.mapQuery ||
       tripConfig.locations.find(({ key }) => key === next?.day?.locationKey)

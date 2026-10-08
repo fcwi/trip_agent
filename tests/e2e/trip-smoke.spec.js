@@ -232,6 +232,83 @@ test("surfaces today's plan, next location, and needed-now guidance in test mode
   await expect(overview.getByText("現在需要", { exact: true })).toBeVisible();
 });
 
+test("keeps preparation reminders and saved checklist progress in sync", async ({
+  page,
+}) => {
+  const beforeTrip = new Date(
+    `${LANDING_SCENARIOS[EXPECTED_TRIP_ID].date}T00:00:00Z`,
+  );
+  beforeTrip.setUTCDate(beforeTrip.getUTCDate() - 2);
+  await page.clock.setFixedTime(beforeTrip);
+  await page.goto("/");
+  await unlockTrip(page);
+  const checklist = page.locator(
+    'section[aria-labelledby="checklist-heading"]',
+  );
+  const overview = page.locator(
+    'section[aria-labelledby="today-overview-heading"]',
+  );
+  const firstCheckbox = checklist.getByRole("checkbox").first();
+  const itemText = await firstCheckbox.locator("..").innerText();
+  await expect(
+    overview.getByText(itemText.trim(), { exact: true }),
+  ).toBeVisible();
+  const countBefore = await checklist.locator("p").first().innerText();
+  await firstCheckbox.locator("..").click();
+  await expect(
+    overview.getByText(itemText.trim(), { exact: true }),
+  ).toHaveCount(0);
+  await expect(checklist.locator("p").first()).not.toHaveText(countBefore);
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "行程標題；連續點擊可開啟測試模式" }),
+  ).toBeVisible();
+  await expect(checklist.getByRole("checkbox").first()).toBeChecked();
+  await expect(
+    overview.getByText(itemText.trim(), { exact: true }),
+  ).toHaveCount(0);
+});
+
+test("opens a selected day from the homepage directory", async ({ page }) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  const directory = page.locator(
+    'section[aria-labelledby="trip-days-heading"]',
+  );
+  const selectedDay = directory.getByRole("button").nth(1);
+  const title = await selectedDay.locator("strong").innerText();
+  await selectedDay.click();
+  await expect(
+    page.getByRole("heading", { name: title, exact: true }),
+  ).toBeVisible();
+  await expect(directory).toHaveCount(0);
+  await page.getByRole("button", { name: /^總覽/ }).click();
+  await expect(directory).toBeVisible();
+});
+
+test("expands timeline events with the keyboard and keeps transport readable", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.locator('button[aria-label^="查看Day"]').first().click();
+  const event = page.locator(".travel-timeline-event").first();
+  const expand = event.getByRole("button");
+  await expand.focus();
+  await page.keyboard.press("Enter");
+  await expect(expand).toHaveAttribute("aria-expanded", "true");
+  await expect(event.locator(".travel-event-details")).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(event.locator(".travel-event-details")).toBeHidden();
+  const mapLink = event.getByRole("link", { name: /^在地圖查看/ });
+  await expect(mapLink).toBeVisible();
+  expect(
+    await mapLink.evaluate((link) => link.closest("button") === null),
+  ).toBe(true);
+  const transport = page.locator(".travel-timeline-event--transport").first();
+  await expect(transport.locator(".travel-transport-summary")).toBeVisible();
+});
+
 test("opens a deep-linked tab after restoring the session", async ({
   page,
 }) => {

@@ -129,4 +129,26 @@ test("falls forward to tomorrow after today's final event", () => {
   assert.equal(overview.nextTiming, "明天第一站");
   assert.equal(overview.nextEvent.title, "前往海邊");
   assert.equal(overview.nextLocation, "海雲台");
+  assert.equal(overview.dayIndex, 0);
+  assert.equal(overview.nextDayIndex, 1);
+  assert.equal(overview.actionLabel, "查看明日完整行程");
+});
+
+test("uses changed checklist items in the before-departure summary", () => {
+  const overview = getLandingOverview({
+    itineraryData,
+    tripConfig,
+    checklistData: [
+      { text: "護照", checked: true },
+      { text: "網卡", checked: false },
+    ],
+    temporalContext: {
+      tripStatus: "before",
+      currentTripDayIndex: -1,
+      minutes: 0,
+    },
+  });
+  assert.deepEqual(overview.neededNow, ["網卡"]);
+  assert.equal(overview.nextDayIndex, 0);
+  assert.equal(overview.actionLabel, "查看首日完整行程");
 });
