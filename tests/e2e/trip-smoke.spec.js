@@ -386,10 +386,14 @@ test("honors reduced motion and keeps the closed tools clear of navigation", asy
   });
   await page.goto("/");
   await unlockTrip(page);
+  // The reading pages stay calm even when the cached forecast says rain.
+  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "指南", exact: true }).click();
   await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(1);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "行程", exact: true }).click();
 
   const viewports = [
     { width: 360, height: 800 },

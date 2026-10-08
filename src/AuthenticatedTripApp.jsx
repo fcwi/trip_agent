@@ -507,7 +507,7 @@ const ItineraryApp = ({ authentication }) => {
     cAccent,
     containerStyle,
     colors,
-  } = useTripShellTheme();
+  } = useTripShellTheme(activeTab);
 
   // activeDay + day swipe/pull-to-refresh live in useItineraryDayPager
   const [expandedItems, setExpandedItems] = useState({});
@@ -2489,7 +2489,10 @@ const ItineraryApp = ({ authentication }) => {
         : currentTheme.blobs.light[2],
 
       // 環境色樣式
-      ambientStyle: { backgroundColor: ambient },
+      ambientStyle: {
+        backgroundColor:
+          activeTab === "itinerary" ? "var(--travel-surface)" : ambient,
+      },
     };
   }, [
     isDarkMode,
@@ -2497,6 +2500,7 @@ const ItineraryApp = ({ authentication }) => {
     cAccent,
     currentTheme,
     activeDay,
+    activeTab,
     userWeather.weatherCode,
     displayWeather.code,
   ]);
@@ -2626,8 +2630,13 @@ const ItineraryApp = ({ authentication }) => {
 
   return (
     <div
-      style={{ ...containerStyle, ...dynamicBgStyle }}
-      className={`min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
+      style={{
+        ...containerStyle,
+        ...(activeTab === "itinerary" ? {} : dynamicBgStyle),
+      }}
+      data-theme={isDarkMode ? "dark" : "light"}
+      data-editorial={activeTab === "itinerary" ? "true" : "false"}
+      className={`travel-shell min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
       onTouchStart={handleMainTouchStart}
       onTouchMove={handleMainTouchMove}
       onTouchEnd={handleMainTouchEnd}
@@ -2674,7 +2683,11 @@ const ItineraryApp = ({ authentication }) => {
       </div>
 
       {/* 背景裝飾球：隨主題與天氣變換顏色 */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+      <div
+        hidden={activeTab === "itinerary"}
+        aria-hidden="true"
+        className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0"
+      >
         <div
           className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-3xl animate-blob transition-colors duration-700 ${theme.blob1}`}
         ></div>
@@ -2719,10 +2732,14 @@ const ItineraryApp = ({ authentication }) => {
       .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
       `}</style>
 
-      <SkyObjects isDay={!isDarkMode} condition={skyCondition} />
-      <WeatherParticles type={particleType} isDay={!isDarkMode} />
+      {activeTab !== "itinerary" && (
+        <SkyObjects isDay={!isDarkMode} condition={skyCondition} />
+      )}
+      {activeTab !== "itinerary" && (
+        <WeatherParticles type={particleType} isDay={!isDarkMode} />
+      )}
       {/* 雷雨時疊加雨滴特效 */}
-      {particleType === "lightning" && (
+      {activeTab !== "itinerary" && particleType === "lightning" && (
         <WeatherParticles type="rain" isDay={!isDarkMode} />
       )}
 

@@ -67,7 +67,7 @@ export default function TripToolsMenu({
         id="trip-tools-panel"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`absolute bottom-full right-0 mb-2 flex origin-bottom-right flex-col gap-2 rounded-2xl border p-2 shadow-xl backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 ${panelClasses} ${
+        className={`travel-tools-panel absolute bottom-full right-0 mb-2 flex origin-bottom-right flex-col gap-2 rounded-2xl border p-2 shadow-xl backdrop-blur-xl transition-[opacity,transform,visibility] duration-200 ${panelClasses} ${
           isOpen
             ? "visible translate-y-0 scale-100 opacity-100"
             : "invisible translate-y-2 scale-95 opacity-0"
@@ -114,7 +114,7 @@ export default function TripToolsMenu({
         aria-controls="trip-tools-panel"
         aria-label={isOpen ? "關閉旅程工具" : "開啟旅程工具"}
         onClick={() => setIsOpen((current) => !current)}
-        className={`flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition-[background-color,color,transform] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
+        className={`travel-tools-trigger flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition-[background-color,color,transform] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
           isDarkMode
             ? "border-white/20 bg-neutral-900/95 text-white focus-visible:ring-offset-neutral-950"
             : "border-white/70 bg-white/95 text-stone-700 focus-visible:ring-offset-stone-100"
