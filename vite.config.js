@@ -340,8 +340,10 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             "react-vendor": ["react", "react-dom"],
             "icons-vendor": ["lucide-react"],
-            // Framer Motion、MapLibre 與 HEIC 皆由功能模組動態載入，
-            // 交由 Rollup 自動分包，避免鎖定畫面預載非必要功能。
+            // Keep the developer picker engine out of its precached panel.
+            "maplibre-gl": ["maplibre-gl"],
+            // Framer Motion 與 HEIC 交由 Rollup 自動分包，
+            // 避免鎖定畫面預載非必要功能。
           },
         },
       },

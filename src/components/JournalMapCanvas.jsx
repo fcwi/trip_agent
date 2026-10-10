@@ -6,8 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
-import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { loadJournalMapEngine } from "../utils/journalMapEngine.js";
 import { Loader2, RotateCcw } from "lucide-react";
 import {
   buildEventPopupHtml,
@@ -33,6 +33,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
 ) {
   const container = useRef(null);
   const mapRef = useRef(null);
+  const engineRef = useRef(null);
   const popups = useRef(new Map());
   const [online, setOnline] = useState(() => navigator.onLine);
   const [status, setStatus] = useState("loading");
@@ -101,7 +102,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
   const reset = () => {
     if (!mapRef.current || !points.length) return;
     popups.current.forEach((popup) => popup.remove());
-    const bounds = new maplibregl.LngLatBounds();
+    const bounds = new engineRef.current.LngLatBounds();
     points.forEach((point) => bounds.extend(point));
     mapRef.current.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
   };
@@ -138,191 +139,202 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     let timeout;
     const createdMarkers = [];
     // MapLibre is an external renderer; mirror its initialization and failures.
-    /* eslint-disable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus("loading");
     const clearMarkers = () => {
       createdMarkers.forEach((marker) => marker.remove());
       popups.current.clear();
     };
-    try {
-      currentMap = new maplibregl.Map({
-        container: container.current,
-        style: `https://api.maptiler.com/maps/${isDarkMode ? "streets-v4-dark" : "streets-v4-pastel"}/style.json?key=${encodeURIComponent(MAPTILER_KEY)}`,
-        center: [validEvents[0].lon, validEvents[0].lat],
-        zoom: 11,
-        interactive,
-        attributionControl: false,
-      });
-      mapRef.current = currentMap;
-      currentMap.addControl(
-        new maplibregl.AttributionControl({ compact: true }),
-        "bottom-right",
-      );
-      if (interactive) {
-        currentMap.addControl(new maplibregl.NavigationControl(), "top-left");
-        for (const [selector, label] of [
-          ["zoom-in", "放大地圖"],
-          ["zoom-out", "縮小地圖"],
-          ["compass", "重設地圖方向"],
-        ]) {
-          const button = container.current.querySelector(
-            `.maplibregl-ctrl-${selector}`,
-          );
-          button?.setAttribute("type", "button");
-          button?.setAttribute("aria-label", label);
-        }
-      }
-      timeout = setTimeout(() => {
-        if (!disposed && !loaded) setStatus("error");
-      }, 12000);
-      currentMap.on("error", () => {
-        if (!disposed && !loaded) setStatus("error");
-      });
-      currentMap.on("load", () => {
+    const initialize = async () => {
+      try {
+        // The optional engine may not be cached on the first offline visit.
+        const maplibregl = await loadJournalMapEngine();
         if (disposed) return;
-        loaded = true;
-        clearTimeout(timeout);
-        setStatus("ready");
-        currentMap.getStyle().layers.forEach((layer) => {
-          if (layer.type !== "symbol" || !layer.layout?.["text-field"]) return;
-          currentMap.setLayoutProperty(layer.id, "text-field", [
-            "format",
-            [
-              "coalesce",
-              ["get", "name:zh-Hant"],
-              ["get", "name:zh"],
-              ["get", "name:en"],
-              ["get", "name"],
-              "",
-            ],
-            {},
-            [
-              "case",
+        engineRef.current = maplibregl;
+        currentMap = new maplibregl.Map({
+          container: container.current,
+          style: `https://api.maptiler.com/maps/${isDarkMode ? "streets-v4-dark" : "streets-v4-pastel"}/style.json?key=${encodeURIComponent(MAPTILER_KEY)}`,
+          center: [validEvents[0].lon, validEvents[0].lat],
+          zoom: 11,
+          interactive,
+          attributionControl: false,
+        });
+        mapRef.current = currentMap;
+        currentMap.addControl(
+          new maplibregl.AttributionControl({ compact: true }),
+          "bottom-right",
+        );
+        if (interactive) {
+          currentMap.addControl(new maplibregl.NavigationControl(), "top-left");
+          for (const [selector, label] of [
+            ["zoom-in", "放大地圖"],
+            ["zoom-out", "縮小地圖"],
+            ["compass", "重設地圖方向"],
+          ]) {
+            const button = container.current.querySelector(
+              `.maplibregl-ctrl-${selector}`,
+            );
+            button?.setAttribute("type", "button");
+            button?.setAttribute("aria-label", label);
+          }
+        }
+        timeout = setTimeout(() => {
+          if (!disposed && !loaded) setStatus("error");
+        }, 12000);
+        currentMap.on("error", () => {
+          if (!disposed && !loaded) setStatus("error");
+        });
+        currentMap.on("load", () => {
+          if (disposed) return;
+          loaded = true;
+          clearTimeout(timeout);
+          setStatus("ready");
+          currentMap.getStyle().layers.forEach((layer) => {
+            if (layer.type !== "symbol" || !layer.layout?.["text-field"])
+              return;
+            currentMap.setLayoutProperty(layer.id, "text-field", [
+              "format",
               [
-                "all",
-                ["has", "name"],
+                "coalesce",
+                ["get", "name:zh-Hant"],
+                ["get", "name:zh"],
+                ["get", "name:en"],
+                ["get", "name"],
+                "",
+              ],
+              {},
+              [
+                "case",
                 [
-                  "!=",
-                  ["get", "name"],
+                  "all",
+                  ["has", "name"],
                   [
-                    "coalesce",
-                    ["get", "name:zh-Hant"],
-                    ["get", "name:zh"],
-                    ["get", "name:en"],
+                    "!=",
                     ["get", "name"],
+                    [
+                      "coalesce",
+                      ["get", "name:zh-Hant"],
+                      ["get", "name:zh"],
+                      ["get", "name:en"],
+                      ["get", "name"],
+                    ],
                   ],
                 ],
+                ["concat", "\n", ["get", "name"]],
+                "",
               ],
-              ["concat", "\n", ["get", "name"]],
-              "",
-            ],
-            { "font-scale": 0.8 },
-          ]);
-        });
-        validEvents.forEach((event) => {
-          const element = document.createElement(
-            interactive ? "button" : "div",
+              { "font-scale": 0.8 },
+            ]);
+          });
+          validEvents.forEach((event) => {
+            const element = document.createElement(
+              interactive ? "button" : "div",
+            );
+            element.className = "journal-map-marker";
+            element.textContent = String(event.index + 1);
+            if (interactive) {
+              element.type = "button";
+              element.setAttribute(
+                "aria-label",
+                `地點 ${event.index + 1}：${event.title}`,
+              );
+            } else element.setAttribute("aria-hidden", "true");
+            const marker = new maplibregl.Marker({ element })
+              .setLngLat([event.lon, event.lat])
+              .addTo(currentMap);
+            if (interactive) {
+              const popup = new maplibregl.Popup({
+                offset: 20,
+                closeButton: true,
+                className: "journal-map-popup",
+              }).setHTML(
+                buildEventPopupHtml({ ...event, isDarkMode, compact: true }),
+              );
+              popup.on("open", () =>
+                popup
+                  .getElement()
+                  .querySelector(".maplibregl-popup-close-button")
+                  ?.setAttribute("aria-label", "關閉地點資訊"),
+              );
+              marker.setPopup(popup);
+              popups.current.set(event.index, popup);
+            }
+            createdMarkers.push(marker);
+          });
+          const addPerson = (location, avatar, name, shared) => {
+            if (!isValidLngLat(location?.lon, location?.lat)) return;
+            const element = document.createElement(
+              interactive && shared ? "button" : "div",
+            );
+            if (interactive && shared) element.type = "button";
+            element.className = "journal-map-person";
+            element.textContent = avatar || "👤";
+            element.setAttribute("aria-label", name);
+            const marker = new maplibregl.Marker({ element }).setLngLat([
+              location.lon,
+              location.lat,
+            ]);
+            if (shared && interactive)
+              marker.setPopup(
+                new maplibregl.Popup({ offset: 20 }).setHTML(
+                  buildSharedLocationPopupHtml({
+                    name,
+                    avatar,
+                    device: location.device,
+                    relativeTime: "最近分享的位置",
+                    lat: location.lat,
+                    lon: location.lon,
+                    isDarkMode,
+                  }),
+                ),
+              );
+            createdMarkers.push(marker.addTo(currentMap));
+          };
+          addPerson(userLocation, currentUser?.avatar, "目前位置", false);
+          recentOthers.forEach((location) =>
+            addPerson(
+              location,
+              location.user?.avatar,
+              location.user?.name || "旅伴",
+              true,
+            ),
           );
-          element.className = "journal-map-marker";
-          element.textContent = String(event.index + 1);
-          if (interactive) {
-            element.type = "button";
-            element.setAttribute(
-              "aria-label",
-              `地點 ${event.index + 1}：${event.title}`,
-            );
-          } else element.setAttribute("aria-hidden", "true");
-          const marker = new maplibregl.Marker({ element })
-            .setLngLat([event.lon, event.lat])
-            .addTo(currentMap);
-          if (interactive) {
-            const popup = new maplibregl.Popup({
-              offset: 20,
-              closeButton: true,
-              className: "journal-map-popup",
-            }).setHTML(
-              buildEventPopupHtml({ ...event, isDarkMode, compact: true }),
-            );
-            popup.on("open", () =>
-              popup
-                .getElement()
-                .querySelector(".maplibregl-popup-close-button")
-                ?.setAttribute("aria-label", "關閉地點資訊"),
-            );
-            marker.setPopup(popup);
-            popups.current.set(event.index, popup);
+          const route = routeCoords.filter((point) =>
+            isValidLngLat(point?.[0], point?.[1]),
+          );
+          if (route.length > 1) {
+            currentMap.addSource("journal-route", {
+              type: "geojson",
+              data: {
+                type: "Feature",
+                properties: {},
+                geometry: { type: "LineString", coordinates: route },
+              },
+            });
+            currentMap.addLayer({
+              id: "journal-route",
+              type: "line",
+              source: "journal-route",
+              paint: {
+                "line-color": isDarkMode ? "#a5cede" : "#3c6472",
+                "line-width": 4,
+              },
+              layout: { "line-join": "round", "line-cap": "round" },
+            });
           }
-          createdMarkers.push(marker);
+          const bounds = new maplibregl.LngLatBounds();
+          points.forEach((point) => bounds.extend(point));
+          currentMap.fitBounds(bounds, {
+            padding: 48,
+            maxZoom: 15,
+            duration: 0,
+          });
         });
-        const addPerson = (location, avatar, name, shared) => {
-          if (!isValidLngLat(location?.lon, location?.lat)) return;
-          const element = document.createElement(
-            interactive && shared ? "button" : "div",
-          );
-          if (interactive && shared) element.type = "button";
-          element.className = "journal-map-person";
-          element.textContent = avatar || "👤";
-          element.setAttribute("aria-label", name);
-          const marker = new maplibregl.Marker({ element }).setLngLat([
-            location.lon,
-            location.lat,
-          ]);
-          if (shared && interactive)
-            marker.setPopup(
-              new maplibregl.Popup({ offset: 20 }).setHTML(
-                buildSharedLocationPopupHtml({
-                  name,
-                  avatar,
-                  device: location.device,
-                  relativeTime: "最近分享的位置",
-                  lat: location.lat,
-                  lon: location.lon,
-                  isDarkMode,
-                }),
-              ),
-            );
-          createdMarkers.push(marker.addTo(currentMap));
-        };
-        addPerson(userLocation, currentUser?.avatar, "目前位置", false);
-        recentOthers.forEach((location) =>
-          addPerson(
-            location,
-            location.user?.avatar,
-            location.user?.name || "旅伴",
-            true,
-          ),
-        );
-        const route = routeCoords.filter((point) =>
-          isValidLngLat(point?.[0], point?.[1]),
-        );
-        if (route.length > 1) {
-          currentMap.addSource("journal-route", {
-            type: "geojson",
-            data: {
-              type: "Feature",
-              properties: {},
-              geometry: { type: "LineString", coordinates: route },
-            },
-          });
-          currentMap.addLayer({
-            id: "journal-route",
-            type: "line",
-            source: "journal-route",
-            paint: {
-              "line-color": isDarkMode ? "#a5cede" : "#3c6472",
-              "line-width": 4,
-            },
-            layout: { "line-join": "round", "line-cap": "round" },
-          });
-        }
-        const bounds = new maplibregl.LngLatBounds();
-        points.forEach((point) => bounds.extend(point));
-        currentMap.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
-      });
-    } catch {
-      setStatus("error");
-    }
-    /* eslint-enable react-hooks/set-state-in-effect */
+      } catch {
+        if (!disposed) setStatus("error");
+      }
+    };
+    initialize();
     return () => {
       disposed = true;
       clearTimeout(timeout);

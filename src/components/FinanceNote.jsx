@@ -1195,6 +1195,13 @@ const FinanceScreen = ({
       }
     }
 
+    // Finish the local transaction before presenting the record as saved.
+    // The background snapshot is debounced and may not run before a reload.
+    await financeDB.saveRecord({
+      ...newItem,
+      image: null,
+      syncing: false,
+    });
     setRecords((prev) => [...prev, newItem]);
 
     if (gasUrl && gasToken) {

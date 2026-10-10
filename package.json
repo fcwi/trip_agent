@@ -9,6 +9,7 @@
     "build": "vite build",
     "build:verify": "node scripts/verify-build-output.mjs",
     "test:e2e": "playwright test",
+    "test:production": "node tests/production/journal-runtime.mjs",
     "test:e2e:ui": "playwright test --ui",
     "lint": "eslint .",
     "test": "node tests/run-tests.js",

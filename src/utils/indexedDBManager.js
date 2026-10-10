@@ -325,6 +325,17 @@ export const financeDB = {
   },
 
   // 記錄操作
+  async saveRecord(record) {
+    const db = this.dbInstance || (await this.init());
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("records", "readwrite");
+      tx.objectStore("records").put(record);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("保存記帳資料失敗"));
+      tx.onabort = () => reject(tx.error || new Error("保存記帳資料已取消"));
+    });
+  },
+
   async saveRecords(records) {
     const db = this.dbInstance || (await this.init());
 

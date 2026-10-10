@@ -1,0 +1,166 @@
+{
+  "validatedAt": "2026-10-10T17:16:30.501Z",
+  "serviceBoundary": "Controlled external failures and mock map background; no real cloud writes or real tile availability claims.",
+  "sourceHashes": {
+    "vite.config.js": "6cb12c8676b1617d80262fb19795e531a0e9e144aca2abfdbf2c57b98330c71d",
+    "src/components/JournalMapCanvas.jsx": "560b416d142f681e042f86863c7dc5870a0e33aaf69f92fe855c0888191c2aaa",
+    "src/utils/journalMapEngine.js": "8e4c6fb9cf626968d25b51b7566d0a70d4af5323d5362e2b11ccc38fed40ce3a",
+    "src/components/FinanceNote.jsx": "644a426a10f64151ac3b89410642531784a2536c2f3b7e95899ed83057043e06",
+    "src/utils/indexedDBManager.js": "f2fa4d47bd84fa846f1270b63a77e8b6b73bf691b95bd7b2f8d7a344dc231cfa",
+    "tests/production/journal-runtime.mjs": "392d97f3c9a9688405759c2394e431a31df4a4ea40dbd5457d4ef57fd27cc508"
+  },
+  "bundles": {
+    "2026_busan": {
+      "testModePanel": "TestModePanel-z3guYtUB.js",
+      "panelBytes": 15621
+    },
+    "2026_karuizawa": {
+      "testModePanel": "TestModePanel-MIGfbo8t.js",
+      "panelBytes": 15621
+    },
+    "2027_tohoku": {
+      "testModePanel": "TestModePanel-BQpI8uzI.js",
+      "panelBytes": 15621
+    }
+  },
+  "scenarios": [
+    {
+      "trip": "2026_busan",
+      "scenario": "offline restart",
+      "theme": "light",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_busan",
+      "scenario": "cold slow network",
+      "theme": "light",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_busan",
+      "scenario": "offline restart",
+      "theme": "dark",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_busan",
+      "scenario": "cold slow network",
+      "theme": "dark",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_karuizawa",
+      "scenario": "offline restart",
+      "theme": "light",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_karuizawa",
+      "scenario": "cold slow network",
+      "theme": "light",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_karuizawa",
+      "scenario": "offline restart",
+      "theme": "dark",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2026_karuizawa",
+      "scenario": "cold slow network",
+      "theme": "dark",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    },
+    {
+      "trip": "2027_tohoku",
+      "scenario": "offline restart",
+      "theme": "light",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2027_tohoku",
+      "scenario": "cold slow network",
+      "theme": "light",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    },
+    {
+      "trip": "2027_tohoku",
+      "scenario": "offline restart",
+      "theme": "dark",
+      "pages": 6,
+      "fontFromCache": true,
+      "offlineMapFallback": true,
+      "aiFailureDisplayed": true,
+      "expenseSurvivesReload": true,
+      "mapEngineRecoversOnline": true,
+      "passed": true
+    },
+    {
+      "trip": "2027_tohoku",
+      "scenario": "cold slow network",
+      "theme": "dark",
+      "pages": 6,
+      "latencyMs": 200,
+      "downloadBytesPerSecond": 256000,
+      "fontDelayMs": 6000,
+      "usableBeforeFont": true,
+      "passed": true
+    }
+  ]
+}

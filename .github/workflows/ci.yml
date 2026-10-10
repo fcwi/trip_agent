@@ -72,3 +72,33 @@ jobs:
           name: playwright-report-${{ matrix.trip }}
           path: playwright-report/
           retention-days: 7
+
+  production-runtime:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        trip:
+          - 2026_busan
+          - 2026_karuizawa
+          - 2027_tohoku
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify offline restart and cold slow network
+        run: npm run test:production -- ${{ matrix.trip }}
+      - name: Upload journal runtime evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-runtime-${{ matrix.trip }}
+          path: |
+            test-run.local/production-audit/*.json
+            test-run.local/production-audit/*.png
+          retention-days: 7
