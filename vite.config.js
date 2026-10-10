@@ -182,7 +182,8 @@ export default defineConfig(({ mode }) => {
         // 🛠️ Workbox 快取策略：這是「複雜快取」的核心
         workbox: {
           // 1. 靜態資源預先快取：讓 HTML, JS, CSS, 圖片在離線時也能載入
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg}"],
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff2}"],
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           // 地圖引擎與 HEIC 轉換器體積較大，改為首次使用時下載並快取。
           globIgnores: [
             "**/assets/maplibre-gl-*.js",

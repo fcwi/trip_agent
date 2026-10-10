@@ -69,7 +69,7 @@ const AIPanel = ({
 
   return (
     <div
-      className="flex-1 px-4 pb-24 flex flex-col h-[calc(100vh-85px)] animate-fadeIn relative"
+      className="journal-ai flex-1 px-4 pb-24 flex flex-col h-[calc(100vh-85px)] animate-fadeIn relative"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -118,7 +118,7 @@ const AIPanel = ({
         </div>
       </div>
       <div
-        className={`backdrop-blur-2xl border rounded-[2rem] flex-1 flex flex-col overflow-hidden max-w-full transition-all duration-300 ${isDarkMode ? "bg-slate-900/60 border-white/10 ring-1 ring-white/10 shadow-lg shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-lg shadow-black/5"} ${componentStyles.itineraryCard}`}
+        className={`journal-panel backdrop-blur-2xl border rounded-[2rem] flex-1 flex flex-col overflow-hidden max-w-full transition-all duration-300 ${isDarkMode ? "bg-slate-900/60 border-white/10 ring-1 ring-white/10 shadow-lg shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-lg shadow-black/5"} ${componentStyles.itineraryCard}`}
       >
         {/* 對話視窗標題與模式切換 */}
         <div
@@ -128,7 +128,7 @@ const AIPanel = ({
             <div className="flex items-center gap-3">
               {/* 模式頭像：隨導遊/口譯模式切換顏色與圖示 */}
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-white/50 transition-all duration-500
+                className={`journal-sticker w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-white/50 transition-all duration-500
                   ${
                     aiMode === "translate"
                       ? "bg-gradient-to-br from-sky-400 to-blue-500"
@@ -171,6 +171,8 @@ const AIPanel = ({
               >
                 <button
                   onClick={() => handleSwitchMode("guide")}
+                  data-journal-mode="guide"
+                  aria-pressed={aiMode === "guide"}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                     aiMode === "guide"
                       ? isDarkMode
@@ -186,6 +188,8 @@ const AIPanel = ({
                 </button>
                 <button
                   onClick={() => handleSwitchMode("translate")}
+                  data-journal-mode="translate"
+                  aria-pressed={aiMode === "translate"}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                     aiMode === "translate"
                       ? isDarkMode

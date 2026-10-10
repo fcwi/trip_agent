@@ -121,10 +121,6 @@ const preloadTab = (tabId) => {
   });
 };
 
-import WeatherParticles from "./components/Background/WeatherParticles.jsx";
-import { getParticleType, getSkyCondition } from "./utils/weatherHelpers.js";
-
-import SkyObjects from "./components/Background/SkyObjects.jsx";
 import TripHeader from "./components/TripHeader.jsx";
 import TripToolsMenu from "./components/Navigation/TripToolsMenu.jsx";
 
@@ -2397,33 +2393,6 @@ const ItineraryApp = ({ authentication }) => {
 
   // 統一主題風格，根據天氣狀況動態調整環境色
   const theme = React.useMemo(() => {
-    const currentCode =
-      activeDay === -1 ? userWeather.weatherCode : displayWeather.code;
-    const sky = getSkyCondition(currentCode);
-
-    const ambientColors = {
-      clear: isDarkMode
-        ? currentTheme.ambientColors.clear.dark
-        : currentTheme.ambientColors.clear.light,
-      cloudy: isDarkMode
-        ? currentTheme.ambientColors.cloudy.dark
-        : currentTheme.ambientColors.cloudy.light,
-      rain: isDarkMode
-        ? currentTheme.ambientColors.rain.dark
-        : currentTheme.ambientColors.rain.light,
-      snow: isDarkMode
-        ? currentTheme.ambientColors.snow.dark
-        : currentTheme.ambientColors.snow.light,
-      thunderstorm: isDarkMode
-        ? currentTheme.ambientColors.thunderstorm.dark
-        : currentTheme.ambientColors.thunderstorm.light,
-      fog: isDarkMode
-        ? currentTheme.ambientColors.fog.dark
-        : currentTheme.ambientColors.fog.light,
-    };
-
-    const ambient = ambientColors[sky] || ambientColors.clear;
-
     return {
       bg: isDarkMode
         ? `${currentTheme.bgGradientDark} bg-[image:var(--bg-texture)] bg-fixed`
@@ -2490,20 +2459,10 @@ const ItineraryApp = ({ authentication }) => {
 
       // 環境色樣式
       ambientStyle: {
-        backgroundColor:
-          activeTab === "itinerary" ? "var(--travel-surface)" : ambient,
+        backgroundColor: "var(--travel-surface)",
       },
     };
-  }, [
-    isDarkMode,
-    cBase,
-    cAccent,
-    currentTheme,
-    activeDay,
-    activeTab,
-    userWeather.weatherCode,
-    displayWeather.code,
-  ]);
+  }, [isDarkMode, cBase, cAccent, currentTheme]);
 
   // Weather detail payload for the new page/component
   const detailWeatherData = React.useMemo(() => {
@@ -2582,60 +2541,15 @@ const ItineraryApp = ({ authentication }) => {
     );
   }
 
-  // 決定當前應顯示的天氣特效代碼
-  let currentEffectCode =
-    activeDay === -1 ? userWeather.weatherCode : displayWeather.code;
-
-  // 應用測試模式或凍結的天氣覆寫
-  const effectiveWeatherOverride =
-    frozenTestWeatherOverride || testWeatherOverride;
-  if (activeDay === -1 && effectiveWeatherOverride.overview !== null) {
-    currentEffectCode = effectiveWeatherOverride.overview;
-  } else if (
-    activeDay >= 0 &&
-    effectiveWeatherOverride.days[activeDay] !== undefined
-  ) {
-    currentEffectCode = effectiveWeatherOverride.days[activeDay];
-  }
-
-  const particleType = getParticleType(currentEffectCode, isDarkMode);
-  const skyCondition = getSkyCondition(currentEffectCode);
-  const isDayTime = !isDarkMode;
-  let dynamicBgStyle = {};
-
-  const weatherColors = currentTheme.weatherColors;
-
-  // 根據天氣狀況動態調整背景色，增強沉浸感
-  if (isDayTime) {
-    const isRaining = [51, 53, 55, 61, 63, 65, 80, 81, 82].includes(
-      currentEffectCode,
-    );
-    const isSnowing = [71, 73, 75, 77, 85, 86].includes(currentEffectCode);
-    const isFoggy = [45, 48].includes(currentEffectCode);
-    const isThunderstorm = [95, 96, 99].includes(currentEffectCode);
-    const isCloudy = [1, 2, 3].includes(currentEffectCode);
-
-    if (isThunderstorm) {
-      dynamicBgStyle = { backgroundColor: currentTheme.dynamicBg.rain.dark };
-    } else if (isRaining) {
-      dynamicBgStyle = { backgroundColor: weatherColors.rain };
-    } else if (isSnowing) {
-      dynamicBgStyle = { backgroundColor: weatherColors.snow };
-    } else if (isFoggy) {
-      dynamicBgStyle = { backgroundColor: currentTheme.dynamicBg.rain.light };
-    } else if (isCloudy) {
-      dynamicBgStyle = { backgroundColor: currentTheme.dynamicBg.cloud };
-    }
-  }
-
+  // Keep all reading pages on the same travel journal surface.
   return (
     <div
       style={{
         ...containerStyle,
-        ...(activeTab === "itinerary" ? {} : dynamicBgStyle),
       }}
       data-theme={isDarkMode ? "dark" : "light"}
-      data-editorial={activeTab === "itinerary" ? "true" : "false"}
+      data-editorial="true"
+      data-active-tab={activeTab}
       className={`travel-shell min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
       onTouchStart={handleMainTouchStart}
       onTouchMove={handleMainTouchMove}
@@ -2682,23 +2596,6 @@ const ItineraryApp = ({ authentication }) => {
         </div>
       </div>
 
-      {/* 背景裝飾球：隨主題與天氣變換顏色 */}
-      <div
-        hidden={activeTab === "itinerary"}
-        aria-hidden="true"
-        className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0"
-      >
-        <div
-          className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-3xl animate-blob transition-colors duration-700 ${theme.blob1}`}
-        ></div>
-        <div
-          className={`absolute top-[20%] right-[-20%] w-[60%] h-[60%] rounded-full blur-3xl animate-blob animation-delay-2000 transition-colors duration-700 ${theme.blob2}`}
-        ></div>
-        <div
-          className={`absolute bottom-[-10%] left-[20%] w-[40%] h-[40%] rounded-full blur-3xl animate-blob animation-delay-4000 transition-colors duration-700 ${theme.blob3}`}
-        ></div>
-      </div>
-
       <style>{`
       @keyframes cloudFloat {
           from { transform: translateX(-100%); }
@@ -2731,17 +2628,6 @@ const ItineraryApp = ({ authentication }) => {
       .animate-scale-in { animation: scaleIn 0.25s ease-out; }
       .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
       `}</style>
-
-      {activeTab !== "itinerary" && (
-        <SkyObjects isDay={!isDarkMode} condition={skyCondition} />
-      )}
-      {activeTab !== "itinerary" && (
-        <WeatherParticles type={particleType} isDay={!isDarkMode} />
-      )}
-      {/* 雷雨時疊加雨滴特效 */}
-      {activeTab !== "itinerary" && particleType === "lightning" && (
-        <WeatherParticles type="rain" isDay={!isDarkMode} />
-      )}
 
       <main
         id="main-content"

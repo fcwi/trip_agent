@@ -1,5 +1,252 @@
-/* Third-wave travel journal: original illustrations, ink outlines and pastel paper.
-   The visual treatment stays on the homepage and daily itinerary. */
+/* Original illustrations, ink outlines and pastel paper across the trip journal. */
+@font-face {
+  font-family: "Huninn";
+  src: url("../assets/fonts/Huninn-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.travel-shell[data-editorial="true"] :is(button, input, textarea, select) {
+  font-family: inherit;
+}
+.travel-shell[data-editorial="true"] .journal-panel {
+  border: 3px solid var(--journal-ink);
+  border-radius: 24px 26px 22px 25px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-entry {
+  border: 2px solid var(--journal-ink);
+  border-radius: 16px 18px 15px 17px;
+  background: var(--travel-page);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"]
+  .journal-entry
+  > button[aria-expanded="true"] {
+  background: var(--travel-subtle);
+  border-bottom: 2px dashed var(--travel-line);
+  border-radius: 14px 16px 0 0;
+}
+.travel-shell[data-editorial="true"] .journal-entry :is(h3, strong) {
+  color: var(--travel-text);
+}
+.travel-shell[data-editorial="true"] .journal-panel h2 {
+  color: var(--travel-text);
+  font-size: 20px;
+  line-height: 1.5;
+}
+.travel-shell[data-editorial="true"] [data-journal-mode] {
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--travel-muted);
+  box-shadow: none;
+}
+.travel-shell[data-editorial="true"] [data-journal-mode][aria-pressed="true"] {
+  border-color: var(--journal-ink);
+  background: var(--journal-yellow);
+  color: var(--travel-text);
+}
+.travel-shell[data-editorial="true"]
+  [data-journal-mode="translate"][aria-pressed="true"] {
+  background: var(--journal-blue);
+}
+.travel-shell[data-editorial="true"] .journal-panel h2 > span {
+  border: 2px solid var(--journal-ink);
+  border-radius: 10px 8px 11px 9px;
+  background: var(--journal-yellow);
+  color: var(--travel-text);
+  box-shadow: none;
+  transform: rotate(-4deg);
+}
+.travel-shell[data-editorial="true"] .journal-panel h2 > span svg {
+  color: inherit;
+}
+.travel-shell[data-editorial="true"] .journal-place-card {
+  border: 2px solid var(--travel-line);
+  background: var(--travel-subtle);
+  border-radius: 12px 14px 11px 13px;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"]
+  .journal-place-card[data-journal-tone="rose"] {
+  border-left: 5px solid var(--journal-pink);
+}
+.travel-shell[data-editorial="true"]
+  .journal-place-card[data-journal-tone="amber"] {
+  border-left: 5px solid var(--journal-yellow);
+}
+.travel-shell[data-editorial="true"]
+  .journal-ai
+  .journal-panel
+  > div:first-child {
+  background: var(--travel-subtle);
+  border-color: var(--journal-ink);
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-finance-card > div:first-child {
+  background: var(--travel-subtle);
+  border-color: var(--journal-ink);
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-sticker {
+  border: 2px solid var(--journal-ink);
+  background: var(--journal-blue);
+  color: var(--travel-text);
+  box-shadow: none;
+  border-radius: 45% 50% 42% 48%;
+}
+.travel-shell[data-editorial="true"] .journal-sticker svg {
+  color: inherit;
+}
+.travel-shell[data-active-tab="ai"] #main-content {
+  height: 100dvh;
+  min-height: 560px;
+}
+.travel-shell[data-active-tab="finance"]
+  #main-content:has(.journal-finance-card) {
+  height: 100dvh;
+  min-height: 560px;
+}
+.travel-shell[data-active-tab="finance"] .travel-header {
+  flex-shrink: 0;
+}
+.travel-shell[data-active-tab="finance"]
+  #main-content:has(.journal-finance-card)
+  > div[style*="display: block"] {
+  flex: 1;
+  min-height: 0;
+}
+.travel-shell[data-active-tab="finance"]
+  .journal-finance:has(.journal-finance-card) {
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 100px;
+}
+.travel-shell[data-active-tab="finance"]
+  .journal-finance:not(:has(.journal-finance-card)) {
+  padding-bottom: 110px;
+}
+.travel-shell[data-editorial="true"] .journal-finance-card {
+  min-height: 0;
+  overflow: hidden;
+}
+.travel-shell[data-editorial="true"] .journal-finance-card > div:first-child {
+  flex-shrink: 0;
+}
+.travel-shell[data-editorial="true"] .journal-finance-card > div:nth-child(2) {
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--travel-page);
+}
+.travel-shell[data-active-tab="ai"] .travel-header {
+  flex-shrink: 0;
+}
+.travel-shell[data-active-tab="ai"]
+  #main-content
+  > div[style*="display: block"] {
+  flex: 1;
+  min-height: 0;
+}
+.travel-shell[data-active-tab="ai"] .journal-ai {
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 100px;
+}
+.travel-shell[data-editorial="true"] .journal-ai .journal-panel {
+  min-height: 0;
+}
+.travel-shell[data-editorial="true"]
+  #panel-guides
+  .journal-entry
+  > button
+  > span:first-child {
+  border: 2px solid var(--journal-ink);
+  background: var(--journal-blue);
+  box-shadow: none;
+}
+.travel-shell[data-editorial="true"]
+  #panel-shops
+  .journal-entry
+  > button
+  > span:first-child
+  > span:first-child {
+  color: var(--travel-text);
+}
+.travel-shell[data-editorial="true"] .journal-finance-setup {
+  padding: 24px;
+}
+.travel-shell[data-editorial="true"] .journal-finance-setup > div:first-child {
+  background: transparent;
+}
+.travel-shell[data-editorial="true"]
+  .journal-finance-setup
+  button[aria-pressed="true"] {
+  border: 2px solid var(--journal-ink);
+  background: var(--journal-yellow);
+  box-shadow: none;
+}
+.travel-shell[data-editorial="true"] .journal-finance-setup input {
+  border: 2px solid var(--journal-ink);
+  background: var(--travel-page);
+  color: var(--travel-text);
+  border-radius: 12px;
+}
+.travel-shell[data-editorial="true"]
+  .journal-finance-setup
+  button:not([aria-pressed]):not([aria-expanded]) {
+  border: 2px solid var(--journal-ink);
+  background: var(--travel-accent);
+  color: var(--travel-on-accent);
+  box-shadow: none;
+}
+.travel-shell[data-editorial="true"] .journal-finance-setup button:disabled {
+  opacity: 0.45;
+}
+.travel-shell[data-editorial="true"] .journal-chat-log {
+  background: var(--travel-page);
+}
+.travel-shell[data-editorial="true"] .journal-finance-record {
+  max-width: 100%;
+  border: 2px solid var(--journal-ink);
+  background: var(--travel-page);
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-chat-bubble {
+  border: 2px solid var(--journal-ink);
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"]
+  .journal-chat-bubble[data-message-role="user"] {
+  background: var(--journal-blue);
+}
+.travel-shell[data-editorial="true"] .journal-chat-input {
+  background: var(--travel-subtle);
+  border-top: 2px solid var(--journal-ink);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-chat-input :is(button, textarea) {
+  border-color: var(--travel-line);
+  border-radius: 12px;
+}
+.travel-shell[data-editorial="true"]
+  .journal-ai
+  .journal-panel
+  > div:first-child
+  > div:first-child {
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .travel-shell[data-editorial="true"] {
   --travel-page: #faf8f0;
   --travel-surface: #fffefd;
@@ -16,7 +263,8 @@
   --journal-green: #d5e4c5;
   --travel-radius: 24px;
   --travel-shadow: none;
-  font-family: "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+  font-family:
+    "Huninn", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
 }
 
 /* Maps share the same paper, ink and accessible controls as the itinerary. */

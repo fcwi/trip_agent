@@ -556,7 +556,7 @@ test("honors reduced motion and keeps the closed tools clear of navigation", asy
   // The reading pages stay calm even when the cached forecast says rain.
   await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
   await page.getByRole("button", { name: "指南", exact: true }).click();
-  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(1);
+  await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator('canvas[aria-hidden="true"]')).toHaveCount(0);
@@ -639,6 +639,33 @@ test("scopes mocked GAS reads and writes to the active trip", async ({
     )
     .toBe(true);
 
+  for (const [width, dark] of [
+    [320, false],
+    [390, true],
+  ]) {
+    await page.setViewportSize({ width, height: 844 });
+    const toggleTheme = page.getByRole("button", {
+      name: dark ? "切換到深色模式" : "切換到亮色模式",
+    });
+    if (await toggleTheme.count()) await toggleTheme.click();
+    await expect(page.locator(".journal-finance-record")).toBeVisible();
+    const entryBox = await page
+      .getByRole("button", { name: "送出紀錄" })
+      .boundingBox();
+    const navigationBox = await page
+      .getByRole("navigation", { name: "主要功能" })
+      .boundingBox();
+    expect(entryBox.y + entryBox.height).toBeLessThan(navigationBox.y);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+      .toBe(width);
+    await page.screenshot({
+      path: `test-run.local/${EXPECTED_TRIP_ID}-ledger-${dark ? "dark" : "light"}.png`,
+      fullPage: true,
+      animations: "disabled",
+      scale: "css",
+    });
+  }
   await page.getByRole("button", { name: "編輯紀錄" }).click({ force: true });
   await page.locator("#editContent").fill("測試午餐（已改）");
   await page.getByRole("button", { name: "儲存" }).click();
@@ -705,4 +732,161 @@ test("sends an explicit destination-language translation task", async ({
     `targetLanguage=${target.name}`,
   );
   expect(geminiPayload.contents[0].parts[0].text).not.toContain("翻譯「");
+});
+
+test("keeps shop expansion and valid map links across tab changes", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.getByRole("button", { name: "商店", exact: true }).click();
+  const firstShop = page.locator("#panel-shops article").first();
+  const toggle = firstShop.getByRole("button");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    firstShop.locator(".journal-place-card").first(),
+  ).toHaveAttribute("href", /google\.com\/maps/);
+  await page.getByRole("button", { name: "指南", exact: true }).click();
+  await page.getByRole("button", { name: "商店", exact: true }).click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+});
+
+test("renders every journal page with the bundled font in narrow light and dark layouts", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.evaluate(async () => {
+    await document.fonts.load('16px "Huninn"', "旅行手帳");
+  });
+  expect(
+    await page.evaluate(() =>
+      [...document.fonts].some(
+        (font) => font.family === "Huninn" && font.status === "loaded",
+      ),
+    ),
+  ).toBe(true);
+  for (const [width, dark] of [
+    [320, false],
+    [390, true],
+  ]) {
+    await page.setViewportSize({ width, height: 844 });
+    const switchTheme = page.getByRole("button", {
+      name: dark ? "切換到深色模式" : "切換到亮色模式",
+    });
+    if (await switchTheme.count()) await switchTheme.click();
+    for (const [label, name] of [
+      ["guides", "指南"],
+      ["shops", "商店"],
+      ["ai", "導遊"],
+      ["finance", "記錄"],
+      ["home", "行程"],
+    ]) {
+      await page
+        .getByRole("navigation", { name: "主要功能" })
+        .getByRole("button", { name: new RegExp(`^${name}`) })
+        .click();
+      await expect(
+        page.locator('.travel-shell[data-editorial="true"]').first(),
+      ).toHaveAttribute("data-theme", dark ? "dark" : "light");
+      if (label === "home")
+        await page.getByRole("button", { name: /^總覽/ }).click();
+      if (label === "home")
+        await page.waitForFunction(() => {
+          const overview = document.querySelector(".travel-overview");
+          return (
+            overview && getComputedStyle(overview.parentElement).opacity === "1"
+          );
+        });
+      if (label === "finance")
+        await expect(
+          page.getByRole("heading", { name: "歡迎使用旅程記帳" }),
+        ).toBeVisible();
+      if (label === "guides" || label === "shops" || label === "ai")
+        await expect(
+          page.locator(".journal-panel:visible").first(),
+        ).toBeVisible();
+      await expect
+        .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+        .toBe(width);
+      if (label === "guides" || label === "shops") {
+        const toggle = page
+          .locator(`#panel-${label} article`)
+          .first()
+          .getByRole("button");
+        if ((await toggle.getAttribute("aria-expanded")) === "false")
+          await toggle.click();
+      }
+      if (label === "ai") {
+        const inputBox = await page
+          .getByRole("button", { name: "傳送訊息" })
+          .boundingBox();
+        const navBox = await page
+          .getByRole("navigation", { name: "主要功能" })
+          .boundingBox();
+        expect(inputBox.y + inputBox.height).toBeLessThan(navBox.y);
+      }
+      await page.screenshot({
+        path: `test-run.local/${EXPECTED_TRIP_ID}-${label}-${dark ? "dark" : "light"}.png`,
+        fullPage: true,
+        animations: "disabled",
+        scale: "css",
+      });
+      if (label === "home") {
+        await page.locator('button[aria-label^="查看Day"]').first().click();
+        await expect(page.locator(".travel-day-layout")).toBeVisible();
+        await page.waitForFunction(
+          () =>
+            getComputedStyle(
+              document.querySelector(".travel-day-layout").parentElement,
+            ).opacity === "1",
+        );
+        await expect
+          .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+          .toBe(width);
+        await page.screenshot({
+          path: `test-run.local/${EXPECTED_TRIP_ID}-daily-${dark ? "dark" : "light"}.png`,
+          fullPage: true,
+          animations: "disabled",
+          scale: "css",
+        });
+      }
+    }
+  }
+});
+
+test("guide chat keeps input, reply and search working with journal bubbles", async ({
+  page,
+}) => {
+  await page.route("https://generativelanguage.googleapis.com/**", (route) =>
+    route.fulfill({
+      json: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "仙台旅行提醒：預留轉乘時間，攜帶保暖衣物。" }],
+            },
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/");
+  await unlockTrip(page);
+  await page.getByRole("button", { name: /^導遊/ }).click();
+  await page
+    .locator(".journal-ai")
+    .getByRole("button", { name: "導遊", exact: true })
+    .click();
+  await page.getByLabel("詢問 AI 導遊").fill("請提供仙台旅行提醒");
+  await page.getByRole("button", { name: "傳送訊息" }).click();
+  await expect(
+    page.locator('.journal-chat-bubble[data-message-role="model"]').last(),
+  ).toContainText("預留轉乘時間");
+  await page.getByRole("button", { name: "搜尋對話" }).click();
+  await page.getByPlaceholder("搜尋對話內容...").fill("保暖");
+  await expect(
+    page.getByRole("button", { name: /仙台旅行提醒：/ }),
+  ).toBeVisible();
 });

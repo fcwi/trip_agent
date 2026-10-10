@@ -63,7 +63,7 @@ const ChatInput = ({
 
   return (
     <div
-      className={`shrink-0 border-t backdrop-blur-xl transition-all duration-300 z-20 
+      className={`journal-chat-input shrink-0 border-t backdrop-blur-xl transition-all duration-300 z-20
         ${
           isDarkMode
             ? "bg-neutral-900/70 border-white/20 ring-1 ring-white/5"

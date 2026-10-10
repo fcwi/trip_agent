@@ -1,5 +1,12 @@
 import React from "react";
-import { Bot, User, Loader, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Bot,
+  User,
+  Loader,
+  Volume2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 
 const ChatMessageList = ({
   messages,
@@ -19,22 +26,24 @@ const ChatMessageList = ({
   // 根據主題配置定義聊天氣泡顏色
   const chatColors = currentTheme?.chatColors || {
     userBubble: {
-      light: "bg-[#5D737E]/90 backdrop-blur-md text-white border-[#4A606A]/60 ring-1 ring-[#4A606A]/30",
-      dark: "bg-sky-800/85 backdrop-blur-md text-white border-sky-700/60 ring-1 ring-sky-600/30"
+      light:
+        "bg-[#5D737E]/90 backdrop-blur-md text-white border-[#4A606A]/60 ring-1 ring-[#4A606A]/30",
+      dark: "bg-sky-800/85 backdrop-blur-md text-white border-sky-700/60 ring-1 ring-sky-600/30",
     },
     modelBubble: {
-      light: "bg-white/85 backdrop-blur-lg text-stone-700 border-white/40 ring-1 ring-black/5",
-      dark: "bg-neutral-800/80 backdrop-blur-lg text-neutral-200 border-white/10 ring-1 ring-white/5"
+      light:
+        "bg-white/85 backdrop-blur-lg text-stone-700 border-white/40 ring-1 ring-black/5",
+      dark: "bg-neutral-800/80 backdrop-blur-lg text-neutral-200 border-white/10 ring-1 ring-white/5",
     },
     bg: {
       light: "bg-[#F9F9F6]/50",
-      dark: "bg-black/20"
-    }
+      dark: "bg-black/20",
+    },
   };
 
   return (
     <div
-      className={`flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 ${
+      className={`journal-chat-log flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 ${
         isDarkMode ? chatColors.bg.dark : chatColors.bg.light
       }`}
     >
@@ -82,53 +91,58 @@ const ChatMessageList = ({
 
           {/* 訊息氣泡：包含圖片預覽與文字內容 */}
           <div
-            ref={(el) => messageRefs.current[idx] = el}
+            ref={(el) => (messageRefs.current[idx] = el)}
             className={`max-w-[75%] group relative transition-all duration-300`}
           >
             <div
-              className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-md border transition-all duration-300
+              data-message-role={msg.role}
+              className={`journal-chat-bubble p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-md border transition-all duration-300
                 ${
                   msg.role === "user"
                     ? isDarkMode
                       ? chatColors.userBubble.dark + " rounded-tr-none"
                       : chatColors.userBubble.light + " rounded-tr-none"
                     : isDarkMode
-                      ? chatColors.modelBubble.dark + " rounded-tl-none hover:shadow-lg"
-                      : chatColors.modelBubble.light + " rounded-tl-none hover:shadow-lg"
+                      ? chatColors.modelBubble.dark +
+                        " rounded-tl-none hover:shadow-lg"
+                      : chatColors.modelBubble.light +
+                        " rounded-tl-none hover:shadow-lg"
                 }`}
             >
               {/* 圖片附件預覽 */}
-              {msg.image && (() => {
-                // 處理圖片可能是字串或物件的情況
-                const imageSrc = typeof msg.image === "string" 
-                  ? msg.image 
-                  : (msg.image.data || null);
-                
-                return imageSrc ? (
-                  <button
-                    type="button"
-                    onClick={() => setFullPreviewImage(imageSrc)}
-                    className="mb-2 block max-w-full rounded-lg"
-                    aria-label="開啟已傳送圖片預覽"
-                  >
-                    <img
-                      src={imageSrc}
-                      alt="已傳送的圖片"
-                      width="640"
-                      height="480"
-                      loading="lazy"
-                      className="h-auto max-w-full cursor-zoom-in rounded-lg border border-white/20 object-cover shadow-sm transition-transform active:scale-95"
-                    />
-                  </button>
-                ) : null;
-              })()}
+              {msg.image &&
+                (() => {
+                  // 處理圖片可能是字串或物件的情況
+                  const imageSrc =
+                    typeof msg.image === "string"
+                      ? msg.image
+                      : msg.image.data || null;
+
+                  return imageSrc ? (
+                    <button
+                      type="button"
+                      onClick={() => setFullPreviewImage(imageSrc)}
+                      className="mb-2 block max-w-full rounded-lg"
+                      aria-label="開啟已傳送圖片預覽"
+                    >
+                      <img
+                        src={imageSrc}
+                        alt="已傳送的圖片"
+                        width="640"
+                        height="480"
+                        loading="lazy"
+                        className="h-auto max-w-full cursor-zoom-in rounded-lg border border-white/20 object-cover shadow-sm transition-transform active:scale-95"
+                      />
+                    </button>
+                  ) : null;
+                })()}
               {/* 渲染文字內容 (支援 Markdown 或特殊格式) */}
               {(() => {
                 const textLength = msg.text?.length || 0;
                 const isLongMessage = textLength > 150;
                 const isExpanded = expandedMessages[idx];
                 const shouldCollapse = isLongMessage && !isExpanded;
-                
+
                 return (
                   <div>
                     <div className={shouldCollapse ? "line-clamp-4" : ""}>

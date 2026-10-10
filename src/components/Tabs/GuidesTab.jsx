@@ -45,7 +45,7 @@ const GuidesTab = ({
     }));
   };
 
-  const sectionClasses = `rounded-[2rem] border p-5 backdrop-blur-2xl ${theme.cardShadow} ${componentStyles.itineraryCard}`;
+  const sectionClasses = `journal-panel rounded-[2rem] border p-5 backdrop-blur-2xl ${theme.cardShadow} ${componentStyles.itineraryCard}`;
 
   return (
     <section
@@ -54,7 +54,9 @@ const GuidesTab = ({
       className="flex-1 animate-fadeIn space-y-5 px-4 pb-24"
     >
       <div className={sectionClasses} style={theme.ambientStyle}>
-        <h2 className={`mb-4 flex items-center gap-2 text-lg font-bold ${theme.text}`}>
+        <h2
+          className={`mb-4 flex items-center gap-2 text-lg font-bold ${theme.text}`}
+        >
           <span
             aria-hidden="true"
             className={`rounded-xl p-1.5 backdrop-blur-md ${
@@ -79,7 +81,7 @@ const GuidesTab = ({
               return (
                 <article
                   key={guide.title || index}
-                  className={`rounded-2xl border backdrop-blur-2xl transition-shadow hover:shadow-lg ${theme.cardShadow} ${componentStyles.itineraryCard}`}
+                  className={`journal-entry rounded-2xl border backdrop-blur-2xl transition-shadow hover:shadow-lg ${theme.cardShadow} ${componentStyles.itineraryCard}`}
                 >
                   <button
                     type="button"
@@ -99,25 +101,37 @@ const GuidesTab = ({
                       {guide.icon}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block break-words text-sm font-bold ${theme.text}`}>
+                      <span
+                        className={`block break-words text-sm font-bold ${theme.text}`}
+                      >
                         {guide.title}
                       </span>
                       {!isOpen && (
-                        <span className={`mt-0.5 block truncate text-xs ${theme.textSec}`}>
+                        <span
+                          className={`mt-0.5 block truncate text-xs ${theme.textSec}`}
+                        >
                           {guide.summary}
                         </span>
                       )}
                     </span>
                     {isOpen ? (
-                      <ChevronUp aria-hidden="true" className={`h-4 w-4 shrink-0 ${theme.textSec}`} />
+                      <ChevronUp
+                        aria-hidden="true"
+                        className={`h-4 w-4 shrink-0 ${theme.textSec}`}
+                      />
                     ) : (
-                      <ChevronDown aria-hidden="true" className={`h-4 w-4 shrink-0 ${theme.textSec}`} />
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`h-4 w-4 shrink-0 ${theme.textSec}`}
+                      />
                     )}
                   </button>
 
                   {isOpen && (
                     <div id={contentId} className="animate-fadeIn px-5 pb-5">
-                      <p className={`mb-4 text-sm leading-relaxed ${theme.textSec}`}>
+                      <p
+                        className={`mb-4 text-sm leading-relaxed ${theme.textSec}`}
+                      >
                         {guide.summary}
                       </p>
                       <div
@@ -127,16 +141,27 @@ const GuidesTab = ({
                             : "border-stone-200/60 bg-[#F9F9F6]/80 ring-1 ring-black/5"
                         }`}
                       >
-                        <h3 className={`mb-2.5 flex items-center gap-1.5 text-xs font-bold ${theme.textSec}`}>
-                          <FileText aria-hidden="true" className="h-3.5 w-3.5" /> 操作重點
+                        <h3
+                          className={`mb-2.5 flex items-center gap-1.5 text-xs font-bold ${theme.textSec}`}
+                        >
+                          <FileText
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5"
+                          />{" "}
+                          操作重點
                         </h3>
                         <ol
                           className={`list-inside list-decimal space-y-2 pl-1 text-sm marker:font-bold ${theme.textSec} ${
-                            isDarkMode ? "marker:text-sky-300" : "marker:text-sky-600"
+                            isDarkMode
+                              ? "marker:text-sky-300"
+                              : "marker:text-sky-600"
                           }`}
                         >
                           {guide.steps?.map((step, stepIndex) => (
-                            <li key={stepIndex} className="pl-1 leading-relaxed">
+                            <li
+                              key={stepIndex}
+                              className="pl-1 leading-relaxed"
+                            >
                               {step}
                             </li>
                           ))}
@@ -155,7 +180,10 @@ const GuidesTab = ({
                           }`}
                         >
                           {guide.link.text}
-                          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                          <ExternalLink
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5"
+                          />
                         </a>
                         {guide.blogs?.length ? (
                           <div
@@ -163,7 +191,9 @@ const GuidesTab = ({
                           >
                             <h3
                               className={`mb-2 text-[11px] font-bold uppercase tracking-wide ${
-                                isDarkMode ? "text-neutral-500" : "text-stone-400"
+                                isDarkMode
+                                  ? "text-neutral-500"
+                                  : "text-stone-400"
                               }`}
                             >
                               相關圖文教學
@@ -181,7 +211,10 @@ const GuidesTab = ({
                                       : "text-stone-500 hover:bg-stone-100/80 hover:text-[#3B5998]"
                                   }`}
                                 >
-                                  <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${isDarkMode ? "bg-neutral-600" : "bg-stone-300"}`} />
+                                  <span
+                                    aria-hidden="true"
+                                    className={`h-1.5 w-1.5 rounded-full ${isDarkMode ? "bg-neutral-600" : "bg-stone-300"}`}
+                                  />
                                   <span className="truncate underline decoration-stone-300 decoration-1 underline-offset-4">
                                     {blog.title}
                                   </span>
@@ -197,13 +230,20 @@ const GuidesTab = ({
               );
             })
           ) : (
-            <EmptyState icon={BookOpen} label="暫無參考指南" isDarkMode={isDarkMode} theme={theme} />
+            <EmptyState
+              icon={BookOpen}
+              label="暫無參考指南"
+              isDarkMode={isDarkMode}
+              theme={theme}
+            />
           )}
         </div>
       </div>
 
       <div className={sectionClasses} style={theme.ambientStyle}>
-        <h2 className={`mb-4 flex items-center gap-2 text-lg font-bold ${theme.text}`}>
+        <h2
+          className={`mb-4 flex items-center gap-2 text-lg font-bold ${theme.text}`}
+        >
           <span
             aria-hidden="true"
             className={`rounded-xl p-1.5 backdrop-blur-md ${
@@ -212,7 +252,9 @@ const GuidesTab = ({
                 : "bg-[#E8F0FE]/70 ring-1 ring-blue-100/30"
             }`}
           >
-            <LinkIcon className={`h-4 w-4 ${isDarkMode ? "text-blue-300" : "text-[#3B5998]"}`} />
+            <LinkIcon
+              className={`h-4 w-4 ${isDarkMode ? "text-blue-300" : "text-[#3B5998]"}`}
+            />
           </span>
           實用連結百寶箱
         </h2>
@@ -237,7 +279,7 @@ const GuidesTab = ({
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`group flex min-h-11 items-center gap-3 rounded-2xl border p-4 backdrop-blur-2xl transition-shadow hover:shadow-lg ${theme.cardShadow} ${componentStyles.itineraryCard}`}
+                      className={`journal-entry group flex min-h-11 items-center gap-3 rounded-2xl border p-4 backdrop-blur-2xl transition-shadow hover:shadow-lg ${theme.cardShadow} ${componentStyles.itineraryCard}`}
                     >
                       <span
                         aria-hidden="true"
@@ -250,11 +292,20 @@ const GuidesTab = ({
                         {item.icon}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className={`flex items-center gap-1.5 text-sm font-bold ${theme.text}`}>
+                        <span
+                          className={`flex items-center gap-1.5 text-sm font-bold ${theme.text}`}
+                        >
                           {item.title}
-                          <ExternalLink aria-hidden="true" className={`h-3 w-3 ${theme.textSec}`} />
+                          <ExternalLink
+                            aria-hidden="true"
+                            className={`h-3 w-3 ${theme.textSec}`}
+                          />
                         </span>
-                        <span className={`mt-0.5 block text-xs ${theme.textSec}`}>{item.desc}</span>
+                        <span
+                          className={`mt-0.5 block text-xs ${theme.textSec}`}
+                        >
+                          {item.desc}
+                        </span>
                       </span>
                     </a>
                   ))}
@@ -262,7 +313,12 @@ const GuidesTab = ({
               </section>
             ))
           ) : (
-            <EmptyState icon={LinkIcon} label="暫無實用連結" isDarkMode={isDarkMode} theme={theme} />
+            <EmptyState
+              icon={LinkIcon}
+              label="暫無實用連結"
+              isDarkMode={isDarkMode}
+              theme={theme}
+            />
           )}
         </div>
       </div>

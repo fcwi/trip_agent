@@ -131,6 +131,19 @@ if (manifest) {
 if (!serviceWorker.includes("AuthenticatedTripApp-")) {
   errors.push("PWA service worker 未預快取解鎖後的核心旅程模組");
 }
+const journalFont = assetNames.find((name) =>
+  /^Huninn-Regular-.*\.woff2$/.test(name),
+);
+requireFile("fonts/OFL-Huninn.txt");
+if (!journalFont) {
+  errors.push("缺少旅行手帳的 Huninn 字體產物");
+} else {
+  const fontBytes = fs.readFileSync(path.join(ASSETS_DIRECTORY, journalFont));
+  if (fontBytes.subarray(0, 4).toString() !== "wOF2")
+    errors.push("Huninn 字體不是有效的 WOFF2 檔案");
+  if (!serviceWorker.includes(journalFont))
+    errors.push("PWA 未預快取 Huninn 字體，離線字體將無法保留");
+}
 if (!assetNames.some((name) => /^workbox-.*\.js$/.test(name))) {
   errors.push("缺少 Workbox runtime 檔案");
 }

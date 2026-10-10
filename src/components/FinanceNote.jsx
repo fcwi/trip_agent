@@ -1631,10 +1631,10 @@ const FinanceScreen = ({
   if (!user) {
     return (
       <div
-        className={`flex flex-col items-center justify-center min-h-[60vh] p-6 space-y-6 animate-fadeIn`}
+        className={`journal-finance flex flex-col items-center justify-center min-h-[60vh] p-6 space-y-6 animate-fadeIn`}
       >
         <div
-          className={`w-full max-w-sm backdrop-blur-2xl border rounded-[2rem] p-8 shadow-lg text-center space-y-6 ${isDarkMode ? "bg-slate-900/70 border-white/10 ring-1 ring-white/10 shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-black/5"}`}
+          className={`journal-panel journal-finance-setup w-full max-w-sm backdrop-blur-2xl border rounded-[2rem] p-8 shadow-lg text-center space-y-6 ${isDarkMode ? "bg-slate-900/70 border-white/10 ring-1 ring-white/10 shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-black/5"}`}
         >
           <div className="space-y-2">
             <h2 className={`text-2xl font-bold ${theme.text}`}>
@@ -1710,7 +1710,7 @@ const FinanceScreen = ({
   // 3. 內容多時會撐開卡片，捲動行為在外層 window。
   return (
     <div
-      className={`px-4 pb-24 animate-fadeIn flex flex-col min-h-[calc(100vh-85px)] relative`}
+      className={`journal-finance px-4 pb-24 animate-fadeIn flex flex-col min-h-[calc(100vh-85px)] relative`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -1760,7 +1760,7 @@ const FinanceScreen = ({
       </div>
       {/* 主卡片容器：內容多時自然撐開 */}
       <div
-        className={`flex-1 flex flex-col backdrop-blur-xl border rounded-[2rem] transition-all duration-300 ${isDarkMode ? "bg-slate-900/50 border-white/20 ring-1 ring-white/5 shadow-xl shadow-black/10" : "bg-white/75 border-white/60 ring-1 ring-black/5 shadow-xl shadow-black/10"}`}
+        className={`journal-panel journal-finance-card flex-1 flex flex-col backdrop-blur-xl border rounded-[2rem] transition-all duration-300 ${isDarkMode ? "bg-slate-900/50 border-white/20 ring-1 ring-white/5 shadow-xl shadow-black/10" : "bg-white/75 border-white/60 ring-1 ring-black/5 shadow-xl shadow-black/10"}`}
       >
         {/* Header */}
         <div
@@ -1872,6 +1872,8 @@ const FinanceScreen = ({
               >
                 <button
                   onClick={() => setMode("finance")}
+                  data-journal-mode="finance"
+                  aria-pressed={mode === "finance"}
                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${mode === "finance" ? (isDarkMode ? "bg-sky-600 text-white shadow-lg hover:shadow-sky-600/50 hover:bg-sky-700" : "bg-[#5D737E] text-white shadow-md hover:shadow-lg hover:bg-[#4A606A]") : isDarkMode ? "text-neutral-400 bg-transparent hover:text-neutral-200 hover:bg-neutral-700/30" : "text-stone-600 bg-transparent hover:text-stone-700 hover:bg-stone-200/50"}`}
                 >
                   <DollarSign className="w-3.5 h-3.5 inline mr-0.5" />
@@ -1879,6 +1881,8 @@ const FinanceScreen = ({
                 </button>
                 <button
                   onClick={() => setMode("note")}
+                  data-journal-mode="note"
+                  aria-pressed={mode === "note"}
                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all whitespace-nowrap ${mode === "note" ? (isDarkMode ? "bg-orange-600 text-white shadow-lg hover:shadow-orange-600/50 hover:bg-orange-700" : "bg-orange-500 text-white shadow-md hover:shadow-lg hover:bg-orange-600") : isDarkMode ? "text-neutral-400 bg-transparent hover:text-neutral-200 hover:bg-neutral-700/30" : "text-stone-600 bg-transparent hover:text-stone-700 hover:bg-stone-200/50"}`}
                 >
                   <MessageSquare className="w-3.5 h-3.5 inline mr-0.5" />
@@ -2173,7 +2177,7 @@ const FinanceScreen = ({
                         >
                           <div
                             id={`record-${record.timestamp}`}
-                            className={`relative overflow-hidden shadow-sm transition-all border p-3.5 text-sm leading-relaxed
+                            className={`journal-finance-record relative overflow-hidden shadow-sm transition-all border p-3.5 text-sm leading-relaxed
                                 ${
                                   isDarkMode
                                     ? "bg-neutral-800/85 backdrop-blur-lg text-neutral-200 border-neutral-700/60 ring-1 ring-neutral-600/30 shadow-md"
@@ -2331,7 +2335,7 @@ const FinanceScreen = ({
 
         {/* Footer 輸入區 - 固定在卡片內容的最下方 */}
         <div
-          className={`shrink-0 border-t backdrop-blur-2xl transition-all duration-300 ${isDarkMode ? "bg-neutral-900/80 border-white/10" : "bg-white/70 border-stone-200/50"}`}
+          className={`journal-chat-input shrink-0 border-t backdrop-blur-2xl transition-all duration-300 ${isDarkMode ? "bg-neutral-900/80 border-white/10" : "bg-white/70 border-stone-200/50"}`}
         >
           <div className="px-3 py-2.5 space-y-2">
             {/* 圖片預覽區 */}
