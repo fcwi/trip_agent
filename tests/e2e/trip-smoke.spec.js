@@ -269,6 +269,59 @@ test("keeps preparation reminders and saved checklist progress in sync", async (
   ).toHaveCount(0);
 });
 
+test("orders homepage information for preparation, travel and review", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  const scenarios = [
+    {
+      offset: -2,
+      phase: "before",
+      order: ["today", "flights", "checklist", "days", "weather"],
+    },
+    {
+      offset: 0,
+      phase: "during",
+      order: ["today", "days", "weather", "flights"],
+    },
+    {
+      offset: 20,
+      phase: "after",
+      order: ["today", "memories", "days", "flights", "weather"],
+    },
+  ];
+  for (const scenario of scenarios) {
+    const date = new Date(
+      `${LANDING_SCENARIOS[EXPECTED_TRIP_ID].date}T03:00:00Z`,
+    );
+    date.setUTCDate(date.getUTCDate() + scenario.offset);
+    await page.clock.setFixedTime(date);
+    await page.goto("/");
+    await unlockTrip(page);
+    await page.getByRole("button", { name: /^總覽/ }).click();
+    const overview = page.locator(".journal-overview");
+    await expect(overview).toHaveAttribute("data-trip-phase", scenario.phase);
+    await expect
+      .poll(() =>
+        overview
+          .locator("[data-overview-section]")
+          .evaluateAll((elements) =>
+            elements.map((element) => element.dataset.overviewSection),
+          ),
+      )
+      .toEqual(scenario.order);
+    if (scenario.phase === "before")
+      await expect(page.getByRole("checkbox").first()).toBeVisible();
+    else
+      await expect(
+        page.locator('section[aria-labelledby="checklist-heading"]'),
+      ).toHaveCount(0);
+  }
+});
+
 test("keeps flight summaries visible while accommodation details are collapsed", async ({
   page,
 }) => {
@@ -337,6 +390,10 @@ test("expands timeline events with the keyboard and keeps transport readable", a
   ).toBe(true);
   const transport = page.locator(".travel-timeline-event--transport").first();
   await expect(transport.locator(".travel-transport-summary")).toBeVisible();
+  await transport.getByRole("button").click();
+  await expect(
+    transport.getByRole("heading", { name: "交通說明" }),
+  ).toBeVisible();
 });
 
 test("opens a deep-linked tab after restoring the session", async ({

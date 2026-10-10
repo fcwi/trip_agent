@@ -527,3 +527,44 @@
     flex-direction: column;
   }
 }
+/* Phase-aware home layout and concise transport rows. DOM order matches reading order. */
+.journal-overview-section {
+  min-width: 0;
+}
+.journal-transport-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  color: var(--travel-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.journal-transport-duration svg {
+  flex: none;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-timeline-event__meta {
+  flex-wrap: wrap;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-transport-summary {
+  margin-top: 4px;
+}
+.travel-shell[data-editorial="true"] .journal-overview {
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .journal-overview {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+  .journal-overview .travel-cover {
+    grid-column: 1 / -1;
+  }
+  .journal-overview-section:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+}

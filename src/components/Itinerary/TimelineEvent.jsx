@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, ChevronUp, MapPin, Navigation } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Clock3 } from "lucide-react";
 
 const CATEGORY_LABELS = {
   transport: "交通",
@@ -62,6 +62,12 @@ export default function TimelineEvent({
               ? event.transport.mode
               : CATEGORY_LABELS[category]}
           </span>
+          {isTransport && event.transport?.duration && (
+            <span className="journal-transport-duration">
+              <Clock3 aria-hidden="true" className="h-4 w-4" />
+              {event.transport.duration}
+            </span>
+          )}
           <a
             className="travel-icon-button"
             href={getMapLink(event.mapQuery || event.title)}
@@ -71,7 +77,7 @@ export default function TimelineEvent({
             <MapPin aria-hidden="true" className="h-4 w-4" />
           </a>
         </div>
-        {event.desc && (
+        {!isTransport && event.desc && (
           <p
             className={`travel-timeline-event__description ${isOpen ? "" : "travel-timeline-event__description--collapsed"}`}
           >
@@ -80,17 +86,16 @@ export default function TimelineEvent({
         )}
         {event.transport && (
           <div className="travel-transport-summary">
-            <p>
-              <Navigation aria-hidden="true" className="h-4 w-4 flex-none" />
-              <strong>{event.transport.mode}</strong>
-              {event.transport.duration && (
-                <span>{event.transport.duration}</span>
-              )}
-            </p>
-            {event.transport.route && <p>{event.transport.route}</p>}
+            <p>{event.transport.route || event.transport.mode}</p>
           </div>
         )}
         <div id={detailsId} hidden={!isOpen} className="travel-event-details">
+          {isTransport && event.desc && (
+            <section>
+              <h4>交通說明</h4>
+              <p>{event.desc}</p>
+            </section>
+          )}
           {event.transport?.note && (
             <section>
               <h4>交通提醒</h4>
