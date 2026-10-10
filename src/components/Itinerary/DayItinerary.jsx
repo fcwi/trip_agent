@@ -1,6 +1,6 @@
 import { AlertCircle, ArrowUpRight, Hotel, Navigation } from "lucide-react";
 import TimelineEvent from "./TimelineEvent.jsx";
-import JournalIllustration from "./JournalIllustration.jsx";
+import { DayStamp } from "./JournalIllustration.jsx";
 
 export default function DayItinerary({
   day,
@@ -28,11 +28,7 @@ export default function DayItinerary({
           data-journal-tone={activeDay % 3}
         >
           <div className="journal-day-picture">
-            <JournalIllustration
-              tripId={tripConfig.id}
-              miniature
-              variant={activeDay}
-            />
+            <DayStamp title={day.title} />
           </div>
           <div className="journal-day-title">
             <p className="travel-eyebrow">

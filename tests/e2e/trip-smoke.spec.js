@@ -269,6 +269,36 @@ test("keeps preparation reminders and saved checklist progress in sync", async (
   ).toHaveCount(0);
 });
 
+test("keeps flight summaries visible while accommodation details are collapsed", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await unlockTrip(page);
+  const flights = page.locator(".travel-flight-info");
+  await expect(
+    flights.getByRole("article", { name: "去程航班" }),
+  ).toBeVisible();
+  await expect(
+    flights.getByRole("article", { name: "回程航班" }),
+  ).toBeVisible();
+  const expand = flights.getByRole("button", { name: "航班與緊急資訊" });
+  await expect(expand).toHaveAttribute("aria-expanded", "false");
+  if (EXPECTED_TRIP_ID === "2027_tohoku") {
+    await expect(
+      flights.locator(".journal-flight-ticket__note").first(),
+    ).toContainText("待核商品頁");
+  }
+  await expand.click();
+  await expect(
+    flights.getByRole("button", { name: /^複製.*地址$/ }).first(),
+  ).toBeVisible();
+  await expand.click();
+  await expect(
+    flights.getByRole("article", { name: "去程航班" }),
+  ).toBeVisible();
+  await expect(expand).toHaveAttribute("aria-expanded", "false");
+});
+
 test("opens a selected day from the homepage directory", async ({ page }) => {
   await page.goto("/");
   await unlockTrip(page);

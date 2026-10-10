@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import FlightTicket from "./Itinerary/FlightTicket.jsx";
 import {
   Plane,
   Phone,
@@ -54,29 +55,42 @@ const FlightInfoCard = memo(
           </button>
         </h2>
 
+        {editorial && (
+          <div className="journal-flight-tickets">
+            <FlightTicket flight={tripConfig.flights.outbound} label="去程" />
+            <FlightTicket
+              flight={tripConfig.flights.inbound}
+              label="回程"
+              returnFlight
+            />
+          </div>
+        )}
+
         {isFlightInfoExpanded && (
           <div id="flight-info-details" className="animate-fadeIn">
             <div className="travel-flight-info__grid grid grid-cols-2 gap-4 mb-4">
               {/* 航班資訊 */}
-              <div
-                className={`rounded-xl p-3 border flex flex-col gap-2 backdrop-blur-md ${isDarkMode ? "bg-neutral-800/30 border-neutral-700/60 ring-1 ring-white/5" : "bg-white/60 border-stone-200/60 ring-1 ring-black/5"}`}
-              >
-                <div className={`text-xs font-bold ${theme.textSec}`}>
-                  去程 ({tripConfig.flights.outbound.code})
-                </div>
-                <div className="text-sm font-bold tracking-wide">
-                  {tripConfig.flights.outbound.time}
-                </div>
+              {!editorial && (
                 <div
-                  className={`w-full h-px my-0.5 ${isDarkMode ? "bg-neutral-700" : "bg-stone-200"}`}
-                />
-                <div className={`text-xs font-bold ${theme.textSec}`}>
-                  回程 ({tripConfig.flights.inbound.code})
+                  className={`rounded-xl p-3 border flex flex-col gap-2 backdrop-blur-md ${isDarkMode ? "bg-neutral-800/30 border-neutral-700/60 ring-1 ring-white/5" : "bg-white/60 border-stone-200/60 ring-1 ring-black/5"}`}
+                >
+                  <div className={`text-xs font-bold ${theme.textSec}`}>
+                    去程 ({tripConfig.flights.outbound.code})
+                  </div>
+                  <div className="text-sm font-bold tracking-wide">
+                    {tripConfig.flights.outbound.time}
+                  </div>
+                  <div
+                    className={`w-full h-px my-0.5 ${isDarkMode ? "bg-neutral-700" : "bg-stone-200"}`}
+                  />
+                  <div className={`text-xs font-bold ${theme.textSec}`}>
+                    回程 ({tripConfig.flights.inbound.code})
+                  </div>
+                  <div className="text-sm font-bold tracking-wide">
+                    {tripConfig.flights.inbound.time}
+                  </div>
                 </div>
-                <div className="text-sm font-bold tracking-wide">
-                  {tripConfig.flights.inbound.time}
-                </div>
-              </div>
+              )}
 
               {/* 飯店與地址 */}
               <div

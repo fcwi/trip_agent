@@ -58,7 +58,9 @@ export default function TimelineEvent({
         </div>
         <div className="travel-timeline-event__meta">
           <span className="travel-event-category">
-            {CATEGORY_LABELS[category]}
+            {isTransport && event.transport?.mode
+              ? event.transport.mode
+              : CATEGORY_LABELS[category]}
           </span>
           <a
             className="travel-icon-button"
