@@ -1,445 +1,135 @@
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useRef,
-  useCallback,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { Lock, Unlock, Loader2 } from "lucide-react";
+import { Unlock } from "lucide-react";
+import JournalMapCanvas from "./JournalMapCanvas.jsx";
 import MapModal from "./MapModal.jsx";
-import { escapeHtml } from "../utils/html.js";
 import {
-  buildEventPopupHtml,
   isValidLngLat,
   toMapLibreRouteCoordinates,
 } from "../utils/mapHelpers.js";
+import { eventMapUrl } from "../utils/journalMap.js";
 
-/**
- * DayMap Component with MapLibre GL JS & MapTiler
- */
-
-const DayMap = ({
-  events,
-  userLocation,
-  isDarkMode,
-  theme,
-  onModalToggle,
-  otherUsersLocations = [],
-  currentUser,
-  MAPTILER_KEY,
-}) => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markers = useRef([]);
+export default function DayMap(props) {
+  const { onModalToggle } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showHint, setShowHint] = useState(false);
   const [routeCoords, setRouteCoords] = useState([]);
-  const [isRouteLoading, setIsRouteLoading] = useState(false);
-
-  // 根據深色模式選擇樣式
-  const mapStyle = isDarkMode
-    ? `https://api.maptiler.com/maps/ch-swisstopo-lbm-dark/style.json?key=${MAPTILER_KEY}`
-    : `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`;
-
-  // 當彈窗狀態改變時，通知父組件 (App.jsx)
+  const [routeStatus, setRouteStatus] = useState("idle");
+  const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {
-    if (onModalToggle) {
-      onModalToggle(isModalOpen);
-    }
-  }, [isModalOpen, onModalToggle]);
-
-  // 使用瀏覽器返回鍵時，讓內部地圖彈窗與父層歷史狀態一起關閉。
-  useEffect(() => {
-    const handlePopState = () => {
-      if (isModalOpen && window.history.state?.modal !== "map") {
-        setIsModalOpen(false);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [isModalOpen]);
-
-  // 過濾出有效座標的事件
-  const validEvents = useMemo(
-    () => events.filter((e) => e.lat && e.lon),
-    [events],
-  );
-
-  // Set map language to Traditional Chinese with local language below
-  const setMapLanguage = useCallback(
-    (mapInstance) => {
-      if (!mapInstance) return;
-      const style = mapInstance.getStyle();
-      if (!style || !style.layers) return;
-
-      style.layers.forEach((layer) => {
-        if (
-          layer.type === "symbol" &&
-          layer.layout &&
-          layer.layout["text-field"]
-        ) {
-          const hasTranslation = [
-            "any",
-            ["has", "name:zh-Hant"],
-            ["has", "name:zh"],
-            ["has", "name:en"],
-          ];
-
-          const isLocalChinese = [
-            "any",
-            ["==", ["get", "name"], ["get", "name:zh-Hant"]],
-            ["==", ["get", "name"], ["get", "name:zh"]],
-            ["==", ["get", "name"], ["get", "name:zh-Hans"]],
-          ];
-
-          const showSecondary = ["all", hasTranslation, ["!", isLocalChinese]];
-
-          mapInstance.setLayoutProperty(layer.id, "text-field", [
-            "format",
-            [
-              "coalesce",
-              ["get", "name:zh-Hant"],
-              ["get", "name:zh"],
-              ["get", "name:en"],
-              ["get", "name"],
-              "",
-            ],
-            { "font-scale": 1.0 },
-            ["case", showSecondary, "\n", ""],
-            {},
-            ["case", showSecondary, ["coalesce", ["get", "name"], ""], ""],
-            {
-              "font-scale": 0.8,
-              "text-color": isDarkMode ? "#9ca3af" : "#6b7280",
-            },
-          ]);
-        }
-      });
-    },
-    [isDarkMode],
-  );
-
-  // 初始化地圖
-  useEffect(() => {
-    if (map.current) return; // 只初始化一次
-
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: mapStyle,
-      center: [139.6917, 35.6895], // [lon, lat]
-      zoom: 10,
-      interactive: false, // 預設禁用交互，由遮罩處理
-      attributionControl: false,
-    });
-
-    map.current.on("load", () => {
-      setMapLanguage(map.current);
-    });
-
-    map.current.on("styledata", () => {
-      setMapLanguage(map.current);
-    });
-
-    map.current.addControl(
-      new maplibregl.AttributionControl({ compact: true }),
-      "bottom-right",
-    );
-
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
     };
-  }, [mapStyle, setMapLanguage]);
-
-  // 切換主題樣式
+  }, []);
+  const validEvents = useMemo(
+    () => props.events.filter((event) => isValidLngLat(event.lon, event.lat)),
+    [props.events],
+  );
   useEffect(() => {
-    if (map.current) {
-      map.current.setStyle(mapStyle);
-    }
-  }, [isDarkMode, mapStyle]);
-
-  // 核心邏輯：從 OSRM 獲取路線資料
+    onModalToggle?.(isModalOpen);
+  }, [isModalOpen, onModalToggle]);
   useEffect(() => {
-    if (validEvents.length < 2) {
+    const pop = () => {
+      if (window.history.state?.modal !== "map") setIsModalOpen(false);
+    };
+    window.addEventListener("popstate", pop);
+    return () => window.removeEventListener("popstate", pop);
+  }, []);
+  useEffect(() => {
+    // Synchronize the displayed request state with new route inputs.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (validEvents.length < 2 || !props.MAPTILER_KEY || !online) {
       setRouteCoords([]);
+      setRouteStatus("idle");
       return;
     }
-
-    const fetchRoute = async () => {
-      setIsRouteLoading(true);
-      try {
-        const waypoints = validEvents.map((e) => `${e.lon},${e.lat}`).join(";");
-        const url = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.routes && data.routes[0]) {
-          const coordinates = toMapLibreRouteCoordinates(
-            data.routes[0].geometry.coordinates,
-          );
-          setRouteCoords(coordinates);
-        }
-      } catch (error) {
-        console.error("Failed to fetch route:", error);
-      } finally {
-        setIsRouteLoading(false);
-      }
+    const controller = new AbortController();
+    let disposed = false;
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    setRouteStatus("loading");
+    setRouteCoords([]);
+    const waypoints = validEvents
+      .map((event) => `${event.lon},${event.lat}`)
+      .join(";");
+    fetch(
+      `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`,
+      { signal: controller.signal },
+    )
+      .then((response) => {
+        if (!response.ok) throw new Error("route unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        if (disposed) return;
+        const coordinates = toMapLibreRouteCoordinates(
+          data.routes?.[0]?.geometry?.coordinates || [],
+        );
+        setRouteCoords(coordinates);
+        setRouteStatus(coordinates.length > 1 ? "ready" : "unavailable");
+      })
+      .catch(() => {
+        if (!disposed) setRouteStatus("unavailable");
+      })
+      .finally(() => clearTimeout(timeout));
+    return () => {
+      disposed = true;
+      clearTimeout(timeout);
+      controller.abort();
     };
-
-    fetchRoute();
-  }, [validEvents]);
-
-  // 更新地圖內容 (標記、路線、視野)
-  useEffect(() => {
-    if (!map.current) return;
-
-    const currentMap = map.current;
-
-    // 1. 清除現有標記
-    markers.current.forEach((m) => m.remove());
-    markers.current = [];
-
-    // 2. 準備邊界計算
-    const bounds = new maplibregl.LngLatBounds();
-    let hasPoints = false;
-
-    // 3. 繪製活動標記
-    validEvents.forEach((event, idx) => {
-      if (!isValidLngLat(event.lon, event.lat)) return;
-      const el = document.createElement("div");
-      el.className = "custom-numbered-marker";
-      el.innerHTML = `
-        <div style="position: relative; width: 32px; height: 32px;">
-          <div style="position: absolute; inset: 0; background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"}; border-radius: 50%; opacity: 0.2; transform: scale(1.5);"></div>
-          <div style="position: relative; width: 100%; height: 100%; background: ${isDarkMode ? "linear-gradient(135deg, #60a5fa 0%, #0ea5e9 100%)" : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)"}; border: 3px solid white; border-radius: 50%; box-shadow: ${isDarkMode ? "0 0 16px rgba(96, 165, 250, 0.5), 0 3px 10px rgba(0, 0, 0, 0.4)" : "0 3px 10px rgba(0, 0, 0, 0.2)"}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; font-family: sans-serif;">
-            ${idx + 1}
-          </div>
-        </div>
-      `;
-
-      const popup = new maplibregl.Popup({
-        offset: 25,
-        closeButton: false,
-        className: "custom-maplibre-popup",
-      }).setHTML(
-        buildEventPopupHtml({
-          index: idx,
-          time: event.time,
-          title: event.title,
-          desc: event.desc,
-          isDarkMode,
-          compact: true,
-        }),
-      );
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([event.lon, event.lat])
-        .setPopup(popup)
-        .addTo(currentMap);
-
-      markers.current.push(marker);
-      bounds.extend([event.lon, event.lat]);
-      hasPoints = true;
-    });
-
-    // 4. 繪製使用者位置
-    if (isValidLngLat(userLocation?.lon, userLocation?.lat)) {
-      const el = document.createElement("div");
-      el.className = "custom-user-location-icon";
-      el.innerHTML = `
-        <div style="position: relative; width: 38px; height: 38px;">
-          <div style="position: absolute; top: -10px; left: -10px; width: 58px; height: 58px; background-color: rgba(251, 146, 60, 0.3); border-radius: 50%; animation: orange-ping 2s infinite; z-index: -1;"></div>
-          <div style="width: 38px; height: 38px; background: white; border: 3px solid #fb923c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px rgba(251, 146, 60, 0.6);">${escapeHtml(currentUser?.avatar || "👤")}</div>
-        </div>
-      `;
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([userLocation.lon, userLocation.lat])
-        .addTo(currentMap);
-      markers.current.push(marker);
-      bounds.extend([userLocation.lon, userLocation.lat]);
-      hasPoints = true;
-    }
-
-    // 5. 繪製其他使用者
-    otherUsersLocations
-      .filter((loc) => new Date() - new Date(loc.timestamp) < 86400000)
-      .forEach((loc) => {
-        if (!isValidLngLat(loc.lon, loc.lat)) return;
-        const el = document.createElement("div");
-        el.className = "custom-other-user-icon";
-        el.innerHTML = `
-          <div style="width: 38px; height: 38px; background: white; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">${escapeHtml(loc.user?.avatar || "👤")}</div>
-        `;
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([loc.lon, loc.lat])
-          .addTo(currentMap);
-        markers.current.push(marker);
-        bounds.extend([loc.lon, loc.lat]);
-        hasPoints = true;
-      });
-
-    // 6. 路線圖層處理
-    const updateRouteLayer = () => {
-      const sourceId = "route-source";
-      if (currentMap.getSource(sourceId)) {
-        currentMap.getSource(sourceId).setData({
-          type: "Feature",
-          geometry: { type: "LineString", coordinates: routeCoords },
-        });
-      } else {
-        currentMap.addSource(sourceId, {
-          type: "geojson",
-          data: {
-            type: "Feature",
-            geometry: { type: "LineString", coordinates: routeCoords },
-          },
-        });
-
-        currentMap.addLayer({
-          id: "route-layer-glow",
-          type: "line",
-          source: sourceId,
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: {
-            "line-color": isDarkMode ? "#00d4ff" : "#3b82f6",
-            "line-width": 8,
-            "line-opacity": 0.3,
-          },
-        });
-
-        currentMap.addLayer({
-          id: "route-layer",
-          type: "line",
-          source: sourceId,
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: {
-            "line-color": isDarkMode ? "#00d4ff" : "#3b82f6",
-            "line-width": 4,
-          },
-        });
-      }
-
-      routeCoords.forEach((pt) => bounds.extend(pt));
-      if (routeCoords.length > 0) hasPoints = true;
-    };
-
-    if (currentMap.isStyleLoaded()) {
-      updateRouteLayer();
-    } else {
-      currentMap.once("style.load", updateRouteLayer);
-    }
-
-    // 7. 適應視野
-    if (hasPoints) {
-      currentMap.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 15,
-        duration: 1000,
-      });
-    }
-  }, [
-    validEvents,
-    userLocation,
-    routeCoords,
-    otherUsersLocations,
-    isDarkMode,
-    currentUser?.avatar,
-  ]);
-
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [validEvents, props.MAPTILER_KEY, online]);
   return (
-    <div
-      className={`travel-map-preview relative w-full h-64 rounded-[2rem] overflow-hidden border z-0 group transition-all duration-300
-      ${
-        isDarkMode
-          ? "border-neutral-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.3)] bg-[#1a1a1a]"
-          : "border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-[#fdfdfd]"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsModalOpen(true);
-          setShowHint(false);
-        }}
-        className={`travel-map-preview__open absolute top-4 right-4 z-[10] flex items-center gap-1.5 px-4 py-2 rounded-full backdrop-blur-md shadow-lg border transition-[background-color,border-color,color,box-shadow,transform] duration-300 active:scale-95
-          ${
-            isDarkMode
-              ? "bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30"
-              : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-          }
-        `}
-      >
-        <Unlock aria-hidden="true" className="w-3.5 h-3.5" />
-        <span className="text-[11px] font-black tracking-wider uppercase">
+    <div className="journal-map-preview-block">
+      <div className="travel-map-preview journal-map-preview">
+        <JournalMapCanvas {...props} routeCoords={routeCoords} />
+        <button
+          type="button"
+          className="travel-map-preview__open journal-map-open"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Unlock aria-hidden="true" className="h-4 w-4" />
           開啟互動地圖
-        </span>
-      </button>
-
-      {isRouteLoading && (
-        <div className="absolute top-4 left-4 z-[10] bg-black/50 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-2">
-          <Loader2 aria-hidden="true" className="w-3 h-3 animate-spin" />
-          計算路線中...
-        </div>
-      )}
-
-      <div
-        className="absolute inset-0 z-[5] flex items-center justify-center bg-transparent cursor-pointer"
-        onClick={() => setIsModalOpen(true)}
-        onMouseEnter={() => setShowHint(true)}
-        onMouseLeave={() => setShowHint(false)}
-      >
-        {showHint && (
-          <div className="bg-black/80 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-md shadow-2xl border border-white/10">
-            🔍 點擊開啟互動地圖
-          </div>
-        )}
+        </button>
       </div>
-
-      <div ref={mapContainer} style={{ height: "100%", width: "100%" }} />
-
-      <style jsx global>{`
-        @keyframes orange-ping {
-          75%,
-          100% {
-            transform: scale(1.8);
-            opacity: 0;
-          }
-        }
-        .custom-maplibre-popup .maplibregl-popup-content {
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-        .custom-maplibre-popup .maplibregl-popup-tip {
-          display: none !important;
-        }
-      `}</style>
-
-      {createPortal(
-        <MapModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          isDarkMode={isDarkMode}
-          events={events}
-          userLocation={userLocation}
-          routeCoords={routeCoords}
-          theme={theme}
-          otherUsersLocations={otherUsersLocations}
-          currentUser={currentUser}
-          MAPTILER_KEY={MAPTILER_KEY}
-        />,
-        document.body,
+      {routeStatus === "loading" && (
+        <p className="travel-muted" role="status">
+          正在計算道路路線…
+        </p>
       )}
+      {routeStatus === "unavailable" && (
+        <p className="travel-muted">
+          道路路線暫無法取得，仍可查看地點標記；交通方式請以行程文字為準。
+        </p>
+      )}
+      <p className="travel-muted">
+        地圖編號對應行程順序；道路連線不代表所有交通方式。
+      </p>
+      <div className="journal-map-place-links">
+        {props.events.map((event, index) => (
+          <a
+            key={index}
+            href={eventMapUrl(event)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {index + 1}. {event.title}
+            <span className="sr-only">，在 Google Maps 查看</span>
+          </a>
+        ))}
+      </div>
+      {isModalOpen &&
+        createPortal(
+          <MapModal
+            {...props}
+            routeCoords={routeCoords}
+            isOpen
+            onClose={() => setIsModalOpen(false)}
+          />,
+          document.body,
+        )}
     </div>
   );
-};
-
-export default DayMap;
+}
