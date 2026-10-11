@@ -3,16 +3,13 @@ import { createPortal } from "react-dom";
 import { Unlock } from "lucide-react";
 import JournalMapCanvas from "./JournalMapCanvas.jsx";
 import MapModal from "./MapModal.jsx";
-import {
-  isValidLngLat,
-  toMapLibreRouteCoordinates,
-} from "../utils/mapHelpers.js";
-import { eventMapUrl } from "../utils/journalMap.js";
+import { toMapLibreRouteCoordinates } from "../utils/mapHelpers.js";
+import { eventMapUrl, getRoadRouteSegments } from "../utils/journalMap.js";
 
 export default function DayMap(props) {
   const { onModalToggle } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [routeCoords, setRouteCoords] = useState([]);
+  const [routeSegments, setRouteSegments] = useState([]);
   const [routeStatus, setRouteStatus] = useState("idle");
   const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {
@@ -24,10 +21,11 @@ export default function DayMap(props) {
       window.removeEventListener("offline", update);
     };
   }, []);
-  const validEvents = useMemo(
-    () => props.events.filter((event) => isValidLngLat(event.lon, event.lat)),
+  const roadSegments = useMemo(
+    () => getRoadRouteSegments(props.events),
     [props.events],
   );
+  const routeCoords = useMemo(() => routeSegments.flat(), [routeSegments]);
   useEffect(() => {
     onModalToggle?.(isModalOpen);
   }, [isModalOpen, onModalToggle]);
@@ -41,8 +39,8 @@ export default function DayMap(props) {
   useEffect(() => {
     // Synchronize the displayed request state with new route inputs.
     /* eslint-disable react-hooks/set-state-in-effect */
-    if (validEvents.length < 2 || !props.MAPTILER_KEY || !online) {
-      setRouteCoords([]);
+    if (!roadSegments.length || !props.MAPTILER_KEY || !online) {
+      setRouteSegments([]);
       setRouteStatus("idle");
       return;
     }
@@ -50,28 +48,37 @@ export default function DayMap(props) {
     let disposed = false;
     const timeout = setTimeout(() => controller.abort(), 10000);
     setRouteStatus("loading");
-    setRouteCoords([]);
-    const waypoints = validEvents
-      .map((event) => `${event.lon},${event.lat}`)
-      .join(";");
-    fetch(
-      `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`,
-      { signal: controller.signal },
+    setRouteSegments([]);
+    Promise.all(
+      roadSegments.map(async (segment) => {
+        try {
+          const waypoints = segment.map((point) => point.join(",")).join(";");
+          const response = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`,
+            { signal: controller.signal },
+          );
+          if (!response.ok) return [];
+          const data = await response.json();
+          if (data.code && data.code !== "Ok") return [];
+          return toMapLibreRouteCoordinates(
+            data.routes?.[0]?.geometry?.coordinates || [],
+          );
+        } catch {
+          return [];
+        }
+      }),
     )
-      .then((response) => {
-        if (!response.ok) throw new Error("route unavailable");
-        return response.json();
-      })
-      .then((data) => {
+      .then((results) => {
         if (disposed) return;
-        const coordinates = toMapLibreRouteCoordinates(
-          data.routes?.[0]?.geometry?.coordinates || [],
+        const available = results.filter((segment) => segment.length > 1);
+        setRouteSegments(available);
+        setRouteStatus(
+          available.length === results.length
+            ? "ready"
+            : available.length
+              ? "partial"
+              : "unavailable",
         );
-        setRouteCoords(coordinates);
-        setRouteStatus(coordinates.length > 1 ? "ready" : "unavailable");
-      })
-      .catch(() => {
-        if (!disposed) setRouteStatus("unavailable");
       })
       .finally(() => clearTimeout(timeout));
     return () => {
@@ -80,11 +87,15 @@ export default function DayMap(props) {
       controller.abort();
     };
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [validEvents, props.MAPTILER_KEY, online]);
+  }, [roadSegments, props.MAPTILER_KEY, online]);
   return (
     <div className="journal-map-preview-block">
       <div className="travel-map-preview journal-map-preview">
-        <JournalMapCanvas {...props} routeCoords={routeCoords} />
+        <JournalMapCanvas
+          {...props}
+          routeCoords={routeCoords}
+          routeSegments={routeSegments}
+        />
         <button
           type="button"
           className="travel-map-preview__open journal-map-open"
@@ -102,6 +113,11 @@ export default function DayMap(props) {
       {routeStatus === "unavailable" && (
         <p className="travel-muted">
           道路路線暫無法取得，仍可查看地點標記；交通方式請以行程文字為準。
+        </p>
+      )}
+      {routeStatus === "partial" && (
+        <p className="travel-muted">
+          部分道路路線暫無法取得，仍可查看全部地點標記。
         </p>
       )}
       <p className="travel-muted">
@@ -125,6 +141,7 @@ export default function DayMap(props) {
           <MapModal
             {...props}
             routeCoords={routeCoords}
+            routeSegments={routeSegments}
             isOpen
             onClose={() => setIsModalOpen(false)}
           />,

@@ -5,7 +5,72 @@ import {
   MAP_FAILURE_MESSAGES,
   getMapPoints,
   eventMapUrl,
+  getRoadRouteSegments,
 } from "../src/utils/journalMap.js";
+
+test("road routing separates flights, deduplicates airports and retains the drive after landing", () => {
+  const airport = { lon: 121.232822, lat: 25.077758 };
+  const sendai = { lon: 140.9225, lat: 38.13694 };
+  const hotel = { lon: 140.3695028, lat: 38.3599694 };
+  assert.deepEqual(
+    getRoadRouteSegments([
+      airport,
+      { ...airport, transport: { mode: "飛機" } },
+      sendai,
+      hotel,
+      hotel,
+    ]),
+    [
+      [
+        [sendai.lon, sendai.lat],
+        [hotel.lon, hotel.lat],
+      ],
+    ],
+  );
+  assert.deepEqual(
+    getRoadRouteSegments([
+      hotel,
+      sendai,
+      { ...sendai, transport: { mode: "飛機" } },
+      airport,
+    ]),
+    [
+      [
+        [hotel.lon, hotel.lat],
+        [sendai.lon, sendai.lat],
+      ],
+    ],
+  );
+});
+
+test("disconnected road segments stay separate even when a flight has no coordinate", () => {
+  assert.deepEqual(
+    getRoadRouteSegments([
+      { lon: 121, lat: 25 },
+      { lon: 121.2, lat: 25.1 },
+      { transport: { mode: "flight" } },
+      { lon: 140, lat: 38 },
+      { lon: 140.2, lat: 38.1 },
+    ]),
+    [
+      [
+        [121, 25],
+        [121.2, 25.1],
+      ],
+      [
+        [140, 38],
+        [140.2, 38.1],
+      ],
+    ],
+  );
+  assert.deepEqual(
+    getRoadRouteSegments([
+      { lon: 1, lat: 2 },
+      { lon: 1, lat: 2 },
+    ]),
+    [],
+  );
+});
 
 test("map failure categories distinguish service rejection and never expose credential URLs", () => {
   for (const [status, category] of [

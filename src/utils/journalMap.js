@@ -1,5 +1,31 @@
 import { isValidLngLat } from "./mapHelpers.js";
 
+// Flight events mark departure coordinates: keep the drive to the airport,
+// then start a new road segment at the next stop instead of routing overseas.
+export function getRoadRouteSegments(events = []) {
+  const segments = [];
+  let current = [];
+  const finish = () => {
+    if (current.length > 1) segments.push(current);
+    current = [];
+  };
+  for (const event of events) {
+    if (event.roadRouteBreakBefore) finish();
+    if (isValidLngLat(event.lon, event.lat)) {
+      const previous = current.at(-1);
+      if (!previous || previous[0] !== event.lon || previous[1] !== event.lat)
+        current.push([event.lon, event.lat]);
+    }
+    if (
+      event.roadRouteBreakAfter ||
+      /飛機|航班|flight|airplane/i.test(event.transport?.mode || "")
+    )
+      finish();
+  }
+  finish();
+  return segments;
+}
+
 export const MAP_MESSAGES = {
   loading: ["地圖載入中", "網路較慢時需要一些時間，仍可使用下方地點連結。"],
   empty: ["這一天尚未提供地點座標", "可從地點清單開啟 Google Maps 搜尋。"],

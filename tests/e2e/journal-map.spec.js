@@ -182,6 +182,68 @@ test("route service failure keeps markers and explains the alternative", async (
   await expect(page.locator(".journal-map-marker")).toHaveCount(2);
 });
 
+test("flight days request only separate road segments and keep markers when one segment fails", async ({
+  page,
+}) => {
+  const requests = [];
+  await page.route("https://router.project-osrm.org/**", async (route) => {
+    const url = new URL(route.request().url());
+    const points = url.pathname.split("/").at(-1);
+    requests.push(points);
+    if (points.startsWith("121")) {
+      await route.fulfill({ status: 400, json: { code: "NoRoute" } });
+    } else {
+      await route.fulfill({
+        json: {
+          code: "Ok",
+          routes: [
+            {
+              geometry: {
+                coordinates: [
+                  [140.9225, 38.13694],
+                  [140.3695028, 38.3599694],
+                ],
+              },
+            },
+          ],
+        },
+      });
+    }
+  });
+  await mount(page, {
+    events: [
+      { title: "台北出發", lon: 121.5, lat: 25.05 },
+      {
+        title: "桃園起飛",
+        lon: 121.232822,
+        lat: 25.077758,
+        transport: { mode: "飛機" },
+      },
+      { title: "抵達仙台", lon: 140.9225, lat: 38.13694 },
+      { title: "入住天童", lon: 140.3695028, lat: 38.3599694 },
+      { title: "飯店晚餐", lon: 140.3695028, lat: 38.3599694 },
+    ],
+  });
+  await expect(
+    page.getByText("部分道路路線暫無法取得", { exact: false }),
+  ).toBeVisible();
+  expect(requests.sort()).toEqual(
+    [
+      "121.5,25.05;121.232822,25.077758",
+      "140.9225,38.13694;140.3695028,38.3599694",
+    ].sort(),
+  );
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
+  await expect(page.locator(".journal-map-marker")).toHaveCount(5);
+  await page.getByRole("button", { name: "開啟互動地圖" }).click();
+  await expect(
+    page.getByRole("dialog").locator(".journal-map-marker"),
+  ).toHaveCount(5);
+});
+
 test("slow style request shows loading without hiding place links", async ({
   page,
 }) => {

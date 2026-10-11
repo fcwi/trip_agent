@@ -26,6 +26,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
   {
     events = EMPTY,
     routeCoords = EMPTY,
+    routeSegments,
     userLocation,
     otherUsersLocations = EMPTY,
     currentUser,
@@ -317,16 +318,18 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
               true,
             ),
           );
-          const route = routeCoords.filter((point) =>
-            isValidLngLat(point?.[0], point?.[1]),
-          );
-          if (route.length > 1) {
+          const routes = (routeSegments || [routeCoords])
+            .map((segment) =>
+              segment.filter((point) => isValidLngLat(point?.[0], point?.[1])),
+            )
+            .filter((segment) => segment.length > 1);
+          if (routes.length) {
             currentMap.addSource("journal-route", {
               type: "geojson",
               data: {
                 type: "Feature",
                 properties: {},
-                geometry: { type: "LineString", coordinates: route },
+                geometry: { type: "MultiLineString", coordinates: routes },
               },
             });
             currentMap.addLayer({
@@ -368,6 +371,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     online,
     validEvents,
     routeCoords,
+    routeSegments,
     points,
     recentOthers,
     currentUser?.avatar,
