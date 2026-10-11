@@ -124,7 +124,7 @@ const AIPanel = ({
         <div
           className={`p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               {/* 模式頭像：隨導遊/口譯模式切換顏色與圖示 */}
               <div
@@ -391,7 +391,7 @@ const AIPanel = ({
               onClick={() => {
                 setInputMessage(q);
               }}
-              className={`flex-shrink-0 snap-start rounded-full border px-3 py-2 text-xs backdrop-blur-md transition-[background-color,color,box-shadow,transform] duration-300 hover:scale-105 active:scale-95 ${isDarkMode ? "bg-neutral-700/60 hover:bg-neutral-600/80 text-neutral-300 hover:text-sky-200 border-white/10 ring-1 ring-white/5 shadow-md" : "bg-white/80 hover:bg-white/95 text-stone-600 hover:text-[#556B2F] border-white/40 ring-1 ring-black/5 shadow-sm hover:shadow-md"}`}
+              className={`min-h-11 flex-shrink-0 snap-start rounded-full border px-3 py-2 text-xs backdrop-blur-md transition-[background-color,color,box-shadow,transform] duration-300 hover:scale-105 active:scale-95 ${isDarkMode ? "bg-neutral-700/60 hover:bg-neutral-600/80 text-neutral-300 hover:text-sky-200 border-white/10 ring-1 ring-white/5 shadow-md" : "bg-white/80 hover:bg-white/95 text-stone-600 hover:text-[#556B2F] border-white/40 ring-1 ring-black/5 shadow-sm hover:shadow-md"}`}
             >
               {q}
             </button>

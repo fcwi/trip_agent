@@ -101,7 +101,7 @@ import { processFileForHeic } from "./utils/imageUtils";
 
 // 抑制 ESLint 對於 JSX 中 motion 未使用的誤判
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 const ChatInput = lazy(() => import("./components/ChatInput.jsx"));
 const CalculatorModal = lazy(() => import("./components/CalculatorModal.jsx"));
 const TestModePanel = lazy(() => import("./components/TestModePanel.jsx"));
@@ -3183,7 +3183,9 @@ const ItineraryApp = ({ authentication }) => {
                           天氣為 <b>{detailWeatherData.desc}</b>， 氣溫比目前
                           {isColder ? "低" : "高"}{" "}
                           <b
-                            style={{ color: isColder ? "#007aff" : "#ff9500" }}
+                            style={{
+                              color: isColder ? "#007aff" : "#ff9500",
+                            }}
                           >
                             {absDiff}°C
                           </b>
@@ -3202,4 +3204,10 @@ const ItineraryApp = ({ authentication }) => {
   );
 };
 
-export default ItineraryApp;
+export default function TripWithMotionPreferences(props) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <ItineraryApp {...props} />
+    </MotionConfig>
+  );
+}

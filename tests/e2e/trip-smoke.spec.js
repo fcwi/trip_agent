@@ -779,12 +779,12 @@ test("renders every journal page with the bundled font in narrow light and dark 
   await page.goto("/");
   await unlockTrip(page);
   await page.evaluate(async () => {
-    await document.fonts.load('16px "Huninn"', "旅行手帳");
+    await document.fonts.load('16px "Trip Journal"', "旅行手帳");
   });
   expect(
     await page.evaluate(() =>
       [...document.fonts].some(
-        (font) => font.family === "Huninn" && font.status === "loaded",
+        (font) => font.family === "Trip Journal" && font.status === "loaded",
       ),
     ),
   ).toBe(true);

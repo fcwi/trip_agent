@@ -1,7 +1,7 @@
 /* Original illustrations, ink outlines and pastel paper across the trip journal. */
 @font-face {
-  font-family: "Huninn";
-  src: url("../assets/fonts/Huninn-Regular.woff2") format("woff2");
+  font-family: "Trip Journal";
+  src: url("../assets/fonts/TripJournal-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -41,10 +41,79 @@
   line-height: 1.5;
 }
 .travel-shell[data-editorial="true"] [data-journal-mode] {
+  min-width: 44px;
+  min-height: 44px;
   border: 2px solid transparent;
   background: transparent;
   color: var(--travel-muted);
   box-shadow: none;
+}
+
+/* Keep secondary copy readable on colored paper in both themes. */
+.travel-shell[data-editorial="true"]
+  :is(
+    .travel-day-heading,
+    .travel-weather-summary,
+    .journal-flight-ticket__heading
+  ) {
+  --travel-muted: var(--travel-text);
+  --travel-accent: var(--travel-text);
+}
+.travel-shell[data-editorial="true"] .travel-day-heading .travel-eyebrow {
+  opacity: 1;
+}
+
+.travel-shell[data-editorial="true"]
+  :is(
+    .journal-finance button[title],
+    .journal-finance button[aria-label="送出紀錄"],
+    .journal-chat-input button,
+    button[title="搜尋對話"],
+    button[title="清除聊天紀錄"],
+    button[title="朗讀訊息"],
+    .travel-weather-summary .travel-icon-button
+  ) {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.journal-record-amount {
+  flex: 0 0 96px;
+  min-width: 0;
+}
+.journal-record-description {
+  flex: 1;
+  min-width: 0;
+}
+.journal-field-label {
+  display: block;
+  padding: 8px 12px 0;
+  color: var(--travel-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.journal-record-fields #financeAmount {
+  width: 100%;
+}
+.journal-record-fields:focus-within {
+  outline: 2px solid var(--travel-accent);
+  outline-offset: 3px;
+}
+@media (max-width: 479px) {
+  .journal-record-controls {
+    flex-wrap: wrap;
+  }
+  .journal-record-fields {
+    flex: 1 0 100%;
+    order: -1;
+  }
+  .journal-record-controls > button:last-child {
+    margin-left: auto;
+  }
 }
 .travel-shell[data-editorial="true"] [data-journal-mode][aria-pressed="true"] {
   border-color: var(--journal-ink);
@@ -264,7 +333,7 @@
   --travel-radius: 24px;
   --travel-shadow: none;
   font-family:
-    "Huninn", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+    "Trip Journal", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
 }
 
 /* Maps share the same paper, ink and accessible controls as the itinerary. */

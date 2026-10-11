@@ -227,7 +227,7 @@ try {
               const cache = await caches.open(name);
               if (
                 (await cache.keys()).some((request) =>
-                  request.url.includes("Huninn-Regular"),
+                  request.url.includes("TripJournal-Regular"),
                 )
               )
                 return true;
@@ -359,12 +359,12 @@ try {
             scale: "css",
           });
           await page.evaluate(async () => {
-            await document.fonts.load('16px "Huninn"', "旅行手帳");
+            await document.fonts.load('16px "Trip Journal"', "旅行手帳");
           });
           assert.equal(
             await page.evaluate(() =>
               [...document.fonts].some(
-                (font) => font.family === "Huninn" && font.status === "loaded",
+                (font) => font.family === "Trip Journal" && font.status === "loaded",
               ),
             ),
             true,
@@ -406,7 +406,7 @@ try {
           await unlock(slow.page, dark);
           const loadingFont = await slow.page.evaluate(() =>
             [...document.fonts].some(
-              (font) => font.family === "Huninn" && font.status !== "loaded",
+              (font) => font.family === "Trip Journal" && font.status !== "loaded",
             ),
           );
           assert.equal(
@@ -416,7 +416,7 @@ try {
           );
           await auditPages(slow.page, trip, `slow-${dark ? "dark" : "light"}`);
           await slow.page.evaluate(async () => {
-            await document.fonts.load('16px "Huninn"', "旅行手帳");
+            await document.fonts.load('16px "Trip Journal"', "旅行手帳");
           });
           assert.deepEqual(slow.errors, []);
           results.push({

@@ -2387,7 +2387,7 @@ const FinanceScreen = ({
             />
 
             {/* 輸入控制區 */}
-            <div className="flex items-center gap-1.5">
+            <div className="journal-record-controls flex items-end gap-2">
               {/* 相機按鈕 */}
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -2399,48 +2399,64 @@ const FinanceScreen = ({
 
               {/* 輸入框容器 - 金額與項目合併在同一輸入框 */}
               <div
-                className={`flex-1 min-w-0 flex items-center rounded-2xl overflow-hidden ${isDarkMode ? "bg-neutral-900/80 border border-neutral-700" : "bg-stone-100"}`}
+                className={`journal-record-fields flex-1 min-w-0 flex items-start rounded-2xl ${isDarkMode ? "bg-neutral-900/80 border border-neutral-700" : "bg-stone-100"}`}
               >
                 {mode === "finance" && (
-                  <input
-                    type="number"
-                    id="financeAmount"
-                    name="financeAmount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="金額"
-                    style={{ fontSize: "16px" }}
-                    className={`flex-shrink-0 w-20 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 leading-tight font-mono
+                  <div className="journal-record-amount">
+                    <label
+                      htmlFor="financeAmount"
+                      className="journal-field-label"
+                    >
+                      金額（{tripConfig.currency.source}）
+                    </label>
+                    <input
+                      type="number"
+                      id="financeAmount"
+                      name="financeAmount"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="金額"
+                      style={{ fontSize: "16px" }}
+                      className={`flex-shrink-0 w-20 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 leading-tight font-mono
                                 ${isDarkMode ? "text-white placeholder:text-neutral-400" : "text-stone-700 placeholder:text-stone-400"}`}
-                  />
+                    />
+                  </div>
                 )}
                 {mode === "finance" && (
                   <div
                     className={`w-px h-5 ${isDarkMode ? "bg-neutral-600" : "bg-stone-300"}`}
                   ></div>
                 )}
-                <textarea
-                  id="financeTextInput"
-                  name="financeTextInput"
-                  value={inputText}
-                  onChange={(e) => {
-                    setInputText(e.target.value);
-                    e.target.style.height = "auto";
-                    e.target.style.height = `${Math.min(e.target.scrollHeight, 40)}px`;
-                  }}
-                  onKeyDown={(e) => {
-                    if (shouldSubmitTextInput(e)) {
-                      e.preventDefault();
-                      handleManualSubmit();
+                <div className="journal-record-description">
+                  <label
+                    htmlFor="financeTextInput"
+                    className="journal-field-label"
+                  >
+                    {mode === "finance" ? "項目說明" : "記事內容"}
+                  </label>
+                  <textarea
+                    id="financeTextInput"
+                    name="financeTextInput"
+                    value={inputText}
+                    onChange={(e) => {
+                      setInputText(e.target.value);
                       e.target.style.height = "auto";
-                    }
-                  }}
-                  rows={1}
-                  placeholder={mode === "finance" ? "項目說明…" : "記事內容…"}
-                  style={{ fontSize: "16px" }}
-                  className={`flex-1 min-w-0 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 resize-none max-h-[40px] leading-snug
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 40)}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      if (shouldSubmitTextInput(e)) {
+                        e.preventDefault();
+                        handleManualSubmit();
+                        e.target.style.height = "auto";
+                      }
+                    }}
+                    rows={1}
+                    placeholder={mode === "finance" ? "項目說明…" : "記事內容…"}
+                    style={{ fontSize: "16px" }}
+                    className={`w-full min-w-0 border-0 bg-transparent px-3 py-2.5 focus:outline-none focus:ring-0 transition-all placeholder:text-opacity-60 resize-none max-h-[40px] leading-snug
                             ${isDarkMode ? "text-white placeholder:text-neutral-400" : "text-stone-700 placeholder:text-stone-400"}`}
-                />
+                  />
+                </div>
               </div>
 
               {/* 發送按鈕 */}
@@ -2851,6 +2867,7 @@ const FinanceScreen = ({
               <div className="space-y-4">
                 <div>
                   <label
+                    htmlFor="editContent"
                     className={`text-xs font-bold mb-1 block ${theme.textSec}`}
                   >
                     內容 / 品項
@@ -2867,6 +2884,7 @@ const FinanceScreen = ({
                 {editingRecord.type === "finance" && (
                   <div>
                     <label
+                      htmlFor="editAmount"
                       className={`text-xs font-bold mb-1 block ${theme.textSec}`}
                     >
                       金額（{tripConfig.currency.source}）

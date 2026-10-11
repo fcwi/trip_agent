@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import TripOverview from "../Itinerary/TripOverview.jsx";
 import DaySelector from "../Itinerary/DaySelector.jsx";
@@ -106,6 +106,14 @@ const ItineraryTab = ({
   currentUser,
   maptilerKey,
 }) => {
+  const reduceMotion = useReducedMotion();
+  const dayVariants = reduceMotion
+    ? {
+        enter: { x: 0, opacity: 1 },
+        center: { x: 0, opacity: 1, transition: { duration: 0 } },
+        exit: { x: 0, opacity: 1, transition: { duration: 0 } },
+      }
+    : slideVariants;
   const { checklist, setChecklist, resetChecklist } =
     useTripChecklist(checklistData);
 
@@ -261,8 +269,8 @@ const ItineraryTab = ({
             <motion.div
               key="overview"
               custom={direction}
-              variants={slideVariants}
-              initial="enter"
+              variants={dayVariants}
+              initial={reduceMotion ? false : "enter"}
               animate="center"
               exit="exit"
               className="space-y-5"
@@ -297,8 +305,8 @@ const ItineraryTab = ({
             <motion.div
               key={`day-${activeDay}`}
               custom={direction}
-              variants={slideVariants}
-              initial="enter"
+              variants={dayVariants}
+              initial={reduceMotion ? false : "enter"}
               animate="center"
               exit="exit"
               className="space-y-5"

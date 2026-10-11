@@ -4,6 +4,14 @@ import { Check, Copy, Key, Loader, Lock, Unlock } from "lucide-react";
 const fieldClasses =
   "w-full rounded-xl border border-stone-200/70 bg-white/90 px-4 py-3 text-base shadow-inner outline-none ring-black/5 transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-neutral-700/70 dark:bg-neutral-900/80 dark:ring-white/5";
 
+const SERVICES = {
+  gemini: { label: "Gemini API Key", field: "VITE_ENCODED_KEY" },
+  maps: { label: "Google Maps API Key", field: "VITE_ENCODED_MAPS_KEY" },
+  maptiler: { label: "MapTiler API Key", field: "VITE_ENCODED_MAPTILER_KEY" },
+  gasUrl: { label: "雲端服務網址", field: "VITE_ENCODED_GAS_URL" },
+  gasToken: { label: "雲端服務 Token", field: "VITE_ENCODED_GAS_TOKEN" },
+};
+
 const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
   const authErrorRef = useRef(null);
   const [copyFeedback, setCopyFeedback] = useState({
@@ -148,21 +156,17 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             className="flex min-h-11 w-full items-center justify-center gap-1.5 text-xs text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-neutral-100"
           >
             <Key aria-hidden="true" className="h-3.5 w-3.5" />
-            {showEncryptTool
-              ? "隱藏加密工具"
-              : "設定／加密 API Key（首次使用請點此）"}
+            {showEncryptTool ? "隱藏加密工具" : "管理者設定／加密 API Key"}
           </button>
 
           {showEncryptTool ? (
             <div className="mt-4 space-y-3 rounded-xl border border-stone-200 bg-stone-50/80 p-4 text-sm dark:border-neutral-700 dark:bg-black/20">
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  ["gemini", "Gemini Key"],
-                  ["maps", "Maps Key"],
-                ].map(([type, label]) => (
+                {Object.entries(SERVICES).map(([type, { label }]) => (
                   <button
                     key={type}
                     type="button"
+                    aria-pressed={keyType === type}
                     onClick={() => {
                       setKeyType(type);
                       setToolResult("");
@@ -179,7 +183,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
               </div>
 
               <label htmlFor="encryptApiKey" className="text-xs font-bold">
-                {keyType === "gemini" ? "Gemini API Key" : "Maps API Key"}
+                {SERVICES[keyType]?.label || "Gemini"}
               </label>
               <input
                 type="password"
@@ -216,7 +220,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
               {toolResult ? (
                 <div className="animate-fadeIn">
                   <p className="mb-1 text-xs font-bold">
-                    請複製下方加密字串至 `.env` 對應欄位：
+                    請存入正式設定檔的 {SERVICES[keyType]?.field} 欄位：
                   </p>
                   <output className="block break-all rounded-lg border border-stone-300 bg-white p-2 font-mono text-xs text-stone-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-green-400">
                     {toolResult}

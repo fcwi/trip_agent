@@ -132,7 +132,7 @@ if (!serviceWorker.includes("AuthenticatedTripApp-")) {
   errors.push("PWA service worker 未預快取解鎖後的核心旅程模組");
 }
 const journalFont = assetNames.find((name) =>
-  /^Huninn-Regular-.*\.woff2$/.test(name),
+  /^TripJournal-Regular-.*\.woff2$/.test(name),
 );
 requireFile("fonts/OFL-Huninn.txt");
 if (!journalFont) {
