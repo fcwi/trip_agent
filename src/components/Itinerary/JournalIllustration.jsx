@@ -86,11 +86,33 @@ export function DayStamp({ title = "" }) {
   );
 }
 
+function CoachDrawing() {
+  return (
+    <>
+      <rect
+        x="5"
+        y="10"
+        width="70"
+        height="36"
+        rx="9"
+        fill="var(--journal-pink)"
+      />
+      <path d="M13 18h40v15H13Z" fill="var(--journal-yellow)" />
+      <path d="M59 18h7l5 15H59Z" fill="var(--journal-yellow)" />
+      <path d="M26 18v15m14-15v15M8 39h47m16-1h4" />
+      <circle cx="21" cy="46" r="7" fill="var(--travel-surface)" />
+      <circle cx="61" cy="46" r="7" fill="var(--travel-surface)" />
+      <circle cx="21" cy="46" r="2" fill="var(--journal-ink)" stroke="none" />
+      <circle cx="61" cy="46" r="2" fill="var(--journal-ink)" stroke="none" />
+    </>
+  );
+}
+
 export function JourneyCar({ className }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 56 60"
+      viewBox="0 0 80 60"
       fill="none"
       aria-hidden="true"
     >
@@ -100,32 +122,7 @@ export function JourneyCar({ className }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M28 3v10" />
-        <rect
-          x="8"
-          y="14"
-          width="40"
-          height="38"
-          rx="12"
-          fill="var(--journal-pink)"
-        />
-        <rect
-          x="16"
-          y="22"
-          width="9"
-          height="11"
-          rx="3"
-          fill="var(--journal-yellow)"
-        />
-        <rect
-          x="31"
-          y="22"
-          width="9"
-          height="11"
-          rx="3"
-          fill="var(--journal-yellow)"
-        />
-        <path d="M10 42h36" />
+        <CoachDrawing />
       </g>
     </svg>
   );
@@ -134,7 +131,6 @@ export function JourneyCar({ className }) {
 export default function JournalIllustration({
   tripId = "",
   miniature = false,
-  variant = 0,
 }) {
   const seaside = tripId.includes("busan");
   return (
@@ -190,34 +186,11 @@ export default function JournalIllustration({
             />
           </>
         )}
-        <path d="M-5 30Q270 125 650 25" />
-        <path d="M321 80v26" />
-        <rect
-          x="296"
-          y="107"
-          width="50"
-          height="49"
-          rx="15"
-          fill="var(--journal-pink)"
-          transform={`rotate(${variant % 2 ? -4 : 3} 321 132)`}
-        />
-        <rect
-          x="305"
-          y="117"
-          width="12"
-          height="15"
-          rx="3"
-          fill="var(--journal-yellow)"
-        />
-        <rect
-          x="325"
-          y="117"
-          width="12"
-          height="15"
-          rx="3"
-          fill="var(--journal-yellow)"
-        />
-        <path d="M298 143h45M199 60q8-9 16 0 8-9 16 0m-48-19q7-8 14 0 7-8 14 0" />
+        <path d="M250 219h140" />
+        <g transform="translate(262 140) scale(1.4)">
+          <CoachDrawing />
+        </g>
+        <path d="M199 60q8-9 16 0 8-9 16 0m-48-19q7-8 14 0 7-8 14 0" />
         <path
           d="M49 217h22m129-8h22m193 16h18m169-14h18"
           stroke="var(--travel-surface)"
