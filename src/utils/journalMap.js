@@ -1,5 +1,32 @@
 import { isValidLngLat } from "./mapHelpers.js";
 
+// Preserve road refs, shields and composite labels supplied by the basemap.
+export function isPlaceNameLayer(layer) {
+  if (layer.type !== "symbol") return false;
+  const field = layer.layout?.["text-field"];
+  let hasName = false;
+  let hasOtherContent = false;
+  const inspect = (value) => {
+    if (typeof value === "string") {
+      for (const match of value.matchAll(/\{([^}]+)\}/g)) {
+        if (/^name(?::|_|$)/.test(match[1])) hasName = true;
+        else hasOtherContent = true;
+      }
+    } else if (Array.isArray(value)) {
+      if (value[0] === "literal") return;
+      if (value[0] === "image") hasOtherContent = true;
+      if (value[0] === "get") {
+        if (typeof value[1] === "string" && /^name(?::|_|$)/.test(value[1]))
+          hasName = true;
+        else hasOtherContent = true;
+      }
+      value.slice(1).forEach(inspect);
+    }
+  };
+  inspect(field);
+  return hasName && !hasOtherContent;
+}
+
 // Flight events mark departure coordinates: keep the drive to the airport,
 // then start a new road segment at the next stop instead of routing overseas.
 export function getRoadRouteSegments(events = []) {

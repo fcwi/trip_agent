@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { isPlaceNameLayer } from "../utils/journalMap.js";
 
 /**
  * MapPicker Component with MapLibre GL JS
@@ -28,7 +29,7 @@ const MapPicker = ({
     // 與 MapModal / DayMap 相同的語言邏輯
     const labelLayerIds = map
       .getStyle()
-      .layers.filter((l) => l.layout && l.layout["text-field"])
+      .layers.filter(isPlaceNameLayer)
       .map((l) => l.id);
 
     labelLayerIds.forEach((layerId) => {

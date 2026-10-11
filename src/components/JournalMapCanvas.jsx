@@ -17,6 +17,7 @@ import {
 import {
   classifyMapFailure,
   getMapPoints,
+  isPlaceNameLayer,
   MAP_FAILURE_MESSAGES,
   MAP_MESSAGES,
 } from "../utils/journalMap.js";
@@ -209,8 +210,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
           clearTimeout(timeout);
           setStatus("ready");
           currentMap.getStyle().layers.forEach((layer) => {
-            if (layer.type !== "symbol" || !layer.layout?.["text-field"])
-              return;
+            if (!isPlaceNameLayer(layer)) return;
             currentMap.setLayoutProperty(layer.id, "text-field", [
               "format",
               [

@@ -22,6 +22,8 @@
 
 ## 尚待定位的黃色警告
 
+後續截圖另出現 `road_`、`transportation:road_` 與空白圖示名稱的缺失警告。程式複查確認語言處理曾覆寫所有文字圖層；已將當日地圖與位置選擇器限制為純地名圖層，保留道路編號、混合內容與內嵌圖示的原始樣式。新增單元測試確認這些圖層不會被地名轉換覆寫；69 項單元測試通過。這是已確認的程式修正，尚不能證明實際 MapTiler 數值／圖示警告已全部消失。
+
 `Expected value to be of type number, but found null instead` 尚未在隔離底圖中重現。應取得使用者實際 MapTiler `style.json` 的圖層內容（移除金鑰），確認數值表達式與資料缺值的來源後再修正。本輪沒有隱藏警告或任意改寫所有外部圖層的數值。
 
 MapLibre 的表達式評估在 runtime 錯誤時可警告並回傳該屬性的預設值；這不等同確認每個圖層都正確顯示。參考：[MapLibre 表達式實作](https://github.com/maplibre/maplibre-style-spec/blob/main/src/expression/index.ts)、[官方表達式規格](https://maplibre.org/maplibre-style-spec/expressions/)。

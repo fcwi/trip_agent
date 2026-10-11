@@ -6,7 +6,33 @@ import {
   getMapPoints,
   eventMapUrl,
   getRoadRouteSegments,
+  isPlaceNameLayer,
 } from "../src/utils/journalMap.js";
+
+test("place-name localization preserves road references and image-bearing labels", () => {
+  const layer = (field) => ({
+    type: "symbol",
+    layout: { "text-field": field },
+  });
+  assert.equal(isPlaceNameLayer(layer("{name}")), true);
+  assert.equal(
+    isPlaceNameLayer(
+      layer(["coalesce", ["get", "name:zh"], ["get", "name"], ""]),
+    ),
+    true,
+  );
+  assert.equal(isPlaceNameLayer(layer("{ref}")), false);
+  assert.equal(
+    isPlaceNameLayer(layer(["coalesce", ["get", "ref"], ["get", "name"]])),
+    false,
+  );
+  assert.equal(
+    isPlaceNameLayer(
+      layer(["format", ["image", "road_shield"], {}, ["get", "name"], {}]),
+    ),
+    false,
+  );
+});
 
 test("road routing separates flights, deduplicates airports and retains the drive after landing", () => {
   const airport = { lon: 121.232822, lat: 25.077758 };
