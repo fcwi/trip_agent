@@ -117,6 +117,11 @@ const FlightInfoCard = memo(
                           {hotel.address}
                         </span>
                       </button>
+                      {hotel.note && (
+                        <p className="travel-muted text-sm leading-relaxed">
+                          {hotel.note}
+                        </p>
+                      )}
                     </div>
                     {index < tripConfig.hotels.length - 1 && (
                       <div

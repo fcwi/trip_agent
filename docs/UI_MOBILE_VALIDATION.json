@@ -1,0 +1,401 @@
+{
+  "validatedAt": "2026-10-11T00:51:34.014Z",
+  "skill": {
+    "repository": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+    "revision": "67803ea",
+    "workflow": "Local SKILL.md and bundled focused UX/stack searches"
+  },
+  "scope": "Browser emulation, not physical devices; controlled external failures; 125% text stress is not native Dynamic Type certification.",
+  "sourceHashes": {
+    "src/AuthenticatedTripApp.jsx": "a7ba4b0b8aad5e010671d3bfa676471d7851a1d9f2e2a40e877a5615cf52338a",
+    "src/styles/journal.css": "3830d7b060b192733a55332f2d72e167616147edbd91410e08decdfbde724851",
+    "src/trip/tripdata_2027_tohoku.jsx": "4ef89f8c51b950a927efbc546f215889d0659aa9511e976c537c5507af496b9e",
+    "src/components/FlightInfoCard.jsx": "8f0eb9c5c991b8c7c76ebb211813d8dff49e381785662b6e4c6bdedece4295d5",
+    "src/components/Itinerary/DayItinerary.jsx": "44e471201255a4b28a569c5d70fde54fe77c4edd9277f59f0917198d36a7cf32",
+    "src/components/Tabs/GuidesTab.jsx": "451d12a80f3a5316a843e510c95453e281b44be0ef3406ed6ec97d036f3897a5",
+    "tests/e2e/trip-smoke.spec.js": "66acda0983f7070512f5b1c6629033150d2451358226e14092c8427defa9f2fb"
+  },
+  "viewportMatrix": [
+    {
+      "profile": "iphone18pro",
+      "theme": "light",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone18pro",
+      "theme": "dark",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone18pro-landscape",
+      "theme": "light",
+      "width": 874,
+      "height": 402,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone18pro-landscape",
+      "theme": "dark",
+      "width": 874,
+      "height": 402,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra",
+      "theme": "light",
+      "width": 412,
+      "height": 915,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra",
+      "theme": "dark",
+      "width": 412,
+      "height": 915,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra-wide",
+      "theme": "light",
+      "width": 480,
+      "height": 1040,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra-wide",
+      "theme": "dark",
+      "width": 480,
+      "height": 1040,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-landscape",
+      "theme": "light",
+      "width": 915,
+      "height": 412,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-landscape",
+      "theme": "dark",
+      "width": 915,
+      "height": 412,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "small-phone",
+      "theme": "light",
+      "width": 320,
+      "height": 740,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "small-phone",
+      "theme": "dark",
+      "width": 320,
+      "height": 740,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone-large-text",
+      "theme": "light",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1.25,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone-large-text",
+      "theme": "dark",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1.25,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    }
+  ],
+  "finalCopyReview": [
+    {
+      "profile": "iphone18pro",
+      "theme": "light",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "iphone18pro",
+      "theme": "dark",
+      "width": 402,
+      "height": 874,
+      "engine": "webkit",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra",
+      "theme": "light",
+      "width": 412,
+      "height": 915,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    },
+    {
+      "profile": "galaxy-s25-ultra",
+      "theme": "dark",
+      "width": 412,
+      "height": 915,
+      "engine": "chromium",
+      "textScale": 1,
+      "checks": [
+        "home",
+        "day-1",
+        "day-2",
+        "day-3",
+        "day-4",
+        "day-5",
+        "指南",
+        "商店",
+        "導遊",
+        "記錄"
+      ],
+      "passed": true
+    }
+  ],
+  "finalCopyChange": "Removed seven unknown-duration placeholders after the viewport matrix; the two primary phone profiles were rechecked in both themes on final copy."
+}

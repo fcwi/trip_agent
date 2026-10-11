@@ -1995,16 +1995,18 @@ const ItineraryApp = ({ authentication }) => {
   }, [fetchWeatherForecast, isVerified]);
 
   useEffect(() => {
+    const synthesis = window.speechSynthesis;
+    if (!synthesis || typeof synthesis.getVoices !== "function") return;
     const updateVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
+      const voices = synthesis.getVoices();
       setAvailableVoices(voices);
     };
 
-    window.speechSynthesis.onvoiceschanged = updateVoices;
+    synthesis.addEventListener("voiceschanged", updateVoices);
     updateVoices();
 
     return () => {
-      window.speechSynthesis.onvoiceschanged = null;
+      synthesis.removeEventListener("voiceschanged", updateVoices);
     };
   }, []);
 
@@ -2056,7 +2058,7 @@ const ItineraryApp = ({ authentication }) => {
   };
 
   const handleSpeak = (text) => {
-    if (!("speechSynthesis" in window)) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
       alert("抱歉，您的瀏覽器不支援語音朗讀功能。");
       return;
     }

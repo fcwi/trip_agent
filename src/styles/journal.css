@@ -603,7 +603,8 @@
   font-family: inherit;
   font-size: clamp(28px, 6vw, 42px);
   line-height: 1.45;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
+  text-wrap: balance;
 }
 
 .travel-shell[data-editorial="true"] .travel-cover__topline {
@@ -1049,11 +1050,11 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   color: var(--travel-muted);
   font-size: 13px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 .journal-transport-duration svg {
   flex: none;
@@ -1062,6 +1063,151 @@
   .travel-timeline-event--transport
   .travel-timeline-event__meta {
   flex-wrap: wrap;
+}
+
+/* Mobile reading rhythm: preserve full copy while keeping short labels together. */
+.travel-shell[data-editorial="true"]
+  :is(
+    .travel-header__title,
+    .travel-day-heading h2,
+    .travel-day-index__content strong,
+    .travel-today h3
+  ) {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.travel-shell[data-editorial="true"]
+  :is(
+    .travel-event-details,
+    .travel-day-notice,
+    .travel-day-route,
+    .journal-entry
+  ) {
+  overflow-wrap: break-word;
+  line-height: 1.6;
+}
+.travel-shell[data-editorial="true"] .travel-event-category {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event__meta
+  > .travel-icon-button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.travel-shell[data-editorial="true"] .travel-text-button {
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.travel-shell[data-editorial="true"] .travel-text-button svg {
+  margin-top: 3px;
+}
+@media (max-width: 767px) {
+  .travel-shell[data-editorial="true"]
+    :is(.journal-overview, .travel-day-main) {
+    gap: 16px;
+  }
+  .travel-shell[data-editorial="true"] #panel-guides .journal-panel {
+    padding: 16px;
+  }
+  .travel-shell[data-editorial="true"] #panel-guides .journal-entry > button {
+    padding: 12px;
+    gap: 10px;
+  }
+  .travel-shell[data-editorial="true"] .journal-guide-title {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .travel-shell[data-editorial="true"] .journal-guide-summary {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .travel-shell[data-editorial="true"] #panel-guides .journal-entry :is(p, ol) {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .travel-shell[data-editorial="true"] .travel-cover__body {
+    padding: 20px 16px;
+  }
+  .travel-shell[data-editorial="true"] .travel-cover__topline {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .travel-shell[data-editorial="true"] .travel-cover h2 {
+    font-size: clamp(26px, 6.7vw, 32px);
+    line-height: 1.35;
+  }
+  .travel-shell[data-editorial="true"] .travel-header {
+    padding-block: 16px;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+  .travel-shell[data-editorial="true"] .travel-eyebrow {
+    letter-spacing: 0.06em;
+  }
+  .travel-shell[data-editorial="true"] .travel-day-heading {
+    padding: 16px;
+  }
+  .travel-shell[data-editorial="true"] .journal-day-picture {
+    flex: 0 0 56px;
+    width: 56px;
+    border-radius: 16px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 20px;
+    padding-block: 12px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline > ol::before {
+    left: 50px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event::before {
+    left: 43px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event__body {
+    padding: 10px 12px;
+  }
+  .travel-shell[data-editorial="true"]
+    .travel-timeline-event--transport
+    .travel-timeline-event__body {
+    padding-inline: 4px;
+  }
+  .travel-shell[data-editorial="true"]
+    .travel-timeline-event__heading
+    h3
+    button {
+    gap: 6px;
+    padding-block: 6px;
+    overflow-wrap: break-word;
+  }
+  .travel-shell[data-editorial="true"]
+    .travel-timeline-event__heading
+    h3
+    button
+    span {
+    overflow-wrap: break-word;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event__description {
+    line-height: 1.6;
+    overflow-wrap: break-word;
+  }
+}
+@media (max-width: 374px) {
+  .travel-shell[data-editorial="true"] .travel-timeline-event {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline > ol::before {
+    left: 44px;
+  }
+  .travel-shell[data-editorial="true"] .travel-timeline-event::before {
+    left: 37px;
+  }
 }
 .travel-shell[data-editorial="true"]
   .travel-timeline-event--transport

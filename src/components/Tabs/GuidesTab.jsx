@@ -102,13 +102,13 @@ const GuidesTab = ({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
-                        className={`block break-words text-sm font-bold ${theme.text}`}
+                        className={`journal-guide-title block break-words text-sm font-bold ${theme.text}`}
                       >
                         {guide.title}
                       </span>
                       {!isOpen && (
                         <span
-                          className={`mt-0.5 block truncate text-xs ${theme.textSec}`}
+                          className={`journal-guide-summary mt-0.5 block text-xs ${theme.textSec}`}
                         >
                           {guide.summary}
                         </span>

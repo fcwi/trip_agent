@@ -28,7 +28,7 @@ const LANDING_SCENARIOS = {
   "2027_tohoku": {
     date: "2027-01-22",
     time: "12:00",
-    plan: "仙台空港 → 天童／上山溫泉（低密度）",
+    plan: "仙台空港 → 天童／上山溫泉",
     next: "抵達仙台空港",
     location: "仙台空港",
   },
@@ -128,6 +128,27 @@ test("reports a wrong password and unlocks with the test credential", async ({
 
   await unlockTrip(page);
   await expect(page).toHaveURL(/\?tab=itinerary$/);
+});
+
+test("opens the trip when the browser does not provide speech synthesis", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "speechSynthesis", {
+      value: undefined,
+      configurable: true,
+    });
+    Object.defineProperty(window, "SpeechSynthesisUtterance", {
+      value: undefined,
+      configurable: true,
+    });
+  });
+  await page.goto("/");
+  await unlockTrip(page);
+  await expect(page.locator("#trip-cover-title")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "網站暫時無法顯示" }),
+  ).toHaveCount(0);
 });
 
 test("remembers an opted-in unlock and clears it when the trip is locked", async ({
@@ -339,7 +360,7 @@ test("keeps flight summaries visible while accommodation details are collapsed",
   if (EXPECTED_TRIP_ID === "2027_tohoku") {
     await expect(
       flights.locator(".journal-flight-ticket__note").first(),
-    ).toContainText("待核商品頁");
+    ).toContainText("時刻依出發通知");
   }
   await expand.click();
   await expect(

@@ -74,7 +74,7 @@ export default function DayItinerary({
           >
             <AlertCircle aria-hidden="true" className="h-5 w-5 flex-none" />
             <div>
-              <h3>{day.notice.type === "alert" ? "重要提醒" : "行程備註"}</h3>
+              <h3>{day.notice.type === "alert" ? "重要提醒" : "今日提醒"}</h3>
               <p>{day.notice.text}</p>
             </div>
           </aside>
