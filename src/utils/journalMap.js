@@ -11,6 +11,41 @@ export const MAP_MESSAGES = {
   error: ["地圖暫時無法載入", "請重試，或使用 Google Maps 查看地點。"],
 };
 
+export const MAP_FAILURE_MESSAGES = {
+  unauthorized: [
+    "地圖服務拒絕存取（401）",
+    "地圖金鑰可能已失效，請通知行程管理者。",
+  ],
+  forbidden: [
+    "地圖服務拒絕存取（403）",
+    "此網站目前無法使用地圖服務，請通知行程管理者確認授權。",
+  ],
+  quota: [
+    "地圖服務已達使用限制（429）",
+    "請稍後重試，或使用 Google Maps 查看地點。",
+  ],
+  missingStyle: ["地圖樣式無法取得（404）", "請通知行程管理者確認地圖設定。"],
+  timeout: ["地圖連線逾時", "請確認網路後重試，或使用 Google Maps 查看地點。"],
+  engine: ["地圖元件無法下載", "請確認網路後重試，或更新網站再開啟。"],
+  graphics: [
+    "瀏覽器無法顯示互動地圖",
+    "請重新開啟瀏覽器，或使用 Google Maps 查看地點。",
+  ],
+};
+
+// Only expose a fixed category; renderer errors can contain URLs with API keys.
+export function classifyMapFailure(error) {
+  const status = Number(error?.status);
+  if (status === 401) return "unauthorized";
+  if (status === 403) return "forbidden";
+  if (status === 429) return "quota";
+  if (status === 404) return "missingStyle";
+  const message = String(error?.message || "");
+  if (/WebGL|GL context|context creation/i.test(message)) return "graphics";
+  if (message === "地圖引擎暫時無法載入") return "engine";
+  return "unknown";
+}
+
 export function getMapPoints(
   events = [],
   route = [],

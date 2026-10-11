@@ -133,6 +133,38 @@ test("missing key and coordinates preserve external map alternatives", async ({
   );
 });
 
+test("service rejection displays its category and retry clears the old error", async ({
+  page,
+}) => {
+  for (const [status, title] of [
+    [401, "地圖服務拒絕存取（401）"],
+    [403, "地圖服務拒絕存取（403）"],
+    [429, "地圖服務已達使用限制（429）"],
+  ]) {
+    await page.route("https://api.maptiler.com/**", (route) =>
+      route.fulfill({ status, body: "denied" }),
+    );
+    await mount(page);
+    await expect(page.getByText(title, { exact: true })).toBeVisible();
+    await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+      "data-map-status",
+      "error",
+    );
+    await page.unroute("https://api.maptiler.com/**");
+  }
+  await page.route("https://api.maptiler.com/**", (route) =>
+    route.fulfill({ json: style }),
+  );
+  await page.getByRole("button", { name: "重新載入地圖" }).click();
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
+  await expect(
+    page.getByText("地圖服務已達使用限制（429）", { exact: true }),
+  ).toHaveCount(0);
+});
+
 test("route service failure keeps markers and explains the alternative", async ({
   page,
 }) => {

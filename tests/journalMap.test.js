@@ -1,6 +1,35 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getMapPoints, eventMapUrl } from "../src/utils/journalMap.js";
+import {
+  classifyMapFailure,
+  MAP_FAILURE_MESSAGES,
+  getMapPoints,
+  eventMapUrl,
+} from "../src/utils/journalMap.js";
+
+test("map failure categories distinguish service rejection and never expose credential URLs", () => {
+  for (const [status, category] of [
+    [401, "unauthorized"],
+    [403, "forbidden"],
+    [429, "quota"],
+    [404, "missingStyle"],
+  ]) {
+    const result = classifyMapFailure({
+      status,
+      message: "https://api.maptiler.com/maps/style.json?key=private-value",
+    });
+    assert.equal(result, category);
+    assert.ok(
+      !MAP_FAILURE_MESSAGES[result].join(" ").includes("private-value"),
+    );
+  }
+  assert.equal(
+    classifyMapFailure(new Error("Failed to initialize WebGL")),
+    "graphics",
+  );
+  assert.equal(classifyMapFailure(new Error("地圖引擎暫時無法載入")), "engine");
+  assert.equal(classifyMapFailure({ status: 503 }), "unknown");
+});
 
 test("map bounds combine event, route and shared positions without reversing lon/lat", () => {
   assert.deepEqual(

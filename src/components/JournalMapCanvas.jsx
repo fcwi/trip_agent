@@ -14,7 +14,12 @@ import {
   buildSharedLocationPopupHtml,
   isValidLngLat,
 } from "../utils/mapHelpers.js";
-import { getMapPoints, MAP_MESSAGES } from "../utils/journalMap.js";
+import {
+  classifyMapFailure,
+  getMapPoints,
+  MAP_FAILURE_MESSAGES,
+  MAP_MESSAGES,
+} from "../utils/journalMap.js";
 
 const EMPTY = [];
 const JournalMapCanvas = forwardRef(function JournalMapCanvas(
@@ -37,6 +42,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
   const popups = useRef(new Map());
   const [online, setOnline] = useState(() => navigator.onLine);
   const [status, setStatus] = useState("loading");
+  const [failure, setFailure] = useState("unknown");
   const [retry, setRetry] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -141,6 +147,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     // MapLibre is an external renderer; mirror its initialization and failures.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus("loading");
+    setFailure("unknown");
     const clearMarkers = () => {
       createdMarkers.forEach((marker) => marker.remove());
       popups.current.clear();
@@ -179,10 +186,21 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
           }
         }
         timeout = setTimeout(() => {
-          if (!disposed && !loaded) setStatus("error");
+          if (!disposed && !loaded) {
+            setFailure((previous) =>
+              previous === "unknown" ? "timeout" : previous,
+            );
+            setStatus("error");
+          }
         }, 12000);
-        currentMap.on("error", () => {
-          if (!disposed && !loaded) setStatus("error");
+        currentMap.on("error", (event) => {
+          if (!disposed && !loaded) {
+            const category = classifyMapFailure(event.error);
+            setFailure((previous) =>
+              category === "unknown" ? previous : category,
+            );
+            setStatus("error");
+          }
         });
         currentMap.on("load", () => {
           if (disposed) return;
@@ -330,8 +348,11 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
             duration: 0,
           });
         });
-      } catch {
-        if (!disposed) setStatus("error");
+      } catch (error) {
+        if (!disposed) {
+          setFailure(classifyMapFailure(error));
+          setStatus("error");
+        }
       }
     };
     initialize();
@@ -355,7 +376,10 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     isDarkMode,
     retry,
   ]);
-  const message = MAP_MESSAGES[visibleStatus];
+  const message =
+    visibleStatus === "error"
+      ? MAP_FAILURE_MESSAGES[failure] || MAP_MESSAGES.error
+      : MAP_MESSAGES[visibleStatus];
   return (
     <div className="journal-map-canvas" data-map-status={visibleStatus}>
       <div ref={container} className="journal-map-canvas__surface" />
