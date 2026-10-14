@@ -36,12 +36,12 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
       <span className="min-w-0">
         <span className="flex flex-wrap items-center gap-2">
           <span
-            className={`text-sm font-bold ${isDarkMode ? "text-neutral-200" : "text-[#37474F]"}`}
+            className={`text-base font-bold ${isDarkMode ? "text-neutral-200" : "text-[#37474F]"}`}
           >
             {shop.name}
           </span>
           <span
-            className={`rounded-xl border px-1.5 py-0.5 text-[11px] shadow-sm ${
+            className={`rounded-xl border px-1.5 py-0.5 text-xs shadow-sm ${
               isDarkMode
                 ? "border-neutral-700 bg-neutral-800 text-neutral-400"
                 : "border-stone-200 bg-white text-stone-500"
@@ -51,7 +51,7 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
           </span>
         </span>
         <span
-          className={`mt-0.5 block text-xs ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
+          className={`mt-1 block text-sm leading-relaxed ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
         >
           {shop.note}
         </span>

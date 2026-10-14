@@ -66,7 +66,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
   return (
     <main
       id="main-content"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50 p-6 text-stone-800 dark:bg-neutral-950 dark:text-neutral-100"
+      className="journal-auth relative flex min-h-screen items-center justify-center overflow-hidden bg-stone-50 p-6 text-stone-800 dark:bg-neutral-950 dark:text-neutral-100"
     >
       <div
         aria-hidden="true"
@@ -76,8 +76,9 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
         <div className="absolute -bottom-1/4 -right-1/4 h-3/4 w-3/4 rounded-full bg-violet-300/20 blur-3xl dark:bg-violet-700/15" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-stone-300/30 backdrop-blur-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-neutral-900/75 dark:shadow-black/30 dark:ring-white/5">
+      <div className="journal-auth-card relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-stone-300/30 backdrop-blur-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-neutral-900/75 dark:shadow-black/30 dark:ring-white/5">
         <div className="mb-8 text-center">
+          <p className="journal-auth-eyebrow">Trip Agent · 旅行手帳</p>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/60 bg-white/90 text-sky-600 shadow-lg dark:border-white/10 dark:bg-neutral-800 dark:text-sky-300">
             {isAuthLoading ? (
               <Loader aria-hidden="true" className="h-8 w-8 animate-spin" />
@@ -92,7 +93,10 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
         </div>
 
         <form onSubmit={submitUnlock} className="space-y-4">
-          <label htmlFor="lockScreenPassword" className="sr-only">
+          <label
+            htmlFor="lockScreenPassword"
+            className="block text-left text-sm font-bold"
+          >
             通關密碼
           </label>
           <input
@@ -104,6 +108,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             placeholder="輸入密碼…"
             autoComplete="current-password"
             aria-describedby={authError ? "authentication-error" : undefined}
+            aria-invalid={Boolean(authError)}
             className={`${fieldClasses} text-center text-lg tracking-widest placeholder:tracking-normal`}
           />
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-stone-200/70 bg-white/70 px-4 py-3 text-left dark:border-neutral-700/70 dark:bg-neutral-900/60">

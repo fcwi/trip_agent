@@ -1812,7 +1812,7 @@ const FinanceScreen = ({
                           <div
                             className={`text-xs ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
                           >
-                            點擊登出或其他地方關閉
+                            點選帳號按鈕或外側可關閉
                           </div>
                         </div>
                         <button

@@ -343,3 +343,11 @@
   opacity: 0.5;
   margin-left: 4px !important;
 }
+
+html {
+  scroll-padding-block: 96px calc(128px + env(safe-area-inset-bottom));
+}
+.pwa-notice-positioner[data-kind="update"] {
+  background: rgb(15 23 42 / 28%);
+  pointer-events: auto;
+}

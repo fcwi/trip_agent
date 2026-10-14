@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { PwaNotice } from "../../src/components/PwaUpdatePrompt.jsx";
 
-function Fixture() {
+function Fixture({ error }) {
   const [visible, setVisible] = useState(true);
   const [updating, setUpdating] = useState(false);
   return visible ? (
@@ -12,14 +12,15 @@ function Fixture() {
       isUpdating={updating}
       onDismiss={() => setVisible(false)}
       onUpdate={() => setUpdating(true)}
+      error={error}
     />
   ) : null;
 }
-export function mountNotice() {
+export function mountNotice(options = {}) {
   document.getElementById("root")?.remove();
   const host = document.createElement("div");
   host.style.transform = "translateX(100px)";
   host.style.overflow = "hidden";
   document.body.append(host);
-  createRoot(host).render(<Fixture />);
+  createRoot(host).render(<Fixture {...options} />);
 }

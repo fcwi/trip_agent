@@ -24,6 +24,7 @@ export const useTripShellTheme = (activeTab = "itinerary") => {
           ? "#020617"
           : "#FDFBF7";
     document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
+    document.documentElement.classList.toggle("dark", isDarkMode);
 
     if (metaThemeColor) {
       metaThemeColor.setAttribute("content", color);

@@ -291,6 +291,11 @@ test("map dialog fits narrow light/dark and desktop layouts", async ({
     await expect(
       dialog.getByRole("button", { name: "放大地圖", exact: true }),
     ).toBeVisible();
+    const zoomControl = await dialog
+      .getByRole("button", { name: "放大地圖", exact: true })
+      .boundingBox();
+    expect(zoomControl.width).toBeGreaterThanOrEqual(44);
+    expect(zoomControl.height).toBeGreaterThanOrEqual(44);
     const surface = await dialog
       .locator(".journal-map-canvas__surface")
       .boundingBox();

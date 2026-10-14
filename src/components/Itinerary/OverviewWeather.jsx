@@ -51,9 +51,17 @@ export default function OverviewWeather({
           {hasTemperature ? `${Math.round(userWeather.temp)}°` : "—"}
         </strong>
         <div>
-          <p>{userWeather.locationName || "尚未取得位置"}</p>
-          <small>
-            {hasTemperature ? userWeather.desc || "天氣資訊" : "暫無天氣資料"}
+          <p>
+            {hasTemperature
+              ? userWeather.locationName || "目前所在地"
+              : isUpdatingLocation
+                ? "正在更新所在地天氣"
+                : "尚未取得所在地資料"}
+          </p>
+          <small role={!hasTemperature ? "status" : undefined}>
+            {hasTemperature
+              ? userWeather.desc || "天氣資訊"
+              : "可更新定位，或查看目的地天氣"}
           </small>
         </div>
       </div>
@@ -65,6 +73,7 @@ export default function OverviewWeather({
       <button
         type="button"
         className="travel-text-button"
+        disabled={!hasTemperature}
         onClick={handleWeatherDetailOpen}
       >
         詳細天氣資訊 <ArrowRight aria-hidden="true" className="h-4 w-4" />

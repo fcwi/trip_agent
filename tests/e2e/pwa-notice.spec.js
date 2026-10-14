@@ -31,3 +31,25 @@ test("update notice stays centered and fully visible outside transformed page co
     await expect(notice).toHaveCount(0);
   }
 });
+
+test("update dialog keeps keyboard focus inside, supports Escape and announces retry guidance", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(async () => {
+    const { mountNotice } = await import("/tests/e2e/pwa-notice-fixture.jsx");
+    mountNotice({ error: "更新暫未完成，請確認網路後再試一次。" });
+  });
+  const dialog = page.getByRole("dialog", { name: "網站有新版本" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("alert")).toContainText("請確認網路後再試一次");
+  await expect(dialog).toBeFocused();
+  for (let step = 0; step < 5; step++) {
+    await page.keyboard.press("Tab");
+    expect(
+      await dialog.evaluate((el) => el.contains(document.activeElement)),
+    ).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+});

@@ -1476,7 +1476,11 @@ const ItineraryApp = ({ authentication }) => {
 
             if (err.code === 1) {
               setHasLocationPermission(false);
-              if (!isSilent) showToast("您已封鎖定位權限", "error");
+              if (!isSilent)
+                showToast(
+                  "未取得定位權限；請在瀏覽器設定允許定位後重試。",
+                  "info",
+                );
             } else {
               setHasLocationPermission(null);
             }
@@ -1530,10 +1534,7 @@ const ItineraryApp = ({ authentication }) => {
   useEffect(() => {
     if (!isVerified) return undefined;
 
-    const alreadyHasData =
-      userWeather.temp !== null && userWeather.locationName !== "定位中...";
-
-    getUserLocationWeather({ isSilent: alreadyHasData, highAccuracy: false });
+    getUserLocationWeather({ isSilent: true, highAccuracy: false });
     fetchOtherUsersLocations(); // 初始載入位置
 
     // 每 10 分鐘自動更新一次天氣資訊與位置，確保資料時效性

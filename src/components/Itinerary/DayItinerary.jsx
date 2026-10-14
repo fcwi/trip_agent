@@ -40,6 +40,8 @@ export default function DayItinerary({
               <a
                 className="travel-text-button"
                 href={getMapLink(day.stay.split("(")[0])}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
                 {day.stay}
@@ -121,7 +123,12 @@ export default function DayItinerary({
             {map}
           </div>
           {day.routeInfo.mapUrl && (
-            <a className="travel-primary-button" href={day.routeInfo.mapUrl}>
+            <a
+              className="travel-primary-button"
+              href={day.routeInfo.mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Navigation aria-hidden="true" className="h-4 w-4" />
               開啟 Google Maps 查看路線
             </a>
