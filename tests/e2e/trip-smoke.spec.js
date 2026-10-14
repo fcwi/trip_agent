@@ -366,6 +366,16 @@ test("keeps flight summaries visible while accommodation details are collapsed",
   await expect(
     flights.getByRole("button", { name: /^複製.*地址$/ }).first(),
   ).toBeVisible();
+  const phoneLinks = await flights
+    .locator('a[href^="tel:"]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  expect(phoneLinks.length).toBeGreaterThan(0);
+  expect(phoneLinks.every((href) => /^tel:\+?\d+$/.test(href))).toBe(true);
+  if (EXPECTED_TRIP_ID === "2027_tohoku") {
+    await expect(flights.locator('a[href="tel:+81196931111"]')).toBeVisible();
+    await expect(flights).toContainText("岩手県岩手郡雫石町高倉温泉");
+    await expect(flights).toContainText("+81-80-1009-7179");
+  }
   await expand.click();
   await expect(
     flights.getByRole("article", { name: "去程航班" }),
@@ -459,7 +469,9 @@ test("operates the trip tools menu with keyboard focus and opens the calculator"
   await expect(calculator).toBeVisible();
   await expect(calculator).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(calculator.getByRole("button", { name: "關閉計算機" })).toBeFocused();
+  await expect(
+    calculator.getByRole("button", { name: "關閉計算機" }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(calculator).toHaveCount(0);
   await expect(trigger).toBeFocused();
@@ -790,6 +802,23 @@ test("keeps shop expansion and valid map links across tab changes", async ({
   await page.getByRole("button", { name: "指南", exact: true }).click();
   await page.getByRole("button", { name: "商店", exact: true }).click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  for (const button of await page
+    .locator("#panel-shops article > button")
+    .all()) {
+    if ((await button.getAttribute("aria-expanded")) !== "true")
+      await button.click();
+  }
+  await expect(page.locator("#panel-shops")).not.toContainText(
+    /可刪|整段刪|互搶|當日無樹冰|紀念品少/,
+  );
+  if (EXPECTED_TRIP_ID === "2027_tohoku") {
+    const ginzanLink = page.getByRole("link", { name: /^銀山溫泉街/ });
+    const query = new URL(
+      await ginzanLink.getAttribute("href"),
+    ).searchParams.get("query");
+    expect(query).toBe("銀山温泉");
+    await expect(page.locator("#panel-shops")).not.toContainText("1km內");
+  }
 });
 
 test("renders every journal page with the bundled font in narrow light and dark layouts", async ({

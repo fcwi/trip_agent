@@ -104,7 +104,15 @@ const FlightInfoCard = memo(
                       </div>
                       <div className="text-xs font-bold flex items-center gap-1.5">
                         <Phone className="w-3 h-3" />
-                        <a href={`tel:${hotel.phone}`}>{hotel.phone}</a>
+                        {/^[+\d][\d\s()-]+$/.test(hotel.phone || "") ? (
+                          <a
+                            href={`tel:${hotel.phone.replace(/[\s()-]/g, "")}`}
+                          >
+                            {hotel.phone}
+                          </a>
+                        ) : (
+                          <span>{hotel.phone || "電話請依出發通知"}</span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -144,8 +152,9 @@ const FlightInfoCard = memo(
                 className={`text-xs leading-relaxed ${isDarkMode ? "text-red-200/80" : "text-red-800/80"}`}
               >
                 <span className="font-bold block mb-0.5">緊急聯絡：</span>
-                報警 110 | 救護車 119 <br />
-                旅外國人急難救助：+81-3-3280-7917
+                報警 {tripConfig.emergency.police} | 救護車{" "}
+                {tripConfig.emergency.ambulance} <br />
+                {tripConfig.emergency.contact}
               </div>
             </div>
           </div>

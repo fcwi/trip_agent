@@ -121,7 +121,7 @@ export default function DayMap(props) {
         </p>
       )}
       <p className="travel-muted">
-        地圖編號對應行程順序；道路連線不代表所有交通方式。
+        地圖標示已有座標的地點，編號對應行程順序；道路連線不代表所有交通方式。
       </p>
       <div className="journal-map-place-links">
         {props.events.map((event, index) => (

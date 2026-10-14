@@ -23,7 +23,7 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
 
   return (
     <a
-      href={getMapLink(`${shop.name} ${querySuffix}`)}
+      href={getMapLink(shop.mapQuery || `${shop.name} ${querySuffix}`)}
       target="_blank"
       rel="noopener noreferrer"
       data-journal-tone={tone}
@@ -193,7 +193,7 @@ const ShopsTab = ({
                               aria-hidden="true"
                               className="h-3.5 w-3.5 text-rose-400"
                             />{" "}
-                            童裝與文具推薦
+                            特色店家與體驗
                           </h3>
                           <div className="grid grid-cols-1 gap-2.5">
                             {areaData.specialShops.map((shop, shopIndex) => (
@@ -219,14 +219,15 @@ const ShopsTab = ({
                               aria-hidden="true"
                               className="h-3.5 w-3.5 text-stone-400"
                             />{" "}
-                            附近常見連鎖 (1km內)
+                            周邊商店與服務
                           </h3>
                           <div className="flex flex-wrap gap-2">
                             {areaData.nearbyChains.map((chain, chainIndex) => (
                               <a
                                 key={`${chain.name}-${chain.location || chainIndex}`}
                                 href={getMapLink(
-                                  `${chain.name} ${areaData.mapQuerySuffix}`,
+                                  chain.mapQuery ||
+                                    `${chain.name} ${areaData.mapQuerySuffix}`,
                                 )}
                                 target="_blank"
                                 rel="noopener noreferrer"

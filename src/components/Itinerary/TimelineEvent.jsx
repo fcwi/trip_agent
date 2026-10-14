@@ -71,6 +71,8 @@ export default function TimelineEvent({
           <a
             className="travel-icon-button"
             href={getMapLink(event.mapQuery || event.title)}
+            target="_blank"
+            rel="noopener noreferrer"
             title="在 Google Maps 查看"
             aria-label={`在地圖查看${event.title}`}
           >
