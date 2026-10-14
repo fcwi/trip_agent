@@ -44,8 +44,16 @@ test("reduced-motion day changes avoid translation and colored headings have rea
   await page.getByRole("button", { name: "解鎖行程" }).click();
   await expect(page.locator(".travel-overview")).toBeVisible();
   for (const dark of [false, true]) {
-    if (dark)
-      await page.getByRole("button", { name: /切換到深色模式/ }).click();
+    const expectedTheme = dark ? "dark" : "light";
+    if (
+      (await page.locator(".travel-shell").getAttribute("data-theme")) !==
+      expectedTheme
+    )
+      await page.getByRole("button", { name: /切換到.*模式/ }).click();
+    await expect(page.locator(".travel-shell")).toHaveAttribute(
+      "data-theme",
+      expectedTheme,
+    );
     for (const day of [1, 2, 3]) {
       await page
         .getByRole("button", { name: new RegExp(`Day ${day}`) })

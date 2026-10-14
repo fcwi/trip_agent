@@ -309,6 +309,33 @@
   height: 18px !important;
 }
 
+.pwa-notice-positioner {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.pwa-notice {
+  width: min(100%, 384px);
+  min-width: 0;
+  max-height: calc(
+    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+.pwa-notice-positioner[data-kind="offline"] {
+  align-items: start;
+}
+
 /* 針對小型預覽圖隱藏非必要的 Logo 或進一步縮小 */
 .maplibregl-ctrl-logo {
   transform: scale(0.6);

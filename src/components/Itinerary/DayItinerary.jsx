@@ -51,6 +51,7 @@ export default function DayItinerary({
             )}
           </div>
         </header>
+        {day.intro && <p className="journal-day-intro">{day.intro}</p>}
         <button
           type="button"
           className="travel-day-weather"

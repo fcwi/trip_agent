@@ -645,15 +645,22 @@
 }
 
 .travel-shell[data-editorial="true"] .travel-cover {
-  border: 3px solid var(--journal-ink);
+  border: 2px solid var(--journal-ink);
   border-radius: 30px 25px 28px 26px;
   background: var(--travel-surface);
 }
 
 .travel-cover__drawing {
   overflow: hidden;
-  border-bottom: 3px solid var(--journal-ink);
-  background: var(--travel-page);
+  border-bottom: 1px solid var(--journal-ink);
+  background:
+    radial-gradient(
+        circle,
+        color-mix(in srgb, var(--journal-ink) 7%, transparent) 0.65px,
+        transparent 0.8px
+      )
+      0 0 / 8px 8px,
+    var(--travel-page);
 }
 
 .journal-illustration {
@@ -817,7 +824,7 @@
   align-items: center;
   gap: 16px;
   padding: 20px;
-  border: 3px solid var(--journal-ink);
+  border: 2px solid var(--journal-ink);
   border-radius: 25px 28px 23px 26px;
   background: var(--journal-blue);
 }
@@ -834,7 +841,7 @@
 .journal-day-picture {
   flex: 0 0 88px;
   overflow: hidden;
-  border: 3px solid var(--journal-ink);
+  border: 1.5px solid var(--journal-ink);
   border-radius: 20px 18px 21px 17px;
   background: var(--travel-surface);
 }
@@ -883,9 +890,10 @@
 .travel-shell[data-editorial="true"] .travel-timeline-event__body {
   min-width: 0;
   padding: 12px 14px;
-  border: 3px solid var(--journal-ink);
+  border: 1.5px solid var(--journal-ink);
   border-radius: 22px 25px 20px 24px;
   background: var(--travel-surface);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--journal-ink) 7%, transparent);
 }
 
 .travel-shell[data-editorial="true"]
@@ -1295,5 +1303,40 @@
   }
   .journal-overview-section:last-child:nth-child(even) {
     grid-column: 1 / -1;
+  }
+}
+
+/* Fine ink hierarchy: illustrations frame the content; body copy stays plain. */
+.travel-shell[data-editorial="true"] .travel-panel {
+  border-width: 2px;
+}
+.journal-day-intro {
+  margin: 16px 4px 20px;
+  max-width: 44rem;
+  color: var(--travel-muted);
+  font-size: 16px;
+  line-height: 1.85;
+  text-wrap: pretty;
+}
+.travel-shell[data-editorial="true"] .travel-section-heading {
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--travel-line);
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event__heading
+  h3
+  button
+  span {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event--transport
+  .travel-timeline-event__body {
+  box-shadow: none;
+}
+@media (max-width: 479px) {
+  .journal-day-intro {
+    margin: 14px 2px 18px;
   }
 }

@@ -31,9 +31,10 @@ export default function TripDayIndex({
               <span className="travel-day-index__content">
                 <strong>{day.title}</strong>
                 <small>
-                  {tripConfig.locations.find(
-                    (location) => location.key === day.locationKey,
-                  )?.name ||
+                  {day.caption ||
+                    tripConfig.locations.find(
+                      (location) => location.key === day.locationKey,
+                    )?.name ||
                     day.stay ||
                     "地點待確認"}
                 </small>

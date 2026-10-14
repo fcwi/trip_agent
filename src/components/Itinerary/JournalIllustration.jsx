@@ -2,15 +2,17 @@
 export function DayStamp({ title = "" }) {
   const kind = /樹冰|阿仁|纜車|膠囊/.test(title)
     ? "cable"
-    : /草莓|採果/.test(title)
-      ? "fruit"
-      : /溫泉|SPA/.test(title)
-        ? "bath"
-        : /空港|機場/.test(title)
-          ? "plane"
-          : /松島|海雲台|廣安|遊船/.test(title)
-            ? "boat"
-            : "mountain";
+    : /銀山|角館|古民家/.test(title)
+      ? "town"
+      : /草莓|採果/.test(title)
+        ? "fruit"
+        : /溫泉|SPA/.test(title)
+          ? "bath"
+        : /松島|海雲台|廣安|遊船/.test(title)
+          ? "boat"
+          : /空港|機場/.test(title)
+            ? "plane"
+              : "mountain";
   return (
     <svg
       className="journal-day-stamp"
@@ -20,7 +22,7 @@ export function DayStamp({ title = "" }) {
     >
       <g
         stroke="var(--journal-ink)"
-        strokeWidth="3"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -39,6 +41,21 @@ export function DayStamp({ title = "" }) {
             />
             <path
               d="M30 44h7v8h-7zm14 0h7v8h-7z"
+              fill="var(--journal-yellow)"
+            />
+          </>
+        ) : kind === "town" ? (
+          <>
+            <path
+              d="M9 61V33l18-12 18 12v28M44 61V39l15-10 14 10v22"
+              fill="var(--journal-pink)"
+            />
+            <path
+              d="m6 33 21-15 22 15m-6 6 16-13 17 13"
+              fill="var(--travel-surface)"
+            />
+            <path
+              d="M17 38h8v9h-8zm14 0h8v9h-8zM22 61V52h10v9M52 44h12v9H52Z"
               fill="var(--journal-yellow)"
             />
           </>
@@ -81,6 +98,11 @@ export function DayStamp({ title = "" }) {
             <path d="m22 40 10-18 9 18-9-4Z" fill="var(--travel-surface)" />
           </>
         )}
+        <path
+          d="M8 73h64M6 9h9m-4-4v8"
+          strokeWidth="1.2"
+          strokeDasharray="2 4"
+        />
       </g>
     </svg>
   );
@@ -142,7 +164,7 @@ export default function JournalIllustration({
     >
       <g
         stroke="var(--journal-ink)"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -151,6 +173,12 @@ export default function JournalIllustration({
           fill="var(--journal-blue)"
         />
         <circle cx="544" cy="55" r="29" fill="var(--journal-yellow)" />
+        <path
+          d="M35 20h125m-125 7h62M488 111h101"
+          strokeWidth="1"
+          strokeDasharray="2 7"
+          opacity="0.35"
+        />
         <path d="M544 10V4m0 102v-6m-45-45h-7m104 0h-7m-77-32-5-5m74 74-5-5m0-64 5-5m-74 74 5-5" />
         {seaside ? (
           <>
@@ -187,6 +215,17 @@ export default function JournalIllustration({
           </>
         )}
         <path d="M250 219h140" />
+        <path
+          d="M8 228q90-16 180 0t180 0t180 0t100 0"
+          strokeWidth="1.2"
+          strokeDasharray="3 7"
+          opacity="0.5"
+        />
+        <path
+          d="m119 156 11-17m20 18 8-13m-75 7 8-11m175 11 11-16m35 22 8-14"
+          strokeWidth="1.2"
+          opacity="0.5"
+        />
         <g transform="translate(262 140) scale(1.4)">
           <CoachDrawing />
         </g>

@@ -91,6 +91,13 @@ async function unlock(page, dark) {
   await setTheme(page, dark);
 }
 async function setTheme(page, dark) {
+  // Acknowledge the first-install notice before operating the page header.
+  const offlineNotice = page.locator(
+    '.pwa-notice-positioner[data-kind="offline"]',
+  );
+  if (await offlineNotice.isVisible()) {
+    await offlineNotice.getByRole("button", { name: "關閉更新通知" }).click();
+  }
   const toggle = page.getByRole("button", {
     name: dark ? "切換到深色模式" : "切換到亮色模式",
   });
@@ -364,7 +371,8 @@ try {
           assert.equal(
             await page.evaluate(() =>
               [...document.fonts].some(
-                (font) => font.family === "Trip Journal" && font.status === "loaded",
+                (font) =>
+                  font.family === "Trip Journal" && font.status === "loaded",
               ),
             ),
             true,
@@ -406,7 +414,8 @@ try {
           await unlock(slow.page, dark);
           const loadingFont = await slow.page.evaluate(() =>
             [...document.fonts].some(
-              (font) => font.family === "Trip Journal" && font.status !== "loaded",
+              (font) =>
+                font.family === "Trip Journal" && font.status !== "loaded",
             ),
           );
           assert.equal(
