@@ -210,7 +210,7 @@ const CalculatorModal = ({
         {/* Header */}
         <div className="calc-header">
           <div className="calc-header-title">
-            <p className="calc-title-label">Calculator</p>
+            <p className="calc-title-label">旅途計算機</p>
             <p className="calc-title-main">當前貨幣：{currentUnit}</p>
           </div>
           <button

@@ -303,3 +303,93 @@
 .calc-modal {
   scrollbar-width: none;
 }
+
+/* Shared journal paper and ink for the travel calculator. */
+.travel-shell[data-editorial="true"] .calc-modal {
+  --calc-bg-glass: var(--travel-surface);
+  --calc-border: var(--journal-ink);
+  --calc-text-primary: var(--travel-text);
+  --calc-text-secondary: var(--travel-muted);
+  --calc-panel-bg: var(--travel-page);
+  --calc-btn-bg: var(--travel-surface);
+  --calc-accent: var(--travel-text);
+  max-width: 400px;
+  max-height: calc(
+    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  overflow-y: auto;
+  border: 2px solid var(--journal-ink);
+  border-radius: 24px 27px 23px 26px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 4px 5px 0 rgb(0 0 0 / 12%);
+  font-family: inherit;
+}
+.travel-shell[data-editorial="true"] .calc-header {
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px dashed var(--travel-line);
+}
+.travel-shell[data-editorial="true"] .calc-title-label {
+  color: var(--travel-accent);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  opacity: 1;
+}
+.travel-shell[data-editorial="true"] .calc-title-main {
+  font-size: 16px;
+}
+.travel-shell[data-editorial="true"] .calc-close-btn {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 14px 16px 13px 15px;
+  background: var(--travel-surface);
+}
+.travel-shell[data-editorial="true"] .calc-display {
+  background: var(--journal-blue);
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 16px 18px 15px 17px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(30px, 9vw, 44px);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+.travel-shell[data-editorial="true"] .calc-hint {
+  background: var(--travel-page);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 8px;
+  margin-bottom: 0;
+}
+.travel-shell[data-editorial="true"] .calc-btn {
+  min-height: 52px;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 14px 16px 13px 15px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  transition:
+    background-color 120ms,
+    filter 120ms;
+}
+.travel-shell[data-editorial="true"] .calc-btn-muted {
+  background: var(--journal-green);
+}
+.travel-shell[data-editorial="true"] .calc-btn-operator {
+  background: var(--journal-yellow);
+}
+.travel-shell[data-editorial="true"] .calc-btn-accent {
+  background: var(--journal-pink);
+}
+.travel-shell[data-editorial="true"] .calc-btn:hover {
+  background: var(--travel-subtle);
+}
+.travel-shell[data-editorial="true"] :is(.calc-btn, .calc-close-btn):active {
+  transform: none;
+  opacity: 1;
+  filter: brightness(0.94);
+}
+.travel-shell[data-editorial="true"] .calc-btn-fx {
+  letter-spacing: 0;
+}

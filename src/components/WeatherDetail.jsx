@@ -321,6 +321,7 @@ const WeatherDetail = ({
       {/* --- 標題區域：地點與當前氣溫 --- */}
       <div className="wc-header-compact">
         <div className="wc-header-main">
+          <p className="wc-journal-label">旅途氣象</p>
           <div className="wc-location-row">
             <MapPin size={14} className="text-accent" />
             <span className="wc-loc-name">

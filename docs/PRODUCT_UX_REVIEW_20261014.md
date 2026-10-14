@@ -40,4 +40,12 @@
 
 最終驗證：69 項單元測試、37 項端到端測試、14 組配置／140 個頁面狀態、4 組正式建置離線／慢網路情境皆通過。lint、來源安全與正式建置產物檢查通過。登入頁主題完成切換後逐張核對；正式 API 設定與本輪備份保持一致。
 
+## 小工具風格補齊
+
+依後續使用者回饋，將計算機與天氣詳情原有的獨立毛玻璃樣式改為共用旅行手帳的紙張、墨線、粉彩及字體。計算機使用粉彩區分功能與運算鍵，顯示區改為紙片式區塊；天氣使用墨線卡片、較大的資訊格與一致的圖示／溫度區間配色。保留資料、運算與換匯邏輯，短畫面可捲動閱讀，關閉控制為 44px。
+
+新增小工具回歸檢查：Chrome 320×740、402×874、412×915、874×402 與 WebKit 402×874、874×402，兩工具與兩主題共 24 個組合通過。確認 2+3=5、以隔離匯率 0.2 換算為 1、七日／每小時預報內容、無橫向溢出、底部建議可捲動讀取及正常關閉。網站工具選單開啟計算機、lint、69 項單元測試、正式建置與產物檢查通過。
+
+備份：忽略的 `backups.local/before-tool-style-a260b54.zip`。截圖：忽略的 `test-run.local/tool-calculator-light.png`、`tool-calculator-dark.png`、`tool-weather-light.png`、`tool-weather-dark.png`。
+
 來源備份：忽略的 `backups.local/before-product-audit-9ec77d8.zip`。正式設定備份：忽略的 `backups.local/env-before-product-audit-20261014.private`。版面與登入證據儲存在忽略的 `test-run.local/product-audit-20261014/`。不在公開報告中寫入憑證或完整來源雜湊。

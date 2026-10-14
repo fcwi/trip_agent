@@ -364,3 +364,158 @@
   background: rgba(150, 150, 150, 0.15);
   border-radius: 6px;
 }
+
+/* Weather as a readable page in the same illustrated travel journal. */
+.travel-shell[data-editorial="true"] .weather-card {
+  --wc-bg-glass: var(--travel-surface);
+  --wc-border: var(--journal-ink);
+  --wc-text-primary: var(--travel-text);
+  --wc-text-secondary: var(--travel-muted);
+  --wc-panel-bg: var(--travel-page);
+  --wc-divider: var(--travel-line);
+  --wc-bar-bg: var(--travel-subtle);
+  max-width: 400px;
+  max-height: calc(
+    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  border: 2px solid var(--journal-ink);
+  border-radius: 24px 27px 23px 26px;
+  padding: 16px;
+  gap: 16px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 4px 5px 0 rgb(0 0 0 / 12%);
+  font-family: inherit;
+}
+.wc-journal-label {
+  color: var(--wc-text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.travel-shell[data-editorial="true"] .wc-header-compact {
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--travel-line);
+  gap: 8px;
+}
+.travel-shell[data-editorial="true"] .wc-header-main {
+  min-width: 0;
+  gap: 4px;
+}
+.travel-shell[data-editorial="true"] .wc-loc-name {
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-editorial="true"] .wc-location-row {
+  font-size: 16px;
+}
+.travel-shell[data-editorial="true"] .wc-updated-at {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"] .wc-temp-big {
+  font-size: 44px;
+  font-weight: 600;
+}
+.travel-shell[data-editorial="true"] .wc-temp-row {
+  margin-top: 8px;
+}
+.travel-shell[data-editorial="true"] .wc-desc {
+  font-size: 14px;
+}
+.travel-shell[data-editorial="true"] .wc-hl {
+  font-size: 12px;
+  opacity: 1;
+  flex-wrap: wrap;
+}
+.travel-shell[data-editorial="true"] .wc-icon-btn {
+  flex-shrink: 0;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 14px 16px 13px 15px;
+  background: var(--travel-surface);
+}
+.travel-shell[data-editorial="true"] .wc-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.travel-shell[data-editorial="true"] .wc-grid-item {
+  padding: 12px 8px;
+  gap: 4px;
+  border: 1px solid var(--travel-line);
+  border-radius: 14px 16px 13px 15px;
+}
+.travel-shell[data-editorial="true"] .wc-grid-label {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"] .wc-grid-value {
+  font-size: 16px;
+}
+.travel-shell[data-editorial="true"] .wc-grid-value span {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"] .wc-section-title {
+  font-size: 14px;
+  opacity: 1;
+  margin-bottom: 8px;
+}
+.travel-shell[data-editorial="true"] .wc-hourly-scroll {
+  height: auto;
+  min-height: 100px;
+  padding-bottom: 8px;
+  gap: 12px;
+}
+.travel-shell[data-editorial="true"] .wc-hour-item {
+  gap: 4px;
+}
+.travel-shell[data-editorial="true"] :is(.wc-h-desc, .wc-h-pop, .wc-day-desc) {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"] :is(.text-accent, .wc-h-pop, .wc-day-pop) {
+  color: var(--travel-accent);
+}
+.travel-shell[data-editorial="true"] .wc-day-pop {
+  background: var(--travel-subtle);
+  font-size: 11px;
+}
+.travel-shell[data-editorial="true"] .wc-day-row {
+  display: grid;
+  grid-template-columns: 38px minmax(80px, 1fr) minmax(96px, 1.1fr);
+  gap: 6px;
+  padding: 10px 0;
+}
+.travel-shell[data-editorial="true"] .wc-day-status {
+  width: auto;
+  min-width: 0;
+  padding-left: 0;
+  gap: 4px;
+}
+.travel-shell[data-editorial="true"] .wc-day-temp {
+  min-width: 0;
+  padding-left: 0;
+  gap: 5px;
+}
+.travel-shell[data-editorial="true"] .wc-temp-bar {
+  min-width: 8px;
+  height: 6px;
+}
+.travel-shell[data-editorial="true"] .wc-footer {
+  background: var(--journal-yellow);
+  border: 1px solid var(--journal-ink);
+  border-radius: 14px 16px 13px 15px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 0;
+}
+
+.travel-shell[data-editorial="true"] .wc-hl span {
+  color: var(--travel-muted);
+}
+.travel-shell[data-editorial="true"] :is(.wc-h-icon-wrapper, .wc-day-icon) svg {
+  color: var(--travel-accent);
+}
+.travel-shell[data-editorial="true"] .wc-temp-bar-inner {
+  background-image: linear-gradient(
+    to right,
+    var(--journal-blue),
+    var(--journal-yellow)
+  ) !important;
+}
