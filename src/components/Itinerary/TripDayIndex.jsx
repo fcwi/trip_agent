@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { DayStamp } from "./JournalIllustration.jsx";
 
 export default function TripDayIndex({
   itineraryData,
@@ -25,6 +26,9 @@ export default function TripDayIndex({
               aria-label={`開啟${day.day}，${day.date}，${day.title}`}
             >
               <span className="travel-day-index__number">
+                <span className="journal-index-picture" aria-hidden="true">
+                  <DayStamp title={day.title} />
+                </span>
                 {day.day}
                 <small>{day.date}</small>
               </span>
