@@ -433,6 +433,12 @@ test("opens a deep-linked tab after restoring the session", async ({
 test("operates the trip tools menu with keyboard focus and opens the calculator", async ({
   page,
 }) => {
+  const focusWarnings = [];
+  page.on("console", (message) => {
+    if (/Blocked aria-hidden|retained focus/i.test(message.text())) {
+      focusWarnings.push(message.text());
+    }
+  });
   await page.goto("/");
   await unlockTrip(page);
 
@@ -449,7 +455,20 @@ test("operates the trip tools menu with keyboard focus and opens the calculator"
 
   await trigger.click();
   await page.getByRole("button", { name: "開啟匯率計算機" }).click();
-  await expect(page.getByRole("dialog", { name: "計算機" })).toBeVisible();
+  const calculator = page.getByRole("dialog", { name: "計算機" });
+  await expect(calculator).toBeVisible();
+  await expect(calculator).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(calculator.getByRole("button", { name: "關閉計算機" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(calculator).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await expect(shareAction).toBeFocused();
+  await page.locator(".travel-header__dates").click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#trip-tools-panel")).toHaveAttribute("inert", "");
+  expect(focusWarnings).toEqual([]);
 });
 
 test("centers selected dates, names icon controls, and renders offline currency as status", async ({

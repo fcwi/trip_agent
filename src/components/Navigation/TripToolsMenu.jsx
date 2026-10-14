@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Calculator, LocateFixed, Loader, Wrench, X } from "lucide-react";
 
 const locationSourceLabel = (source) => {
@@ -20,18 +20,26 @@ export default function TripToolsMenu({
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
   const firstActionRef = useRef(null);
+  const panelRef = useRef(null);
+
+  const closeMenu = useCallback(() => {
+    // Move focus before React hides the panel, including while a tool loads.
+    if (panelRef.current?.contains(document.activeElement)) {
+      triggerRef.current?.focus({ preventScroll: true });
+    }
+    setIsOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return undefined;
 
     const handlePointerDown = (event) => {
-      if (!containerRef.current?.contains(event.target)) setIsOpen(false);
+      if (!containerRef.current?.contains(event.target)) closeMenu();
     };
     const handleKeyDown = (event) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
-      setIsOpen(false);
-      requestAnimationFrame(() => triggerRef.current?.focus());
+      closeMenu();
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -45,7 +53,7 @@ export default function TripToolsMenu({
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, closeMenu]);
 
   const panelClasses = isDarkMode
     ? "border-white/15 bg-neutral-950/95 text-neutral-100 shadow-black/40"
@@ -57,13 +65,14 @@ export default function TripToolsMenu({
     hasLocationPermission === false || locationSource === "cache";
 
   const runAction = (action) => {
-    setIsOpen(false);
+    closeMenu();
     action();
   };
 
   return (
     <div ref={containerRef} className="relative z-[70] flex flex-col items-end">
       <div
+        ref={panelRef}
         id="trip-tools-panel"
         aria-hidden={!isOpen}
         inert={!isOpen}
@@ -113,7 +122,7 @@ export default function TripToolsMenu({
         aria-expanded={isOpen}
         aria-controls="trip-tools-panel"
         aria-label={isOpen ? "關閉旅程工具" : "開啟旅程工具"}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => (isOpen ? closeMenu() : setIsOpen(true))}
         className={`travel-tools-trigger flex h-12 w-12 items-center justify-center rounded-full border shadow-xl backdrop-blur-xl transition-[background-color,color,transform] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${
           isDarkMode
             ? "border-white/20 bg-neutral-900/95 text-white focus-visible:ring-offset-neutral-950"
