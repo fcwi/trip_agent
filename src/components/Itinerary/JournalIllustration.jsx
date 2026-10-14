@@ -158,7 +158,7 @@ export default function JournalIllustration({
   return (
     <svg
       className={`journal-illustration ${miniature ? "journal-illustration--mini" : ""}`}
-      viewBox="0 0 640 240"
+      viewBox="64 -8 512 264"
       fill="none"
       aria-hidden="true"
     >
@@ -226,7 +226,7 @@ export default function JournalIllustration({
           strokeWidth="1.2"
           opacity="0.5"
         />
-        <g transform="translate(262 140) scale(1.4)">
+        <g transform="translate(246 124) scale(1.8)">
           <CoachDrawing />
         </g>
         <path d="M199 60q8-9 16 0 8-9 16 0m-48-19q7-8 14 0 7-8 14 0" />
