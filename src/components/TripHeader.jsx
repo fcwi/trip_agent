@@ -23,12 +23,13 @@ const TripHeader = ({
             aria-label="行程標題；連續點擊可開啟測試模式"
             onClick={onTitleClick}
           >
-            {isOverview ? "旅行手帳" : tripConfig.title}
+            <span className="travel-header__title-size" aria-hidden="true">
+              {tripConfig.title}
+            </span>
+            <span>{isOverview ? "旅行手帳" : tripConfig.title}</span>
           </button>
         </h1>
-        {!isOverview && (
-          <p className="travel-header__dates">{tripConfig.subTitle}</p>
-        )}
+        <p className="travel-header__dates">{tripConfig.subTitle}</p>
       </div>
       <div className="travel-header__actions">
         <button

@@ -622,6 +622,25 @@
   border-bottom: 3px solid var(--journal-ink);
 }
 
+/* Reserve the trip title's wrapped height when the overview title is shorter. */
+.travel-shell[data-editorial="true"] .travel-header__title button {
+  display: grid;
+  align-items: center;
+}
+
+.travel-shell[data-editorial="true"] .travel-header__title button > span {
+  grid-area: 1 / 1;
+}
+
+.travel-header__title-size {
+  display: none;
+  visibility: hidden;
+}
+
+.travel-shell[data-editorial="true"] .travel-header__title-size {
+  display: block;
+}
+
 .travel-shell[data-editorial="true"] .travel-panel {
   border: 3px solid var(--journal-ink);
   border-radius: 24px 26px 22px 25px;
@@ -1002,24 +1021,6 @@
   }
 }
 
-/* Keep the cover first in the homepage's visual hierarchy. */
-.travel-shell[data-editorial="true"]
-  .travel-date-selector[data-overview="true"] {
-  padding-top: 0;
-  padding-bottom: 4px;
-}
-.travel-shell[data-editorial="true"]
-  .travel-date-selector[data-overview="true"]
-  > button {
-  justify-content: center;
-  min-height: 44px;
-  padding-block: 6px;
-}
-.travel-date-selector[data-overview="true"] .journal-date-node,
-.travel-date-selector[data-overview="true"] small,
-.travel-date-selector[data-overview="true"] > button::after {
-  display: none;
-}
 /* Visible ticket summaries and small, day-specific picture stamps. */
 .journal-flight-tickets {
   display: grid;
