@@ -1,6 +1,13 @@
 import { Key, Lock, Moon, Sun } from "lucide-react";
 import CurrencyWidget from "./CurrencyWidget.jsx";
 import TripSwitcher from "./TripSwitcher.jsx";
+import { getTripPhase } from "../config/tripCatalog.js";
+
+const phaseLabels = {
+  upcoming: "即將出發",
+  during: "旅程中",
+  past: "旅程回顧",
+};
 
 const TripHeader = ({
   tripConfig,
@@ -11,14 +18,19 @@ const TripHeader = ({
   onToggleTheme,
   rateData,
   isOnline,
-  isOverview = false,
 }) => {
   const lockLabel = testModeClickCount === 10 ? "進入測試模式" : "鎖定行程";
+  const phase = getTripPhase(tripConfig);
   return (
     <header className="travel-header">
       <div className="travel-header__identity">
-        <p className="travel-eyebrow">Trip Agent</p>
-        <h1 className="travel-header__title">
+        <p className="travel-eyebrow journal-header-kicker">
+          <span>Trip Agent</span>
+          <span className="journal-header-phase" data-trip-phase={phase}>
+            {phaseLabels[phase]}
+          </span>
+        </p>
+        <h1 className="travel-header__title" aria-label={tripConfig.title}>
           <button
             type="button"
             aria-label="行程標題；連續點擊可開啟測試模式"
@@ -27,7 +39,7 @@ const TripHeader = ({
             <span className="travel-header__title-size" aria-hidden="true">
               {tripConfig.title}
             </span>
-            <span>{isOverview ? "旅行手帳" : tripConfig.title}</span>
+            <span>{tripConfig.title}</span>
           </button>
         </h1>
         <p className="travel-header__dates">{tripConfig.subTitle}</p>

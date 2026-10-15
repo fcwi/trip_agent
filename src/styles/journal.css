@@ -1771,6 +1771,25 @@
 .travel-shell[data-editorial="true"] .journal-map-dialog h2 {
   font-size: 18px;
 }
+
+/* Keep the current trip and its date context visible across every tab. */
+.journal-header-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.journal-header-phase {
+  padding: 1px 6px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 6px;
+  background: var(--travel-surface);
+  color: var(--travel-muted);
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
 .travel-shell[data-editorial="true"]
   .journal-map-dialog
   > header

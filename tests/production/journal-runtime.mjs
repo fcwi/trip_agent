@@ -108,6 +108,38 @@ async function setTheme(page, dark) {
     dark ? "dark" : "light",
   );
 }
+
+async function loadEvidence(page) {
+  return page.evaluate(() => {
+    const resources = performance
+      .getEntriesByType("resource")
+      .filter((entry) => {
+        const url = new URL(entry.name);
+        return (
+          url.origin === location.origin &&
+          /\.(js|css|woff2)$/.test(url.pathname)
+        );
+      });
+    const optional = resources.filter((entry) =>
+      /\/(maplibre-gl|heic2any)-[^/]+\.js$/.test(new URL(entry.name).pathname),
+    );
+    return {
+      elapsedMs: Math.round(performance.now()),
+      resourceCount: resources.length,
+      transferredBytes: resources.reduce(
+        (sum, entry) => sum + entry.transferSize,
+        0,
+      ),
+      decodedBytes: resources.reduce(
+        (sum, entry) => sum + entry.decodedBodySize,
+        0,
+      ),
+      optionalEngines: optional.map((entry) =>
+        new URL(entry.name).pathname.split("/").at(-1),
+      ),
+    };
+  });
+}
 async function auditPages(page, trip, label) {
   // A new navigation uses the automatic time-based theme; select and verify
   // the requested appearance again before taking any screenshots.
@@ -445,7 +477,19 @@ try {
             await route.continue();
           });
           await slow.page.goto(`${root}/?trip=${trip}`);
+          const lockedLoad = await loadEvidence(slow.page);
+          assert.deepEqual(
+            lockedLoad.optionalEngines,
+            [],
+            "locked page must not download optional map or photo engines",
+          );
           await unlock(slow.page, dark);
+          const unlockedLoad = await loadEvidence(slow.page);
+          assert.deepEqual(
+            unlockedLoad.optionalEngines,
+            [],
+            "trip overview must stay usable without optional engines",
+          );
           const loadingFont = await slow.page.evaluate(() =>
             [...document.fonts].some(
               (font) =>
@@ -471,6 +515,7 @@ try {
             downloadBytesPerSecond: 256000,
             fontDelayMs: 6000,
             usableBeforeFont: true,
+            loadEvidence: { locked: lockedLoad, unlocked: unlockedLoad },
             passed: true,
           });
           console.log(

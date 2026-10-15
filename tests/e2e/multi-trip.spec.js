@@ -56,6 +56,45 @@ const switchTo = async (page, trip) => {
   await expect(page.getByLabel("通關密碼")).toHaveCount(0);
 };
 
+test("trip identity and phase stay visible across overview, daily and guide pages", async ({
+  page,
+}) => {
+  for (const [id, date, phase, label] of [
+    ["2027_tohoku", "2026-10-15T03:00:00Z", "upcoming", "即將出發"],
+    ["2026_busan", "2026-07-03T03:00:00Z", "during", "旅程中"],
+    ["2026_karuizawa", "2026-10-15T03:00:00Z", "past", "旅程回顧"],
+  ]) {
+    await page.clock.setFixedTime(new Date(date));
+    await page.goto(`/?trip=${id}`);
+    if (await page.getByLabel("通關密碼").count()) await unlock(page);
+    const trip = trips.find((item) => item.id === id);
+    const header = page.locator(".travel-header");
+    await expect(
+      header.getByRole("heading", { level: 1, name: trip.title, exact: true }),
+    ).toBeVisible();
+    await expect(header.locator(".journal-header-phase")).toHaveText(label);
+    await expect(header.locator(".journal-header-phase")).toHaveAttribute(
+      "data-trip-phase",
+      phase,
+    );
+    await page.getByRole("button", { name: "總覽", exact: true }).click();
+    const overviewHeight = (await header.boundingBox()).height;
+    await page.locator('button[aria-label^="查看Day"]').first().click();
+    await expect(page.locator(".travel-day-heading")).toBeVisible();
+    expect(
+      Math.abs((await header.boundingBox()).height - overviewHeight),
+    ).toBeLessThan(1);
+    await page
+      .getByRole("navigation", { name: "主要功能" })
+      .getByRole("button", { name: /^指南/ })
+      .click();
+    await expect(
+      header.getByRole("heading", { level: 1, name: trip.title, exact: true }),
+    ).toBeVisible();
+    await expect(header.locator(".journal-header-phase")).toHaveText(label);
+  }
+});
+
 test("automatically opens the ongoing or nearest future trip and falls back to the latest review", async ({
   page,
 }) => {

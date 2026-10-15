@@ -2656,7 +2656,6 @@ const ItineraryApp = ({ authentication }) => {
         className={`max-w-md mx-auto relative min-h-screen flex flex-col z-10 ${activeTab === "itinerary" ? "travel-itinerary-shell" : ""}`}
       >
         <TripHeader
-          isOverview={activeTab === "itinerary" && activeDay === -1}
           tripConfig={tripConfig}
           isDarkMode={isDarkMode}
           theme={theme}
