@@ -69,7 +69,7 @@ export default function TimelineEvent({
             </span>
           )}
           <a
-            className="travel-icon-button"
+            className="travel-icon-button journal-event-map-link"
             href={getMapLink(event.mapQuery || event.title)}
             target="_blank"
             rel="noopener noreferrer"
@@ -77,6 +77,7 @@ export default function TimelineEvent({
             aria-label={`在地圖查看${event.title}`}
           >
             <MapPin aria-hidden="true" className="h-4 w-4" />
+            <span aria-hidden="true">地圖</span>
           </a>
         </div>
         {!isTransport && event.desc && (
@@ -99,7 +100,7 @@ export default function TimelineEvent({
             </section>
           )}
           {event.transport?.note && (
-            <section>
+            <section className="journal-event-reminder">
               <h4>交通提醒</h4>
               <p>{event.transport.note}</p>
             </section>
@@ -115,7 +116,7 @@ export default function TimelineEvent({
             </section>
           )}
           {event.tips?.length > 0 && (
-            <section>
+            <section className="journal-event-reminder">
               <h4>行程提醒</h4>
               <ul>
                 {event.tips.map((item, index) => (

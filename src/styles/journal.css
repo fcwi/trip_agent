@@ -1644,3 +1644,117 @@
 .dark .journal-auth button[type="submit"] {
   color: var(--auth-page);
 }
+
+/* Daily reading: handwriting names the scene; plain text explains the plan. */
+.travel-shell[data-editorial="true"] .travel-day-layout {
+  --journal-body-font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+    "Microsoft JhengHei", sans-serif;
+}
+.travel-shell[data-editorial="true"]
+  .travel-day-layout
+  :is(
+    .journal-day-intro,
+    .travel-day-notice p,
+    .travel-day-route > p,
+    .travel-timeline-event__description,
+    .travel-event-details,
+    .travel-transport-summary,
+    .travel-timeline-event__time,
+    .travel-timeline-event__meta,
+    .travel-day-weather small
+  ) {
+  font-family: var(--journal-body-font);
+  letter-spacing: normal;
+}
+.travel-shell[data-editorial="true"]
+  .travel-day-layout
+  :is(
+    .journal-day-intro,
+    .travel-timeline-event__description,
+    .travel-event-details,
+    .travel-day-notice p,
+    .travel-day-route > p
+  ) {
+  font-size: 16px;
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+.travel-shell[data-editorial="true"] .travel-timeline-event__time {
+  padding-top: 24px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.travel-shell[data-editorial="true"]
+  .travel-timeline-event__heading
+  h3
+  button
+  span {
+  text-decoration: none;
+  text-wrap: pretty;
+}
+.travel-shell[data-editorial="true"] .travel-timeline-event__meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+.travel-shell[data-editorial="true"] .travel-event-category {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 3px 9px;
+}
+.travel-shell[data-editorial="true"] .journal-transport-duration {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: normal;
+}
+.travel-shell[data-editorial="true"] .journal-event-map-link {
+  flex: none;
+  gap: 4px;
+  min-width: 66px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 8px;
+  border: 1px solid var(--journal-rule);
+  font-family: var(--journal-body-font);
+  font-size: 13px;
+  line-height: 1;
+}
+.travel-shell[data-editorial="true"] .travel-transport-summary {
+  padding-left: 10px;
+  border-left: 2px solid var(--travel-line);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.travel-shell[data-editorial="true"] .travel-event-details {
+  padding-top: 18px;
+  margin-top: 18px;
+}
+.travel-shell[data-editorial="true"] .travel-event-details h4 {
+  margin-bottom: 8px;
+  font-family: var(--journal-body-font);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.travel-shell[data-editorial="true"] .travel-event-details section + section {
+  margin-top: 22px;
+}
+.travel-shell[data-editorial="true"] .travel-event-details li + li {
+  margin-top: 8px;
+}
+.travel-shell[data-editorial="true"] .journal-event-reminder {
+  padding: 12px 14px;
+  border-left: 2px solid var(--travel-accent);
+  border-radius: 0 10px 10px 0;
+  background: var(--travel-page);
+}
+@media (max-width: 374px) {
+  .travel-shell[data-editorial="true"] .travel-timeline-event__body {
+    padding-inline: 12px;
+  }
+}
