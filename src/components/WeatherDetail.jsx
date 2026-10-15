@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import "./WeatherDetail.css";
+import UtilityState from "./UtilityState.jsx";
+import { useOnlineStatus } from "../hooks/useOnlineStatus.js";
 import {
   Wind,
   Droplets,
@@ -189,7 +191,12 @@ const WeatherDetail = ({
   isDarkMode = false,
   theme, // 外部傳入的主題配置
 }) => {
+  const online = useOnlineStatus();
   const isLoading = loading || weather?.loading;
+  const hasData =
+    Number.isFinite(weather?.temp) ||
+    weather?.daily?.temperature_2m_max?.some(Number.isFinite);
+  const isInitialLoading = isLoading && !hasData;
 
   // 格式化當前天氣數據
   const current = useMemo(() => {
@@ -203,8 +210,8 @@ const WeatherDetail = ({
       arr && arr[i] !== undefined ? arr[i] : arr ? arr[0] : null;
 
     return {
-      temp: weather.temp != null ? Math.round(weather.temp) : "--",
-      desc: weather.desc || "多雲",
+      temp: Number.isFinite(weather.temp) ? Math.round(weather.temp) : "--",
+      desc: weather.desc || "尚無天氣資料",
       location: weather.locationName || "未知地點",
       max:
         getVal(daily.temperature_2m_max, idx) != null
@@ -224,7 +231,7 @@ const WeatherDetail = ({
         getVal(hourly.wind_speed_10m, idx) != null
           ? Math.round(getVal(hourly.wind_speed_10m, idx))
           : "--",
-      precipProb: getVal(hourly.precipitation_probability, idx) ?? 0,
+      precipProb: getVal(hourly.precipitation_probability, idx) ?? "--",
       humidity: getVal(hourly.relative_humidity_2m, idx) ?? "--",
 
       sunrise: getVal(daily.sunrise, idx)
@@ -244,7 +251,7 @@ const WeatherDetail = ({
 
   // 處理每小時預報列表 (從當前小時開始抓取 12 筆)
   const hourlyItems = useMemo(() => {
-    if (!weather?.hourly?.time) return [];
+    if (!weather?.hourly?.time || !weather.hourly.temperature_2m) return [];
     const { time, temperature_2m, precipitation_probability, weathercode } =
       weather.hourly;
 
@@ -256,31 +263,39 @@ const WeatherDetail = ({
 
     const startIndex = currentHourIndex !== -1 ? currentHourIndex : 0;
 
-    return time.slice(startIndex, startIndex + 12).map((t, i) => {
-      const originalIndex = startIndex + i;
+    return time
+      .slice(startIndex, startIndex + 12)
+      .map((t, i) => {
+        const originalIndex = startIndex + i;
+        if (!Number.isFinite(temperature_2m[originalIndex])) return null;
 
-      const hourDate = new Date(t);
-      const hour = hourDate.getHours();
-      const isDay = hour >= 6 && hour < 18;
+        const hourDate = new Date(t);
+        const hour = hourDate.getHours();
+        const isDay = hour >= 6 && hour < 18;
 
-      const status = getWeatherStatus(
-        weathercode?.[originalIndex],
-        isDay,
-        theme,
-      );
+        const status = getWeatherStatus(
+          weathercode?.[originalIndex],
+          isDay,
+          theme,
+        );
 
-      return {
-        time: i === 0 ? "現在" : `${hour}時`,
-        temp: Math.round(temperature_2m[originalIndex]),
-        pop: precipitation_probability?.[originalIndex] || 0,
-        status: status,
-      };
-    });
+        return {
+          time: i === 0 ? "現在" : `${hour}時`,
+          temp: Math.round(temperature_2m[originalIndex]),
+          pop: precipitation_probability?.[originalIndex] || 0,
+          status: status,
+        };
+      })
+      .filter(Boolean);
   }, [weather, theme]);
 
   // 處理未來 7 天預報列表與溫度區間
   const { dailyItems, overallMin, overallMax } = useMemo(() => {
-    if (!weather?.daily?.time)
+    if (
+      !weather?.daily?.time ||
+      !weather.daily.temperature_2m_max ||
+      !weather.daily.temperature_2m_min
+    )
       return { dailyItems: [], overallMin: 0, overallMax: 0 };
     const {
       time,
@@ -291,6 +306,11 @@ const WeatherDetail = ({
     } = weather.daily;
 
     const items = time.slice(0, 7).map((t, i) => {
+      if (
+        !Number.isFinite(temperature_2m_max[i]) ||
+        !Number.isFinite(temperature_2m_min[i])
+      )
+        return null;
       const status = getWeatherStatus(weathercode?.[i], true, theme);
       return {
         day: i === 0 ? "今天" : formatDay(t),
@@ -301,10 +321,17 @@ const WeatherDetail = ({
       };
     });
 
-    const allMin = Math.min(...items.map((i) => i.min));
-    const allMax = Math.max(...items.map((i) => i.max));
+    const validItems = items.filter(
+      (item) => item && Number.isFinite(item.min) && Number.isFinite(item.max),
+    );
+    const allMin = validItems.length
+      ? Math.min(...validItems.map((i) => i.min))
+      : 0;
+    const allMax = validItems.length
+      ? Math.max(...validItems.map((i) => i.max))
+      : 0;
 
-    return { dailyItems: items, overallMin: allMin, overallMax: allMax };
+    return { dailyItems: validItems, overallMin: allMin, overallMax: allMax };
   }, [weather, theme]);
 
   const themeClass = isDarkMode ? "theme-dark" : "theme-light";
@@ -325,7 +352,7 @@ const WeatherDetail = ({
           <div className="wc-location-row">
             <MapPin size={14} className="text-accent" />
             <span className="wc-loc-name">
-              {isLoading ? (
+              {isInitialLoading ? (
                 <Skeleton width="60px" height="20px" />
               ) : (
                 current?.location
@@ -337,7 +364,7 @@ const WeatherDetail = ({
           </span>
           <div className="wc-temp-row">
             <div className="wc-temp-big">
-              {isLoading ? (
+              {isInitialLoading ? (
                 <Skeleton width="80px" height="50px" />
               ) : (
                 `${current?.temp}°`
@@ -390,138 +417,182 @@ const WeatherDetail = ({
         </div>
       </div>
 
-      {/* --- 詳細數據網格 (體感、降雨、紫外線、風速) --- */}
-      <div className="wc-grid">
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Activity size={12} /> 體感
+      {(isLoading || !online || weather?.error || !hasData) && (
+        <UtilityState
+          kind={
+            isLoading
+              ? "loading"
+              : !online
+                ? "offline"
+                : weather?.error
+                  ? "error"
+                  : "empty"
+          }
+          title={
+            isLoading
+              ? "正在更新天氣"
+              : !online
+                ? "目前離線"
+                : weather?.error
+                  ? "天氣暫時無法更新"
+                  : "尚無天氣資料"
+          }
+          onRetry={!isLoading && online ? onRefresh : undefined}
+          retryLabel="重新整理天氣"
+        >
+          {hasData
+            ? "目前保留上次取得的資料，請留意更新時間。"
+            : "請確認網路後重新整理，天氣資料取得前不提供預報數值。"}
+        </UtilityState>
+      )}
+      {(hasData || isInitialLoading) && (
+        <>
+          {/* --- 詳細數據網格 (體感、降雨、紫外線、風速) --- */}
+          <div className="wc-grid">
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Activity size={12} /> 體感
+              </div>
+              <div className="wc-grid-value">{current?.feelsLike}°</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <CloudRain size={12} /> 降雨
+              </div>
+              <div className="wc-grid-value">{current?.precipProb}%</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Droplets size={12} /> 濕度
+              </div>
+              <div className="wc-grid-value">{current?.humidity}%</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Sun size={12} /> 紫外線
+              </div>
+              <div className="wc-grid-value">{current?.uv}</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Wind size={12} /> 風速
+              </div>
+              <div className="wc-grid-value">
+                {current?.wind} <span className="text-[10px]">km/h</span>
+              </div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Sunrise size={12} /> 日出
+              </div>
+              <div className="wc-grid-value">{current?.sunrise}</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Sunset size={12} /> 日落
+              </div>
+              <div className="wc-grid-value">{current?.sunset}</div>
+            </div>
+            <div className="wc-grid-item">
+              <div className="wc-grid-label">
+                <Moon size={12} /> 月相
+              </div>
+              <div className="wc-grid-value flex items-center justify-center h-full">
+                <MoonPhaseSvg phase={current?.moonPhase?.phase} size={24} />
+              </div>
+            </div>
           </div>
-          <div className="wc-grid-value">{current?.feelsLike}°</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <CloudRain size={12} /> 降雨
-          </div>
-          <div className="wc-grid-value">{current?.precipProb}%</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Droplets size={12} /> 濕度
-          </div>
-          <div className="wc-grid-value">{current?.humidity}%</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Sun size={12} /> 紫外線
-          </div>
-          <div className="wc-grid-value">{current?.uv}</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Wind size={12} /> 風速
-          </div>
-          <div className="wc-grid-value">
-            {current?.wind} <span className="text-[10px]">km/h</span>
-          </div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Sunrise size={12} /> 日出
-          </div>
-          <div className="wc-grid-value">{current?.sunrise}</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Sunset size={12} /> 日落
-          </div>
-          <div className="wc-grid-value">{current?.sunset}</div>
-        </div>
-        <div className="wc-grid-item">
-          <div className="wc-grid-label">
-            <Moon size={12} /> 月相
-          </div>
-          <div className="wc-grid-value flex items-center justify-center h-full">
-            <MoonPhaseSvg phase={current?.moonPhase?.phase} size={24} />
-          </div>
-        </div>
-      </div>
 
-      {/* --- 每小時預報橫向滾動列表 --- */}
-      <div>
-        <div className="wc-section-title">
-          <Activity size={12} /> 每小時預報
-        </div>
-        <div className="wc-hourly-scroll">
-          {isLoading
-            ? [1, 2, 3, 4, 5].map((i) => (
-                <Skeleton key={i} width="50px" height="90px" />
-              ))
-            : hourlyItems.map((item, idx) => (
-                <div key={idx} className="wc-hour-item">
-                  <span className="wc-h-time">{item.time}</span>
-                  <div className="wc-h-icon-wrapper">{item.status.icon}</div>
-                  <span className="wc-h-desc">{item.status.label}</span>
-                  <span className="wc-h-temp">{item.temp}°</span>
-                  {item.pop > 0 && (
-                    <span className="wc-h-pop">{item.pop}%</span>
-                  )}
-                </div>
-              ))}
-        </div>
-      </div>
-
-      {/* --- 未來 7 天預報列表 --- */}
-      <div>
-        <div className="wc-section-title">
-          <Sun size={12} /> 未來 7 天
-        </div>
-        <div className="wc-daily-list">
-          {isLoading
-            ? [1, 2, 3].map((i) => (
-                <Skeleton key={i} width="100%" height="40px" />
-              ))
-            : dailyItems.map((item, idx) => (
-                <div key={idx} className="wc-day-row">
-                  <span className="wc-day-name">{item.day}</span>
-                  <div className="wc-day-status">
-                    <span className="wc-day-icon">{item.status.icon}</span>
-                    <span className="wc-day-desc">{item.status.label}</span>
-                    {item.pop > 10 && (
-                      <span className="wc-day-pop">
-                        <Droplets size={10} />
-                        {item.pop}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="wc-day-temp">
-                    <span className="wc-temp-min">{item.min}°</span>
-                    <div className="wc-temp-bar">
-                      <div
-                        className="wc-temp-bar-inner"
-                        style={{
-                          left: `${((item.min - overallMin) / (overallMax - overallMin)) * 100}%`,
-                          width: `${((item.max - item.min) / (overallMax - overallMin)) * 100}%`,
-                          background: getTempGradient(item.min, item.max),
-                        }}
-                      />
-                      {idx === 0 && current?.temp !== "--" && (
-                        <div
-                          className="wc-temp-dot"
-                          style={{
-                            left: `${((current.temp - overallMin) / (overallMax - overallMin)) * 100}%`,
-                          }}
-                        />
+          {/* --- 每小時預報橫向滾動列表 --- */}
+          <div>
+            <div className="wc-section-title">
+              <Activity size={12} /> 每小時預報
+            </div>
+            <div className="wc-hourly-scroll">
+              {isInitialLoading
+                ? [1, 2, 3, 4, 5].map((i) => (
+                    <Skeleton key={i} width="50px" height="90px" />
+                  ))
+                : hourlyItems.map((item, idx) => (
+                    <div key={idx} className="wc-hour-item">
+                      <span className="wc-h-time">{item.time}</span>
+                      <div className="wc-h-icon-wrapper">
+                        {item.status.icon}
+                      </div>
+                      <span className="wc-h-desc">{item.status.label}</span>
+                      <span className="wc-h-temp">{item.temp}°</span>
+                      {item.pop > 0 && (
+                        <span className="wc-h-pop">{item.pop}%</span>
                       )}
                     </div>
-                    <span className="wc-temp-high">{item.max}°</span>
-                  </div>
-                </div>
-              ))}
-        </div>
-      </div>
+                  ))}
+            </div>
+          </div>
 
-      {/* --- 底部穿著與活動建議 --- */}
-      <div className="wc-footer">{advice || "暫無特別建議。"}</div>
+          {/* --- 未來 7 天預報列表 --- */}
+          <div>
+            <div className="wc-section-title">
+              <Sun size={12} /> 未來 7 天
+            </div>
+            <div className="wc-daily-list">
+              {isInitialLoading
+                ? [1, 2, 3].map((i) => (
+                    <Skeleton key={i} width="100%" height="40px" />
+                  ))
+                : dailyItems.map((item, idx) => (
+                    <div key={idx} className="wc-day-row">
+                      <span className="wc-day-name">{item.day}</span>
+                      <div className="wc-day-status">
+                        <span className="wc-day-icon">{item.status.icon}</span>
+                        <span className="wc-day-desc">{item.status.label}</span>
+                        {item.pop > 10 && (
+                          <span className="wc-day-pop">
+                            <Droplets size={10} />
+                            {item.pop}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="wc-day-temp">
+                        <span className="wc-temp-min">{item.min}°</span>
+                        <div className="wc-temp-bar">
+                          <div
+                            className="wc-temp-bar-inner"
+                            style={{
+                              left: `${((item.min - overallMin) / Math.max(1, overallMax - overallMin)) * 100}%`,
+                              width: `${((item.max - item.min) / Math.max(1, overallMax - overallMin)) * 100}%`,
+                              background: getTempGradient(item.min, item.max),
+                            }}
+                          />
+                          {idx === 0 && current?.temp !== "--" && (
+                            <div
+                              className="wc-temp-dot"
+                              style={{
+                                left: `${((current.temp - overallMin) / Math.max(1, overallMax - overallMin)) * 100}%`,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <span className="wc-temp-high">{item.max}°</span>
+                      </div>
+                    </div>
+                  ))}
+            </div>
+          </div>
+
+          {/* --- 底部穿著與活動建議 --- */}
+          {!isLoading && hourlyItems.length === 0 && (
+            <UtilityState title="尚無逐時預報">
+              此地點目前未提供逐時資料。
+            </UtilityState>
+          )}
+          {!isLoading && dailyItems.length === 0 && (
+            <UtilityState title="尚無每日預報">
+              可稍後重新整理天氣。
+            </UtilityState>
+          )}
+          <div className="wc-footer">{advice || "暫無特別建議。"}</div>
+        </>
+      )}
     </div>
   );
 };

@@ -8,7 +8,7 @@ import {
 } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadJournalMapEngine } from "../utils/journalMapEngine.js";
-import { Loader2, RotateCcw } from "lucide-react";
+import UtilityState from "./UtilityState.jsx";
 import {
   buildEventPopupHtml,
   buildSharedLocationPopupHtml,
@@ -388,22 +388,20 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     <div className="journal-map-canvas" data-map-status={visibleStatus}>
       <div ref={container} className="journal-map-canvas__surface" />
       {message && (
-        <div className="journal-map-state" role="status" aria-live="polite">
-          {visibleStatus === "loading" && (
-            <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin" />
-          )}
-          <strong>{message[0]}</strong>
-          <p>{message[1]}</p>
-          {visibleStatus === "error" && (
-            <button
-              type="button"
-              className="travel-text-button"
-              onClick={() => setRetry((value) => value + 1)}
-            >
-              <RotateCcw aria-hidden="true" className="h-4 w-4" />
-              重新載入地圖
-            </button>
-          )}
+        <div className="journal-map-state">
+          <UtilityState
+            kind={visibleStatus}
+            title={message[0]}
+            showIcon={visibleStatus === "loading"}
+            onRetry={
+              visibleStatus === "error"
+                ? () => setRetry((value) => value + 1)
+                : undefined
+            }
+            retryLabel="重新載入地圖"
+          >
+            {message[1]}
+          </UtilityState>
         </div>
       )}
     </div>

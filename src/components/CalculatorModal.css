@@ -393,3 +393,34 @@
 .travel-shell[data-editorial="true"] .calc-btn-fx {
   letter-spacing: 0;
 }
+
+/* Shared utility chrome: quiet paper, clear actions and a reachable header. */
+.travel-shell[data-editorial="true"] .calc-modal {
+  border: 1.5px solid var(--journal-rule);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 16%);
+}
+.travel-shell[data-editorial="true"] .calc-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  background: var(--travel-surface);
+  border-bottom: 1px solid var(--travel-line);
+}
+.travel-shell[data-editorial="true"] .calc-close-btn {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 14px;
+}
+
+.travel-shell[data-editorial="true"] .calc-content {
+  gap: 12px;
+}
+.travel-shell[data-editorial="true"] .calc-title-main {
+  font-size: 18px;
+}
+.travel-shell[data-editorial="true"] .calc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

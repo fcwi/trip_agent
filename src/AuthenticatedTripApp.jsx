@@ -1913,7 +1913,11 @@ const ItineraryApp = ({ authentication }) => {
       forecastAbortControllerRef.current = controller;
 
       if (showLoading) {
-        setWeatherForecast((prev) => ({ ...prev, loading: true }));
+        setWeatherForecast((prev) => ({
+          ...prev,
+          loading: true,
+          error: false,
+        }));
       }
 
       try {
@@ -1957,7 +1961,11 @@ const ItineraryApp = ({ authentication }) => {
       } catch (error) {
         if (error?.name === "AbortError") return false;
         console.error("Failed to fetch weather:", error);
-        setWeatherForecast((prev) => ({ ...prev, loading: false }));
+        setWeatherForecast((prev) => ({
+          ...prev,
+          loading: false,
+          error: true,
+        }));
         return false;
       } finally {
         if (forecastAbortControllerRef.current === controller) {
@@ -2482,7 +2490,15 @@ const ItineraryApp = ({ authentication }) => {
 
     const locKey = getDailyLocationKey(activeDay, itineraryData, tripConfig);
     const forecast = weatherForecast[locKey];
-    if (!forecast) return null;
+    if (!forecast)
+      return {
+        temp: null,
+        locationName:
+          tripConfig.locations.find((loc) => loc.key === locKey)?.name ||
+          locKey,
+        loading: weatherForecast.loading,
+        error: weatherForecast.error,
+      };
 
     const code = forecast.weathercode?.[activeDay] ?? forecast.weathercode?.[0];
     const info = code != null ? getWeatherData(code) : null;
@@ -2501,6 +2517,7 @@ const ItineraryApp = ({ authentication }) => {
       daily: forecast,
       loading: weatherForecast.loading,
       updatedAt: weatherForecast.updatedAt,
+      error: weatherForecast.error,
     };
   }, [activeDay, userWeather, weatherForecast]);
 

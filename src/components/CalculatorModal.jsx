@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import "./CalculatorModal.css";
+import UtilityState from "./UtilityState.jsx";
+import { useOnlineStatus } from "../hooks/useOnlineStatus.js";
 
 /**
  * CalculatorModal Component
@@ -22,6 +24,7 @@ const CalculatorModal = ({
   currencyTarget, // Target currency (e.g., 'TWD')
 }) => {
   const dialogRef = useModalAccessibility(isOpen, onClose);
+  const online = useOnlineStatus();
   const base = (currencyCode || "").toUpperCase();
   const target = (currencyTarget || "").toUpperCase();
 
@@ -33,11 +36,14 @@ const CalculatorModal = ({
 
   // State for currency conversion logic
   const [fxDirection, setFxDirection] = useState("baseToTarget");
-  const [fxHint, setFxHint] = useState("");
   const [currentUnit, setCurrentUnit] = useState(base);
 
   const rateReady =
-    rateData && !rateData.loading && !rateData.error && rateData.current;
+    rateData &&
+    !rateData.loading &&
+    !rateData.error &&
+    Number.isFinite(rateData.current) &&
+    rateData.current > 0;
 
   // Reset state when modal opens
   useEffect(() => {
@@ -50,16 +56,14 @@ const CalculatorModal = ({
       setIsNewEntry(true);
       setFxDirection("baseToTarget");
       setCurrentUnit(base);
-      // 初始化匯率提示：當前貨幣是base(JPY)，顯示1 JPY = X TWD
-      if (rateReady) {
-        setFxHint(`1 ${base} = ${rateData.current.toFixed(4)} ${target}`);
-      } else if (rateData?.error) {
-        setFxHint("匯率連線失敗，稍後再試");
-      } else {
-        setFxHint("匯率更新中...");
-      }
     });
-  }, [isOpen, base, target, rateReady, rateData]);
+  }, [isOpen, base, target]);
+
+  const rateHint = rateReady
+    ? fxDirection === "baseToTarget"
+      ? `1 ${base} = ${rateData.current.toFixed(4)} ${target}`
+      : `1 ${target} = ${(1 / rateData.current).toFixed(4)} ${base}`
+    : "";
 
   // if (!isOpen) return null; // Keep Alive optimization
 
@@ -68,8 +72,8 @@ const CalculatorModal = ({
    */
   const clampLength = (val) => {
     const str = val.toString();
+    if (!Number.isFinite(Number(val))) return "Error";
     if (str.length <= 14) return str;
-    if (!Number.isFinite(val)) return "Error";
     return parseFloat(val.toFixed(8)).toString();
   };
 
@@ -83,7 +87,7 @@ const CalculatorModal = ({
         setIsNewEntry(false);
         return digit;
       }
-      return clampLength(`${prev}${digit}`);
+      return prev.length >= 14 ? prev : `${prev}${digit}`;
     });
   };
 
@@ -106,9 +110,6 @@ const CalculatorModal = ({
     setCurrentUnit(base);
     setFxDirection("baseToTarget");
     // 重置為初始匯率提示：當前貨幣是base(JPY)，顯示1 JPY = X TWD
-    if (rateReady) {
-      setFxHint(`1 ${base} = ${rateData.current.toFixed(4)} ${target}`);
-    }
   };
 
   const toggleSign = () => {
@@ -161,7 +162,6 @@ const CalculatorModal = ({
    */
   const handleFxConvert = () => {
     if (!rateReady) {
-      setFxHint(rateData?.error ? "匯率連線失敗，稍後再試" : "匯率更新中");
       return;
     }
     const current = parseDisplay();
@@ -172,13 +172,11 @@ const CalculatorModal = ({
       result = current * rate;
       setFxDirection("targetToBase");
       setCurrentUnit(target);
-      setFxHint(`1 ${target} = ${(1 / rate).toFixed(4)} ${base}`);
     } else {
       // 從 TWD 轉回 JPY，轉換後當前貨幣是 JPY
       result = rate === 0 ? NaN : current / rate;
       setFxDirection("baseToTarget");
       setCurrentUnit(base);
-      setFxHint(`1 ${base} = ${rate.toFixed(4)} ${target}`);
     }
     setDisplayValue(clampLength(result));
     setStoredValue(null);
@@ -226,15 +224,39 @@ const CalculatorModal = ({
         {/* Content */}
         <div className="calc-content">
           {/* Display */}
-          <div className="calc-display" aria-live="polite">
+          <div
+            className="calc-display"
+            aria-live="polite"
+            style={{
+              fontSize:
+                displayValue.length > 10 ? "clamp(20px, 6vw, 30px)" : undefined,
+            }}
+          >
             {displayValue}
           </div>
 
           {/* Hint Message */}
-          {fxHint && (
+          {rateHint && (
             <div className="calc-hint" role="status" aria-live="polite">
-              {fxHint}
+              {rateHint}
             </div>
+          )}
+
+          {!rateReady && (
+            <UtilityState
+              kind={
+                !online ? "offline" : rateData?.loading ? "loading" : "error"
+              }
+              title={
+                !online
+                  ? "目前離線"
+                  : rateData?.loading
+                    ? "正在更新匯率"
+                    : "匯率暫時無法取得"
+              }
+            >
+              一般計算仍可使用，匯率恢復後即可換算。
+            </UtilityState>
           )}
 
           {/* Keypad */}
@@ -247,6 +269,7 @@ const CalculatorModal = ({
             </button>
             <button
               className="calc-btn calc-btn-muted calc-btn-fx"
+              disabled={!rateReady}
               onClick={handleFxConvert}
             >
               轉{fxLabel}

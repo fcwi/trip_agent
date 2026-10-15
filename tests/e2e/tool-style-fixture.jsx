@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import CalculatorModal from "../../src/components/CalculatorModal.jsx";
 import WeatherDetail from "../../src/components/WeatherDetail.jsx";
 
-export function mountTool(kind, dark) {
+export function mountTool(kind, dark, options = {}) {
   document.getElementById("root")?.remove();
   const host = document.createElement("main");
   host.className =
@@ -47,24 +47,32 @@ export function mountTool(kind, dark) {
       precipitation_probability_max: days.map(() => 60),
     },
   };
-  root.render(
-    kind === "calculator" ? (
-      <CalculatorModal
-        isOpen
-        isDarkMode={dark}
-        currencyCode="JPY"
-        currencyTarget="TWD"
-        rateData={{ current: 0.2, loading: false }}
-        onClose={close}
-      />
-    ) : (
-      <WeatherDetail
-        weather={weather}
-        isDarkMode={dark}
-        advice="雪地行走請注意防滑，備妥手套與毛帽。"
-        onClose={close}
-        onRefresh={() => {}}
-      />
-    ),
-  );
+  let currentOptions = options;
+  const render = () =>
+    root.render(
+      kind === "calculator" ? (
+        <CalculatorModal
+          isOpen
+          isDarkMode={dark}
+          currencyCode="JPY"
+          currencyTarget="TWD"
+          rateData={currentOptions.rateData || { current: 0.2, loading: false }}
+          onClose={close}
+        />
+      ) : (
+        <WeatherDetail
+          weather={currentOptions.weather || weather}
+          loading={currentOptions.loading}
+          isDarkMode={dark}
+          advice="雪地行走請注意防滑，備妥手套與毛帽。"
+          onClose={close}
+          onRefresh={currentOptions.onRefresh || (() => {})}
+        />
+      ),
+    );
+  window.updateToolFixture = (patch) => {
+    currentOptions = { ...currentOptions, ...patch };
+    render();
+  };
+  render();
 }

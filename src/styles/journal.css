@@ -1758,3 +1758,25 @@
     padding-inline: 12px;
   }
 }
+
+/* The route dialog uses the same header and quiet frame as other utilities. */
+.travel-shell[data-editorial="true"] .journal-map-dialog {
+  border: 1.5px solid var(--journal-rule);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 16%);
+}
+.travel-shell[data-editorial="true"] .journal-map-dialog > header {
+  padding: 16px;
+  border-bottom: 1px solid var(--travel-line);
+}
+.travel-shell[data-editorial="true"] .journal-map-dialog h2 {
+  font-size: 18px;
+}
+.travel-shell[data-editorial="true"]
+  .journal-map-dialog
+  > header
+  .travel-icon-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 14px;
+}
