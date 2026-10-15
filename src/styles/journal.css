@@ -11,15 +11,15 @@
   font-family: inherit;
 }
 .travel-shell[data-editorial="true"] .journal-panel {
-  border: 3px solid var(--journal-ink);
-  border-radius: 24px 26px 22px 25px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 22px 24px 21px 23px;
   background: var(--travel-surface);
   color: var(--travel-text);
   box-shadow: none;
   backdrop-filter: none;
 }
 .travel-shell[data-editorial="true"] .journal-entry {
-  border: 2px solid var(--journal-ink);
+  border: 1px solid var(--journal-rule);
   border-radius: 16px 18px 15px 17px;
   background: var(--travel-page);
   box-shadow: none;
@@ -326,6 +326,7 @@
   --travel-accent: #3c6472;
   --travel-on-accent: #fffefd;
   --journal-ink: #383633;
+  --journal-rule: color-mix(in srgb, var(--journal-ink) 28%, transparent);
   --journal-pink: #efa69b;
   --journal-blue: #a5cede;
   --journal-yellow: #f3d07a;
@@ -664,22 +665,28 @@
 }
 
 .travel-shell[data-editorial="true"] .travel-cover {
-  border: 2px solid var(--journal-ink);
+  border: 1.5px solid color-mix(in srgb, var(--journal-ink) 68%, transparent);
   border-radius: 30px 25px 28px 26px;
   background: var(--travel-surface);
 }
 
 .travel-cover__drawing {
   overflow: hidden;
-  border-bottom: 1px solid var(--journal-ink);
-  background:
-    radial-gradient(
-        circle,
-        color-mix(in srgb, var(--journal-ink) 7%, transparent) 0.65px,
-        transparent 0.8px
-      )
-      0 0 / 8px 8px,
-    var(--travel-page);
+  border-bottom: 1px solid var(--journal-rule);
+  background: linear-gradient(
+    165deg,
+    var(--travel-page),
+    var(--travel-surface)
+  );
+}
+
+/* Softer distant ink leaves the foreground and main subject in focus. */
+.journal-art-distance {
+  opacity: 0.62;
+  stroke-width: 1;
+}
+.journal-art-foreground {
+  stroke-width: 1.35;
 }
 
 .journal-illustration {
@@ -710,7 +717,7 @@
 
 .travel-shell[data-editorial="true"] .travel-badge {
   padding: 6px 14px;
-  border: 2px solid var(--journal-ink);
+  border: 1px solid color-mix(in srgb, var(--journal-ink) 55%, transparent);
   border-radius: 22px 20px 24px 19px;
   background: var(--journal-yellow);
   color: var(--travel-text);
@@ -752,10 +759,7 @@
 }
 
 .travel-shell[data-editorial="true"] .travel-day-index__content strong {
-  text-decoration: underline;
-  text-decoration-color: var(--journal-blue);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 5px;
+  text-decoration: none;
 }
 
 .travel-shell[data-editorial="true"] .travel-date-selector {
@@ -909,10 +913,10 @@
 .travel-shell[data-editorial="true"] .travel-timeline-event__body {
   min-width: 0;
   padding: 12px 14px;
-  border: 1.5px solid var(--journal-ink);
-  border-radius: 22px 25px 20px 24px;
+  border: 1px solid var(--journal-rule);
+  border-radius: 19px 21px 18px 20px;
   background: var(--travel-surface);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--journal-ink) 7%, transparent);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--journal-ink) 4%, transparent);
 }
 
 .travel-shell[data-editorial="true"]
@@ -924,7 +928,7 @@
 
 .travel-shell[data-editorial="true"] .travel-event-category {
   padding: 2px 9px;
-  border: 2px solid var(--journal-ink);
+  border: 1px solid var(--journal-rule);
   border-radius: 18px;
   background: var(--journal-green);
   color: var(--travel-text);
@@ -958,7 +962,7 @@
 }
 
 .travel-shell[data-editorial="true"] .travel-day-weather {
-  border: 2px solid var(--journal-ink);
+  border: 1px solid var(--journal-rule);
   border-radius: 16px;
   background: var(--travel-surface);
 }
@@ -1303,9 +1307,10 @@
   }
 }
 
-/* Fine ink hierarchy: illustrations frame the content; body copy stays plain. */
+/* Fine ink hierarchy: a quiet frame for secondary information. */
 .travel-shell[data-editorial="true"] .travel-panel {
-  border-width: 2px;
+  border-width: 1px;
+  border-color: var(--journal-rule);
 }
 .journal-day-intro {
   margin: 16px 4px 20px;
@@ -1325,18 +1330,18 @@
   padding: 5px;
 }
 .journal-cover-study {
-  width: clamp(76px, 21vw, 104px);
+  width: clamp(72px, 20vw, 92px);
   aspect-ratio: 1;
   background: var(--travel-surface);
-  border: 1px solid color-mix(in srgb, var(--journal-ink) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--journal-ink) 20%, transparent);
   border-radius: 3px;
-  box-shadow: 2px 3px 0 color-mix(in srgb, var(--journal-ink) 5%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--journal-ink) 5%, transparent);
 }
 .journal-cover-study:first-child {
-  transform: rotate(-5deg);
+  transform: rotate(-3deg);
 }
 .journal-cover-study:last-child {
-  transform: rotate(5deg);
+  transform: rotate(3deg);
 }
 .journal-day-note {
   display: grid;

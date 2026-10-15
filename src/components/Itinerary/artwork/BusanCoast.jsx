@@ -6,7 +6,11 @@ export default function BusanCoast() {
     <SceneFrame id="busan-coast">
       <circle cx="506" cy="46" r="25" fill="var(--journal-yellow)" />
       <path d="M506 10V3m-35 43h-8m86 0h-8m-60-27-5-5m60 60-5-5" />
-      <path d="M0 181q74-99 158-15t170 8v45H0Z" fill="var(--journal-green)" />
+      <path
+        className="journal-art-distance"
+        d="M0 181q74-99 158-15t170 8v45H0Z"
+        fill="var(--journal-green)"
+      />
       <House x={198} y={105} scale={0.65} color="var(--journal-yellow)" />
       <House x={43} y={144} scale={0.55} color="var(--journal-blue)" />
       <path
@@ -22,11 +26,13 @@ export default function BusanCoast() {
         fill="var(--travel-surface)"
       />
       <path d="M0 201q148-15 320 0t320-1v104H0Z" fill="var(--journal-blue)" />
-      <path d="M278 175h312M330 176V93m181 83V93m-192 0h22m159 0h22M289 148q42-83 130-5 54-71 122-12l42 25m-244-51v70m25-39v39m25-27v27m25-29v29m49-30v30m25-40v40m25-67v67m25-54v54m25-29v29" />
-      <path
-        d="M278 181h312m-302-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6"
-        strokeWidth=".7"
-      />
+      <g className="journal-art-distance">
+        <path d="M278 175h312M330 176V93m181 83V93m-192 0h22m159 0h22M289 148q42-83 130-5 54-71 122-12l42 25m-244-51v70m25-39v39m25-27v27m25-29v29m49-30v30m25-40v40m25-67v67m25-54v54m25-29v29" />
+        <path
+          d="M278 181h312m-302-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6m17-6v6"
+          strokeWidth=".7"
+        />
+      </g>
       <path
         d="M70 137h28m12 7h35m12 15h31M82 117v13m43-19v13m46 27v13m-104-52h34m9-22h35m10 37h34"
         strokeWidth=".8"
@@ -36,6 +42,15 @@ export default function BusanCoast() {
       <path d="M103 179q-12 18-13 36m13-36q12 18 13 36M70 265h57" />
       <path d="m463 231 17 20h63l18-20Z" fill="var(--journal-pink)" />
       <path d="M509 223v-54l34 54Z" fill="var(--travel-surface)" />
+      <ellipse
+        cx="285"
+        cy="257"
+        rx="101"
+        ry="5"
+        fill="var(--journal-ink)"
+        stroke="none"
+        opacity=".09"
+      />
       <path
         d="M205 208h153q17 0 17 17v27H195v-32q0-12 10-12Z"
         fill="var(--journal-green)"
@@ -59,6 +74,14 @@ export default function BusanCoast() {
         d="M157 72q8-9 16 0 8-9 16 0m-16-23q7-8 14 0 7-8 14 0M26 239h27m348-24h22m155 49h24"
         strokeWidth="1.5"
       />
+      <g className="journal-art-foreground">
+        <path d="M42 302q8-24 3-37m2 25-12-10m12 0 9-12m511 33q-4-27 6-43m-8 26-9-12m11 2 13-8" />
+        <path
+          d="M63 288q11-7 20 0m-16 4h12m456-7 9-3m-7 6h5"
+          strokeWidth=".8"
+          opacity=".6"
+        />
+      </g>
     </SceneFrame>
   );
 }

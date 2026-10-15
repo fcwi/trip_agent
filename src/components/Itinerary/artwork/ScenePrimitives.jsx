@@ -1,4 +1,7 @@
+import { useId } from "react";
+
 export function SceneFrame({ id, children }) {
+  const washId = useId();
   return (
     <svg
       className="journal-illustration"
@@ -8,9 +11,21 @@ export function SceneFrame({ id, children }) {
       aria-hidden="true"
       focusable="false"
     >
+      <defs>
+        <linearGradient id={washId} x1="0" y1="0" x2=".85" y2="1">
+          <stop stopColor="var(--journal-blue)" stopOpacity=".16" />
+          <stop
+            offset=".55"
+            stopColor="var(--journal-yellow)"
+            stopOpacity=".035"
+          />
+          <stop offset="1" stopColor="var(--travel-surface)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d="M32-8h576v312H32Z" fill={`url(#${washId})`} />
       <g
         stroke="var(--journal-ink)"
-        strokeWidth="1.6"
+        strokeWidth="1.45"
         strokeLinecap="round"
         strokeLinejoin="round"
       >

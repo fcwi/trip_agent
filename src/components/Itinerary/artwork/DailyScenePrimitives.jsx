@@ -25,12 +25,19 @@ export function Study({ id, children }) {
 
 export function Wash({ color = paint.blue }) {
   return (
-    <path
-      d="M16 89C9 46 44 16 94 19c54-9 87 21 90 63 12 48-16 88-70 90-58 13-98-19-98-83Z"
-      fill={color}
-      stroke="none"
-      opacity=".18"
-    />
+    <g stroke="none">
+      <path
+        d="M16 89C9 46 44 16 94 19c54-9 87 21 90 63 12 48-16 88-70 90-58 13-98-19-98-83Z"
+        fill={color}
+        stroke="none"
+        opacity=".13"
+      />
+      <path
+        d="M22 87C16 51 49 28 88 30c44-8 83 14 85 51 7 36-18 64-58 69-52 9-86-14-93-63Z"
+        fill={color}
+        opacity=".08"
+      />
+    </g>
   );
 }
 
@@ -155,12 +162,29 @@ export function Train({
 export function House({ x, y, scale = 1, color = paint.pink, snow = false }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${scale})`}>
+      <ellipse
+        cx="28"
+        cy="72"
+        rx="31"
+        ry="4"
+        fill="var(--journal-ink)"
+        stroke="none"
+        opacity=".08"
+      />
       <path d="M0 22h51v48H0Z" fill={color} />
-      <path d="m-5 24 30-24 31 24Z" fill={snow ? paint.snow : paint.gold} />
+      <path
+        d="m-5 24Q10 10 25 0q17 11 31 24Z"
+        fill={snow ? paint.snow : paint.gold}
+      />
       <path d="M5 24h43m-41 7h37m-38 32h39" strokeWidth=".7" opacity=".65" />
       <Windows x={7} y={34} columns={2} rows={1} step={25} />
       <path d="M21 70V51h12v19m-3-8h1" fill={paint.paper} />
       <path d="M13 11V1h7v4" />
+      <path
+        d="M2 68q9 1 17 0m16 0 12-1M3 27l1 32m45-30-1 16"
+        strokeWidth=".55"
+        opacity=".35"
+      />
     </g>
   );
 }

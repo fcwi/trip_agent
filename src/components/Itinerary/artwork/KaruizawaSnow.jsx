@@ -4,14 +4,16 @@ import { BareTree } from "./DailyScenePrimitives.jsx";
 export default function KaruizawaSnow() {
   return (
     <SceneFrame id="karuizawa-snow">
-      <path
-        d="M0 213 203 36l52 9L441 210l98-81 101 83v92H0Z"
-        fill="var(--journal-snow, var(--travel-surface))"
-      />
-      <path
-        d="m159 77 44-41 52 9 54 47-42-8-31 12-27-20-26 12Z"
-        fill="var(--journal-blue)"
-      />
+      <g className="journal-art-distance">
+        <path
+          d="M0 213 203 36l52 9L441 210l98-81 101 83v92H0Z"
+          fill="var(--journal-snow, var(--travel-surface))"
+        />
+        <path
+          d="m159 77 44-41 52 9 54 47-42-8-31 12-27-20-26 12Z"
+          fill="var(--journal-blue)"
+        />
+      </g>
       <path
         d="M0 231q132-25 276 1t364-11v83H0Z"
         fill="var(--journal-snow, var(--travel-surface))"
@@ -49,6 +51,15 @@ export default function KaruizawaSnow() {
         d="M170 257h335m-325 10h314m-300-10v10m35-10v10m35-10v10m35-10v10m35-10v10m35-10v10m35-10v10m35-10v10m35-10v10"
         strokeWidth="2"
       />
+      <ellipse
+        cx="326"
+        cy="253"
+        rx="124"
+        ry="5"
+        fill="var(--journal-blue)"
+        stroke="none"
+        opacity=".18"
+      />
       <path
         d="M206 207q0-13 14-13h201l23 25v27H206Z"
         fill="var(--journal-blue)"
@@ -80,6 +91,10 @@ export default function KaruizawaSnow() {
       <path d="M90 233h26m-22 14 20 3m-14-18h1m8 0h1m-10 7 5-2m-21 21-12-9m50 9 11-9" />
       <path d="M94 224v-10h19v11" fill="var(--journal-pink)" />
       <Snowflakes />
+      <g className="journal-art-foreground">
+        <path d="M47 301q8-28 2-51m2 31-11-12m11-3 10-14m-12 42-12-8m548 16q-8-29-2-47m-1 27 12-10m-12-5-10-8" />
+        <path d="M38 300q19-5 39-2m480 2h31" strokeWidth=".8" opacity=".5" />
+      </g>
       <path
         d="m67 281 38 2m18 7h27m373-26h28m-303-142-16 28m74-25 23 22m-145-34 9 14"
         strokeWidth=".9"

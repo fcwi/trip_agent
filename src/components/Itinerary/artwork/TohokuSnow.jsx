@@ -9,14 +9,16 @@ import { Windows } from "./DailyScenePrimitives.jsx";
 export default function TohokuSnow() {
   return (
     <SceneFrame id="tohoku-snow">
-      <path
-        d="M0 222 126 48l94 104L312 20l149 193 69-80 110 87v84H0Z"
-        fill="var(--journal-snow, var(--travel-surface))"
-      />
-      <path
-        d="m92 95 34-47 41 59-36-12-18 12Zm179-15 41-60 54 70-31-8-23 14-18-19Z"
-        fill="var(--journal-blue)"
-      />
+      <g className="journal-art-distance">
+        <path
+          d="M0 222 126 48l94 104L312 20l149 193 69-80 110 87v84H0Z"
+          fill="var(--journal-snow, var(--travel-surface))"
+        />
+        <path
+          d="m92 95 34-47 41 59-36-12-18 12Zm179-15 41-60 54 70-31-8-23 14-18-19Z"
+          fill="var(--journal-blue)"
+        />
+      </g>
       <path
         d="M0 228q136-48 272 4t368-3v75H0Z"
         fill="var(--journal-snow, var(--travel-surface))"
@@ -73,6 +75,15 @@ export default function TohokuSnow() {
         stroke="var(--journal-blue)"
         opacity="0.5"
       />
+      <ellipse
+        cx="326"
+        cy="267"
+        rx="97"
+        ry="6"
+        fill="var(--journal-blue)"
+        stroke="none"
+        opacity=".18"
+      />
       <g transform="translate(251 173) scale(1.8)">
         <SceneCoach />
       </g>
@@ -80,6 +91,14 @@ export default function TohokuSnow() {
         <path d="M65 284q18-8 38-2m66-14 24-3m211 18 33-1m54-29 36 1M191 93l7 9m-13-4 9-1M541 43l6 7m-8-3 9-1" />
       </g>
       <Snowflakes />
+      <g className="journal-art-foreground">
+        <path d="M42 298q13-27 8-51m1 28-12-13m12 1 13-15m-15 40-14-6m519 21q-10-21-4-43m-1 23 13-14m-13 3-9-10" />
+        <path
+          d="M36 299q17-7 38-2m467 4q18-8 41-2"
+          strokeWidth=".8"
+          opacity=".5"
+        />
+      </g>
     </SceneFrame>
   );
 }
