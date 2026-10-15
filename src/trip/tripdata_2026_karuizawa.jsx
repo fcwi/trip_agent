@@ -70,10 +70,10 @@ export const guidesData = [
   {
     title: "Skyliner 臉部辨識購票 (Face Check-in Go)",
     icon: <Train className="w-5 h-5" />, // 圖示會繼承父容器的文字顏色
-    summary: "不用排隊領票，直接『刷臉』進站的最新功能！",
+    summary: "先選擇一般兌票或 Face Check in Go，再依票種完成取票。",
     steps: [
-      "進入 Skyliner e-ticket 官網購票 (選擇單程/來回)。",
-      "付款完成後，系統會引導拍攝/上傳臉部照片。",
+      "Face Check in Go 僅適用單程票；去回程刷臉搭乘須分別購買單程票。",
+      "付款後依官網流程登錄代表人的臉部照片；希望自選班次或座位時，改至櫃檯兌票。",
       "抵達機場車站後，直接走『Face Check-in Go』專用閘門。",
       "看鏡頭刷臉，閘門會吐出紙本車票 (記得拿！)，直接進站。",
       "出站時走人工通道，將紙本車票交給站務員即可。",
@@ -82,51 +82,29 @@ export const guidesData = [
       text: "官網購票與詳情",
       url: "https://www.keisei.co.jp/keisei/tetudou/skyliner/e-ticket/zht/",
     },
-    blogs: [
-      {
-        title: "妮可魯｜Skyliner「刷臉」秒過閘口超方便教學",
-        url: "https://nicolelee.tw/skyliner/",
-      },
-      {
-        title: "OREO時光旅行｜2025 Skyliner 人臉識別進站攻略",
-        url: "https://oreo.blog/skyliner2025/",
-      },
-      {
-        title: "樂吃購！日本｜Skyliner 搭乘攻略與刷臉教學",
-        url: "https://tokyo.letsgojp.com/archives/738491/",
-      },
-    ],
+    blogs: [],
   },
   {
     title: "teamLab Borderless 購票與入場",
     icon: <Camera className="w-5 h-5" />,
     summary: "麻布台之丘熱門景點，務必提前預約。",
     steps: [
-      "建議提前 1-2 個月上官網預訂，選擇日期與入場時段。",
+      "在官方售票頁確認開放日期、入場時段及票價，再依同行人數購票。",
       "購票後會收到 QR Code (電子票)。",
       "當天依預約時段抵達，在入口掃描 QR Code 入場。",
-      "場內禁止飲食、自拍棒、大型行李 (有置物櫃)。",
+      "依館方規定寄放行李；場內部分區域昏暗，請照看同行兒童。",
       "部分展區地板為鏡面，建議穿著褲裝。",
     ],
     link: {
       text: "官方購票頁面",
       url: "https://www.teamlab.art/zh-hant/e/borderless-azabudai/",
     },
-    blogs: [
-      {
-        title: "Wendy's Journey｜麻布台之丘 teamLab 參觀攻略",
-        url: "https://www.wendyjourney.com/teamlab-borderless/",
-      },
-      {
-        title: "樂吃購！日本｜麻布台之丘攻略：teamLab 門票與交通",
-        url: "https://tokyo.letsgojp.com/archives/632958/",
-      },
-    ],
+    blogs: [],
   },
   {
     title: "Visit Japan Web 入境申報",
     icon: <QrCode className="w-5 h-5" />,
-    summary: "入境必備，節省通關時間。",
+    summary: "可事先完成日本入境與海關申報，減少抵達後填寫時間。",
     steps: [
       "出發前一週：註冊帳號並登入 Visit Japan Web。",
       "登錄本人資料 (掃描護照) 與同行家人資料。",
@@ -138,50 +116,24 @@ export const guidesData = [
       text: "開始申報 (官方)",
       url: "https://vjw-lp.digital.go.jp/zh-hant/",
     },
-    blogs: [
-      {
-        title: "DJB｜2025 日本入境快速通關 Visit Japan Web 教學",
-        url: "https://djbcard.com/visitjapanweb/",
-      },
-      {
-        title: "樂吃購！日本｜2025 最新 Visit Japan Web 填寫全攻略",
-        url: "https://www.letsgojp.com/archives/535150/",
-      },
-      {
-        title: "輕旅行｜Visit Japan Web 申請填寫懶人包",
-        url: "https://travel.yam.com/article/138578",
-      },
-    ],
+    blogs: [],
   },
   {
     title: "JR 東日本網路訂票 (Ekinet)",
     icon: <Train className="w-5 h-5" />,
     summary: "預訂北陸新幹線指定席 (上野 ↔ 輕井澤)。",
     steps: [
-      "註冊 JR-EAST Train Reservation 帳號。",
+      "一般指定席於乘車日前一個月的日本時間 10:00 開放販售；先註冊 JR-EAST Train Reservation 帳號。",
       "選擇路線：北陸新幹線 (Hokuriku Shinkansen)。",
       "輸入出發/到達站 (Ueno / Karuizawa) 與日期時間。",
       "選位並付款。取得 QR Code 或取票代碼。",
-      "乘車前至 JR 車站的『指定席售票機』掃描護照或輸入代碼取票。",
+      "依訂單取票說明，攜帶護照、取票代碼及付款所需資料，至適用售票機或櫃檯取票。",
     ],
     link: {
       text: "Ekinet 繁體中文官網",
       url: "https://www.eki-net.com/zh-CHT/jreast-train-reservation/Top/Index",
     },
-    blogs: [
-      {
-        title: "JR Times｜使用網路訂票系統預約新幹線教學",
-        url: "https://www.jrtimes.tw/article.aspx?article_id=328",
-      },
-      {
-        title: "Traveler Duck｜2025 JR 東日本訂票、劃位、取票教學",
-        url: "https://travelerduck.com/jr-east-guide/",
-      },
-      {
-        title: "NAVITIME｜JR 線票務安排與領票指南",
-        url: "https://japantravel.navitime.com/zh-tw/booking/jr/support/ticketing/",
-      },
-    ],
+    blogs: [],
   },
 ];
 
@@ -509,6 +461,8 @@ export const itineraryData = [
     locationKey: "karuizawa",
     date: "1/24 (六)",
     title: "抵達與移動：直奔雪國",
+    intro:
+      "從機場接上鐵道，沿途從東京市區轉入輕井澤。今天以順利轉乘、入住與吃好晚餐為主，為明天的玩雪留些體力。",
     stay: "輕井澤王子大飯店西館",
     routeInfo: {
       summary: "成田機場 → 京成上野 → JR上野 → 輕井澤 → 飯店",
@@ -523,9 +477,9 @@ export const itineraryData = [
         lat: 35.771986,
         lon: 140.39285,
         icon: <MapPin />,
-        desc: "領取行李，入境審查 (準備 VJW QR Code)。入境後請至 B1 找紅色招牌的「JR 東日本旅行服務中心」兌換/購買周遊券。",
+        desc: "完成入境與行李提領後，先確認接續鐵路的票券。Skyliner 與 JR 為不同系統；需領取 JR 車票或周遊券時，再依訂單前往 JR 櫃檯或適用售票機。",
         tips: [
-          "若 JR 櫃檯大排長龍，可至「售票機」掃描護照取票。",
+          "先確認訂單支援的取票地點與方式，預留通關、取票及轉乘時間。",
           "連結機場 WiFi 或開通漫遊，確認網路順暢。",
           "上廁所、買飲料，準備搭車。",
         ],
@@ -554,12 +508,12 @@ export const itineraryData = [
         icon: <Utensils />,
         desc: "購買知名的鐵路便當 (Ekiben)！新幹線上可以吃東西，當作遲來的午餐或點心。",
         highlights: [
-          "上野站中央改札口外的便當屋「駅弁屋 匠」種類最全。",
+          "可在 JR 上野站購買便當與飲料，先確認新幹線月台，再利用候車時間採買。",
           "推薦：深川飯便當 (蛤蜊飯)、牛肉壽喜燒便當、新幹線造型便當 (小朋友最愛)。",
         ],
         tips: [
           "京成上野站出站後，沿著地面指標走約 5-7 分鐘可到 JR 上野站。",
-          "JR 上野站人潮多，推嬰兒車請找電梯 (公園口或廣小路口方向)。",
+          "京成上野與 JR 上野是不同車站；攜帶行李或推車時，依現場無障礙指標使用電梯。",
         ],
       },
       {
@@ -574,7 +528,7 @@ export const itineraryData = [
           mode: "北陸新幹線 (Hakutaka 或 Asama 號)",
           duration: "約 60-70 分鐘",
           route: "JR 上野站 → 輕井澤站",
-          note: "⚠️ 務必提前 1 個月於 JR 東日本官網預訂指定席！Ekinet 取票需使用信用卡。",
+          note: "一般指定席於乘車日前一個月的日本時間 10:00 開賣。選擇確實停靠輕井澤的班次，並依訂單方式取票。",
         },
       },
       {
@@ -586,13 +540,13 @@ export const itineraryData = [
         icon: <Hotel />,
         desc: "抵達輕井澤站南口，前往 Outlet 方向搭乘接駁車。西館櫃檯辦理入住。",
         transport: {
-          mode: "飯店接駁車 (Piccolo Bus)",
+          mode: "飯店接駁車 (Pickup Bus)",
           duration: "約 10 分鐘",
           route: "輕井澤站南口 → 西館門口",
-          note: "接駁車約每 30 分鐘一班。若錯過且天氣冷，建議直接搭計程車 (約 1000-1500 日幣)。",
+          note: "依抵達當日的飯店接駁時刻與南口乘車處候車；錯過末班或行李較多時，可改搭計程車。",
         },
         highlights: [
-          "露臺房 (Terrace Room) 空間寬敞，鞋子脫在玄關，非常適合家庭。",
+          "依住宿訂單確認房型、入住人數與早餐內容，入住時詢問翌日雪場交通。",
           "晚上氣溫低，進房先開暖氣。",
         ],
       },
@@ -603,21 +557,21 @@ export const itineraryData = [
         lat: 36.34018,
         lon: 138.63246,
         icon: <Utensils />,
-        desc: "Outlet 商店約 19:00 打烊，但餐廳區 (味之街) 通常營業至 21:00 左右。",
+        desc: "入住後在購物廣場或飯店附近安排晚餐。冬季店舖、餐廳與最後點餐時間不同，先確認想去的餐廳仍可入座。",
         highlights: [
           "明治亭：醬汁豬排丼，份量大、醬汁濃郁。",
           "築地ハレの日：新鮮海鮮丼，想吃生魚片的首選。",
           "Cool Miner：牛排漢堡排，適合想吃肉的人。",
         ],
         tips: [
-          "此時商店已關門，請直接前往餐廳區用餐。",
-          "飯店內也有便利商店 (FamilyMart)，可以買些零食、牛奶、隔天早餐。",
+          "若抵達時間較晚，先用餐，再安排採買，避免錯過最後點餐。",
+          "向飯店確認館內商店的營業時間，視需要補充飲水與隔日點心。",
         ],
       },
     ],
     notice: {
       type: "info",
-      text: "重要提醒：新幹線指定席票券建議提前一個月預訂，以免向隅！",
+      text: "抵達日先保留通關與取票彈性，再銜接停靠輕井澤的新幹線；入住後優先確認晚餐。",
     },
   },
   {
@@ -625,6 +579,8 @@ export const itineraryData = [
     locationKey: "karuizawa",
     date: "1/25 (日)",
     title: "輕井澤：安心玩雪與購物",
+    intro:
+      "上午親近雪地，下午回到湖畔商店區慢慢逛。把玩雪、用餐與室內休息交錯安排，讓全家都能照自己的節奏旅行。",
     stay: "輕井澤王子大飯店西館",
     routeInfo: {
       summary: "飯店 → 王子滑雪場 → 王子Outlet → 飯店",
@@ -634,21 +590,21 @@ export const itineraryData = [
     events: [
       {
         time: "09:30",
-        title: "王子飯店滑雪場 Kids Park",
+        title: "王子滑雪場 Snowman Park",
         mapQuery: "輕井澤王子大飯店滑雪場",
         lat: 36.335,
         lon: 138.634,
         icon: <Snowflake />,
-        desc: "就在 Outlet 旁，專為兒童設計的戲雪區，不滑雪也能玩得很開心。",
+        desc: "以雪盆、輪胎與堆雪人為主，安排輕鬆的親子玩雪時光。先確認所購票券的園區與開放項目，再依飯店指引前往。",
         highlights: [
-          "雪盆溜滑梯：有電動步道 (魔毯) 載你上去，不用自己爬坡！",
+          "雪盆區：依工作人員指引使用雪盆與移動設備。",
           "輪胎滑雪 (Tubing)：刺激又好玩。",
           "堆雪人區域：記得帶玩雪工具 (夾雪球器)。",
         ],
         tips: [
-          "入場費約 ¥2000/人 (包含雪盆租借)。",
+          "2025–2026 雪季官方公告為成人、兒童每人 ¥2,300 起，含雪盆；未滿 3 歲免費。",
           "大人小孩都要穿防水衣褲、手套、帽子。",
-          "旁邊有休息室和廁所，冷了可以進去取暖販賣機買熱飲。",
+          "先確認休息區與廁所位置；手套或襪子濕了就更換，適時回室內休息。",
         ],
       },
       {
@@ -676,7 +632,7 @@ export const itineraryData = [
         lat: 36.34,
         lon: 138.633,
         icon: <ShoppingBag />,
-        desc: "全日本最美 Outlet，風景如畫。分為東、西、新東、新西等多個區域。",
+        desc: "沿著湖畔與不同商店區散步採買，將購物與休息交錯安排，減少在低溫中長時間移動。",
         highlights: [
           "媽媽必逛：Gucci, Bottega Veneta (New East), Coach (折扣優)。",
           "小孩必逛：樂高商店 (LEGO), 森林家族 (New West)。",
@@ -684,7 +640,7 @@ export const itineraryData = [
         ],
         tips: [
           "先去 Information Center 出示護照領取外國人優惠券 (Coupon Book)。",
-          "園區很大，善用園區內循環巴士 (Pickup Bus) 移動。",
+          "購物廣場與飯店接駁的乘車處及路線不同，移動前先核對園區地圖。",
           "大部分店家可免稅，請隨身攜帶護照。",
         ],
       },
@@ -702,7 +658,7 @@ export const itineraryData = [
           "單點小吃：澤屋果醬 (SAWAYA) 可買來當伴手禮。",
         ],
         tips: [
-          "吃飽後可在 Outlet 欣賞夜間點燈，湖畔倒影非常浪漫。",
+          "餐後可在開放的湖畔區短暫散步；若低溫或路面結冰，提早返回飯店。",
           "回飯店前確認隔天 Check-out 時間與行李寄放方式。",
         ],
       },
@@ -713,6 +669,8 @@ export const itineraryData = [
     locationKey: "ueno",
     date: "1/26 (一)",
     title: "移動日 + 上野輕鬆逛",
+    intro:
+      "離開雪國回到上野，先安頓行李，再逛玩具店、百貨與阿美橫丁。移動日保留彈性，將想買的東西分批完成。",
     stay: "&HERE TOKYO UENO",
     routeInfo: {
       summary: "輕井澤 → 上野站 → 飯店 → Yamashiroya → PARCO_ya → 阿美橫丁",
@@ -750,25 +708,25 @@ export const itineraryData = [
           note: "飯店靠近上野公園不忍池側，位置清幽，對面就是公園。",
         },
         highlights: [
-          "午餐推薦：一蘭拉麵上野店 (就在車站旁，24小時)。",
+          "午餐可選上野站周邊的拉麵或定食，依排隊情況調整，不必為單一餐廳久候。",
           "壽司郎上野店 (需抽號碼牌，建議用 App 先預約)。",
           "敘敘苑燒肉 (上野丸井店，高樓層景觀好)。",
         ],
       },
       {
         time: "13:30",
-        title: "爸媽分組行動 (安太座時光)",
+        title: "上野午後：玩具與百貨散策",
         mapQuery: "Yamashiroya 上野",
         lat: 35.7126,
         lon: 139.7758,
         icon: <Star />,
-        desc: "爸爸帶小孩逛玩具，媽媽去百貨下午茶。",
+        desc: "依家人的興趣分組探索玩具店與百貨，約好會合地點與時間，再一起前往阿美橫丁。",
         highlights: [
-          "👨 爸+寶：Yamashiroya 玩具店 (上野站對面整棟，B1-6F 全是玩具，有電梯)。",
-          "👩 媽媽：PARCO_ya 上野 (質感百貨，好逛不擠)。",
+          "玩具路線：在上野站對面的 Yamashiroya 找角色周邊與玩具。",
+          "百貨路線：PARCO_ya 上野的服飾與餐飲可依興趣自由安排。",
         ],
         tips: [
-          "媽媽務必去 PARCO_ya 的 HARBS 吃水果千層蛋糕！(35.7078, 139.7743)",
+          "咖啡與甜點安排在採買之間，依店舖候位情況選擇。",
           "Yamashiroya 門口有很多扭蛋機。",
         ],
       },
@@ -781,7 +739,7 @@ export const itineraryData = [
         icon: <ShoppingBag />,
         desc: "感受東京下町熱鬧氣氛，藥妝零食大採購。",
         highlights: [
-          "二木之菓子：買伴手禮零食最便宜，有免稅。",
+          "二木之菓子：可比較零食與伴手禮，先確認各店結帳與免稅方式。",
           "OS Drug：藥妝超便宜，但只收現金，不免稅。",
           "街頭小吃：鐵火丼 (生魚片蓋飯)、水果串 (草莓/哈密瓜)。",
         ],
@@ -798,9 +756,11 @@ export const itineraryData = [
     locationKey: "roppongi",
     date: "1/27 (二)",
     title: "六本木：藝術與浪漫之夜",
+    intro:
+      "從麻布台之丘的光影藝術走到六本木的城市景觀。白天留給展覽，傍晚放慢腳步，在街景與晚餐之間收尾。",
     stay: "&HERE TOKYO UENO",
     routeInfo: {
-      summary: "上野 → 麻布台之丘 → teamLab → 六本木之丘 → 櫸木坂點燈 → 上野",
+      summary: "上野 → 麻布台之丘 → teamLab → 六本木之丘 → 櫸木坂散策 → 上野",
       mapUrl:
         "https://www.google.com/maps/dir/?api=1&origin=&HERE+TOKYO+UENO&destination=&HERE+TOKYO+UENO&waypoints=Azabudai+Hills|teamLab+Borderless|Roppongi+Hills|Roppongi+Keyakizaka+Dori",
     },
@@ -812,12 +772,12 @@ export const itineraryData = [
         lat: 35.71131,
         lon: 139.774945,
         icon: <Train />,
-        desc: "提早出發，前往東京最新地標。避開上班尖峰最擠的時段。",
+        desc: "從上野搭乘日比谷線前往神谷町，平日早晨預留通勤人潮與找入口的時間。",
         transport: {
           mode: "東京地鐵 日比谷線 (H線)",
           duration: "約 25 分鐘",
-          route: "上野站 (H17) → 神谷町站 (H05)",
-          note: "神谷町站 5 號出口直結麻布台之丘，不用出站，沿著指標走即可。",
+          route: "上野站 (H18) → 神谷町站 (H05)",
+          note: "由神谷町站 5 號出口依麻布台之丘指標步行；出閘後另預留前往展館入口的時間。",
         },
       },
       {
@@ -829,14 +789,14 @@ export const itineraryData = [
         icon: <Camera />,
         desc: "沉浸式光影藝術，視覺震撼。位於麻布台之丘 Garden Plaza B B1。",
         highlights: [
-          "彩繪海洋：小孩畫的魚會游進牆壁裡！記得找畫圖區。",
+          "觀察光影如何在不同房間延伸與變化，依當日開放的作品慢慢探索。",
           "泡泡宇宙：絕美燈球空間，拍照必去。",
-          "無界的世界：光影會移動到不同房間，可以追著光跑。",
+          "無界的世界：沿著光影移動尋找作品，保持步行並照看同行兒童。",
         ],
         tips: [
-          "✅ 已預約 9:00 場次，請準時入場。需下載 teamLab App 互動。",
+          "行程以 9:00 入場規劃，實際入場時段請核對電子票；App 可依作品需要選用。",
           "場內黑暗且有鏡面地板，建議穿褲裝，不要穿裙子。",
-          "有大型置物櫃可放包包外套。",
+          "行李寄放方式先查館方入場須知，避免攜帶難以收納的大型物品。",
         ],
       },
       {
@@ -862,10 +822,10 @@ export const itineraryData = [
         icon: <Camera />,
         desc: "前往六本木之丘展望台。",
         transport: {
-          mode: "步行 或 地鐵一站",
-          duration: "約 15-20 分鐘",
+          mode: "步行 或 日比谷線一站",
+          duration: "步行約 25–35 分鐘",
           route: "麻布台之丘 → 六本木之丘",
-          note: "天氣好建議散步過去，沿途經過高級住宅區，街景很美。",
+          note: "地鐵可由神谷町搭日比谷線至六本木，再步行至六本木之丘；步行方案另預留找路與過路口時間。",
         },
         highlights: [
           "52F 室內展望台 (Tokyo City View)：360度俯瞰東京，東京鐵塔近在眼前。",
@@ -875,15 +835,15 @@ export const itineraryData = [
       },
       {
         time: "17:00",
-        title: "六本木櫸木坂點燈",
+        title: "六本木櫸木坂夜間散策",
         mapQuery: "六本木櫸木坂",
         lat: 35.6595,
         lon: 139.729,
         icon: <Star />,
-        desc: "媽媽心願達成！冬季限定的浪漫燈飾。",
+        desc: "沿櫸木坂欣賞城市夜景與東京鐵塔方向的景色，再就近用晚餐；季節點燈另依當年活動日程安排。",
         highlights: [
-          "整排樹掛滿藍白燈飾 (Snow & Blue) + 紅色東京鐵塔背景。",
-          "最佳拍照點：蒂芬妮 (Tiffany) 專賣店附近的天橋，人多請排隊。",
+          "以街景與東京鐵塔的構圖為主，拍照時保持人行道通行。",
+          "若在天橋或路口拍照，請勿停留於階梯、車道或妨礙行人。",
         ],
         tips: [
           "這時候風會比較大，記得戴帽子圍巾。",
@@ -893,7 +853,7 @@ export const itineraryData = [
     ],
     notice: {
       type: "alert",
-      text: "重要提醒：teamLab Borderless 門票非常熱門，請務必提前上網購票。",
+      text: "核對 teamLab 電子票的日期與入場時段；傍晚以六本木夜景與晚餐為主。",
     },
   },
   {
@@ -901,6 +861,8 @@ export const itineraryData = [
     locationKey: "odaiba",
     date: "1/28 (三)",
     title: "台場夢想日 + 童裝採購",
+    intro:
+      "搭海灣列車前往台場，在角色商店與戶外廣場尋找童趣，再到豐洲採買。沿途留一段面向東京灣的休息時間。",
     stay: "&HERE TOKYO UENO",
     routeInfo: {
       summary: "上野 → 台場DiverCity → LaLaport豐洲 → 上野",
@@ -920,7 +882,7 @@ export const itineraryData = [
           mode: "地鐵銀座線 + 百合海鷗號",
           duration: "約 40 分鐘",
           route: "上野 → 新橋 (轉乘) → 台場站",
-          note: "💡 必殺技：去程請搶百合海鷗號「第一節車廂」最前排，風景無敵！像坐雲霄飛車。",
+          note: "沿途可欣賞東京灣與彩虹大橋；前排若客滿，依序候車即可，避免阻擋車門。",
         },
       },
       {
@@ -934,7 +896,7 @@ export const itineraryData = [
         highlights: [
           "秘密道具實驗室：體驗竹蜻蜓 (模擬飛行)、空氣砲 (射擊遊戲) (需代幣)。",
           "客製化刺繡區：可以繡名字/哆啦A夢圖案在毛巾、包包上 (需等待時間)。",
-          "門口廣場：有 1:1 實物大獨角獸鋼彈，整點有變身秀。",
+          "戶外廣場可觀賞實物大獨角獸鋼彈；演出時間先查看現場公告。",
         ],
         tips: [
           "DiverCity 美食街選擇多，午餐可在此解決 (金子半之助、田中商店拉麵)。",
@@ -962,11 +924,11 @@ export const itineraryData = [
         lat: 35.6554,
         lon: 139.7925,
         icon: <ShoppingBag />,
-        desc: "東京親子友善商場 No.1，可以看海。",
+        desc: "在豐洲採買童裝與日用品，累了可到海灣側稍作休息，再安排晚餐與返回上野。",
         highlights: [
-          "après les cours (2F)：日系童裝，風格溫柔可愛。",
-          "Akachan Honpo (3F)：阿卡將本舖，母嬰用品一次補齊。",
-          "KidZania (3F)：職業體驗城 (若有時間可預約，但需懂日文較佳)。",
+          "après les cours：日系童裝，風格溫柔可愛。",
+          "Akachan Honpo：阿卡將本舖，母嬰用品一次補齊。",
+          "若想體驗 KidZania，須另查場次與語言安排，並改以半天行程規劃，不臨時插入採買空檔。",
         ],
         tips: [
           "商場外有海濱公園，可以讓小孩跑跑跳跳，風景優美。",
@@ -995,6 +957,8 @@ export const itineraryData = [
     locationKey: "ueno",
     date: "1/29 (四)",
     title: "最後衝刺與返家",
+    intro:
+      "把最後採買留在飯店附近，收齊行李後直奔成田。先完成報到與安檢，再用剩餘時間挑選伴手禮。",
     stay: "溫暖的家",
     routeInfo: {
       summary: "上野多慶屋 → 京成上野站 → 成田機場",
@@ -1004,14 +968,14 @@ export const itineraryData = [
     events: [
       {
         time: "09:00",
-        title: "上野補貨",
+        title: "上野早餐與最後採買",
         mapQuery: "多慶屋 上野",
         lat: 35.7067,
         lon: 139.7767,
         icon: <ShoppingBag />,
-        desc: "把握最後採買機會。",
+        desc: "先在上野附近享用早餐，店舖開門後再少量補貨。購物清單以好攜帶的伴手禮為主，預留返回飯店取行李的時間。",
         highlights: [
-          "多慶屋 (紫色大樓)：零食、乾貨、磁力貼、保溫瓶一次買齊。9:00 開門。",
+          "多慶屋：依當日各樓層營業時間安排採買，先列好伴手禮清單。",
           "唐吉訶德上野店：補買藥妝、雜貨。",
           "二木之菓子：若第一天沒買夠，這裡再補。",
         ],
@@ -1049,7 +1013,7 @@ export const itineraryData = [
           "扭蛋區：把剩下的零錢扭完。",
         ],
         tips: [
-          "星宇航空櫃檯通常在 3F (J 櫃檯)，先掛行李再去逛。",
+          "星宇航空位於第 2 航廈 3F；報到櫃檯與登機門請查看當日航班看板。",
           "出境後免稅店人多，請預留結帳時間。",
         ],
       },

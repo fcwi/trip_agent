@@ -46,47 +46,38 @@ export const guidesData = [
   {
     title: "Visit Busan Pass (VBP)",
     icon: <Ticket className="w-5 h-5" />,
-    summary: "釜山旅遊神卡，免費進入多個熱門景點。",
+    summary: "依使用時數或景點次數選票，先比較想去的景點再購買。",
     steps: [
-      "事前購買：Klook / KKday 購買 24H 或 48H 通行證 (實體卡或電子憑證)。",
-      "實體卡：抵達金海機場後，至櫃檯兌換實體卡 (可當交通卡使用，需儲值)。",
+      "先在 VBP 官網核對票種、適用景點與使用期限，再選擇官方或授權通路購買。",
+      "實體票依訂單指定地點兌換；交通卡功能須另外儲值，不包含在景點權益內。",
       "電子版：下載 App 綁定憑證，入場出示 QR Code。",
-      "啟用：第一個景點入場掃描後開始倒數計時。",
-      "適用景點：Blue Line Park 海濱列車 (需預約)、X the Sky、松島纜車、Lotte World 等。",
+      "時數型票券於首次使用適用景點時開始計時；次數型票券另按該票種規則使用。",
+      "海濱列車與天空膠囊是不同產品；持 VBP 仍須確認景點權益、兌票方式與另行預約需求。",
     ],
     link: {
       text: "VBP 官網與景點列表",
       url: "https://www.visitbusanpass.com/",
     },
-    blogs: [
-      {
-        title: "Mimi韓｜Visit Busan Pass 釜山通行證攻略",
-        url: "https://mimihan.tw/visit-busan-pass/",
-      },
-      {
-        title: "波比看世界｜釜山通行證 Visit Busan Pass 買哪種划算？",
-        url: "https://bobby.tw/blog/post/visit-busan-pass",
-      },
-    ],
+    blogs: [],
   },
   {
-    title: "Q-CODE 入境檢疫資訊",
+    title: "韓國入境申報與 Q-CODE",
     icon: <QrCode className="w-5 h-5" />,
-    summary: "入境韓國前建議填寫。",
+    summary: "先區分入境申報、K-ETA 與健康檢疫，依適用條件準備。",
     steps: [
-      "雖目前不強制，但填寫 Q-CODE 可加速通關。",
-      "出發前 3 天內上網填寫健康狀態。",
-      "填寫完成後截圖 QR Code。",
-      "若未填寫，機上需填寫黃色紙本健康申報單。",
+      "先在韓國 e-Arrival Card 官網確認是否屬申報對象，並核對 K-ETA 或簽證資格。",
+      "適用電子入境申報者，可自抵達韓國前三天起免費填寫；完成後保存申報編號與確認信。",
+      "Q-CODE 是健康檢疫申報，不能取代入境卡；依當季檢疫地區、旅遊史及症狀判斷是否須申報。",
+      "準備護照、住宿地址、航班與回程資料，入境時依檢疫及移民官指示辦理。",
     ],
     link: {
-      text: "Q-CODE 官方網站",
-      url: "https://cov19ent.kdca.go.kr/",
+      text: "韓國電子入境申報官方指南",
+      url: "https://www.e-arrivalcard.go.kr/portal/guide/eacGuide.do?locale=E",
     },
     blogs: [
       {
-        title: "Creatrip｜韓國入境最新規定 Q-CODE 教學",
-        url: "https://www.creatrip.com/blog/12345", // 示意連結
+        title: "KDCA｜Q-CODE 官方公告與適用條件",
+        url: "https://qcode.kdca.go.kr/qco/bbs/BD_selectBbsList.do?q_bbsSn=1016",
       },
     ],
   },
@@ -96,20 +87,20 @@ export const guidesData = [
     summary: "輕軌、機場巴士或計程車的選擇。",
     steps: [
       "輕軌 (Light Rail)：機場站 → 沙上站 (轉乘地鐵2號線) → 西面/海雲台。便宜但不適合大行李。",
-      "機場巴士 (Limousine Bus)：國際線 1F 3號月台搭乘。直達西面/海雲台飯店門口，舒適。",
+      "機場巴士依當日路線、停靠站與時刻搭乘；不要將海雲台班次當成西面飯店直達車。",
       "計程車：依指標排隊。一般計程車 (銀/白/橘) 或模範計程車 (黑)。三人以上建議搭車。",
       "Uber (UT)：可直接叫車，綁定海外信用卡扣款。",
     ],
     link: {
       text: "金海機場交通指南",
-      url: "https://www.airport.co.kr/gimhae/cms/fr/conts/contsView.do?MENU_ID=1350",
+      url: "https://www.airport.co.kr/gimhaeeng/cms/frCon/index.do?CONTENTS_NO=1&MENU_ID=110",
     },
     blogs: [],
   },
   {
     title: "Naver Map 使用指南",
     icon: <Map className="w-5 h-5" />,
-    summary: "韓國必備地圖 App (Google Maps 不準)。",
+    summary: "以 Naver Map 核對韓國境內的大眾交通與步行路線。",
     steps: [
       "下載 Naver Map App (設定語言為簡體/繁體中文)。",
       "註冊/登入 (可收藏地點)。",
@@ -121,12 +112,7 @@ export const guidesData = [
       text: "Naver Map 網頁版",
       url: "https://map.naver.com/",
     },
-    blogs: [
-      {
-        title: "小不點看世界｜Naver Map 中文版教學",
-        url: "https://www.paine0602.com/naver-map/",
-      },
-    ],
+    blogs: [],
   },
 ];
 
@@ -333,10 +319,13 @@ export const itineraryData = [
     locationKey: "seomyeon",
     date: "7/2 (四)",
     title: "抵達釜山：豬肉湯飯與西面逛街",
+    intro:
+      "抵達後先安頓行李，以一碗熱湯飯展開旅程。下午留在西面附近散步採買，讓通關、換匯與入住都有餘裕。",
     stay: "Lotte Hotel Busan (西面)",
     routeInfo: {
       summary: "金海機場 → 飯店放行李 → 豬肉湯飯 → 西面商圈",
-      mapUrl: "https://www.google.com/maps/dir/?api=1&origin=35.1732,128.9464&destination=35.1578,129.06&waypoints=35.1565,129.0558%7C35.1548,129.0592&travelmode=transit",
+      mapUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=35.1732,128.9464&destination=35.1578,129.06&waypoints=35.1565,129.0558%7C35.1548,129.0592&travelmode=transit",
     },
     events: [
       {
@@ -346,7 +335,7 @@ export const itineraryData = [
         lat: 35.1732,
         lon: 128.9464,
         icon: <Plane />,
-        desc: "搭乘 CI188 抵達。領取行李，入境審查 (準備 Q-CODE 或黃色紙本)。入境大廳領取 Visit Busan Pass (若有買) 或儲值 T-money。",
+        desc: "抵達後依序完成檢疫、入境與行李提領。先準備適用的入境申報資料，再依訂單領取通行證或儲值交通卡。",
         tips: [
           "機場換匯匯率較差，建議先換少量韓元搭車，去西面再在大額換匯。",
           "便利商店可買 T-money 卡。",
@@ -361,10 +350,10 @@ export const itineraryData = [
         icon: <Train />,
         desc: "前往市區飯店。",
         transport: {
-          mode: "機場巴士 或 計程車",
-          duration: "約 30-40 分鐘",
+          mode: "計程車 或 輕軌轉地鐵",
+          duration: "約 45–60 分鐘，另留候車時間",
           route: "金海機場 → 樂天飯店 (西面)",
-          note: "人多建議直接搭計程車，車資約 1.5-2 萬韓元，省力方便。",
+          note: "行李較多可從正式排班區搭計程車，依跳表及道路狀況計費；搭軌道交通則於沙上轉地鐵 2 號線往西面。",
         },
       },
       {
@@ -377,7 +366,7 @@ export const itineraryData = [
         desc: "先至釜山樂天飯店寄放行李。隨後前往西面換錢所換韓幣。",
         tips: [
           "老奶奶換錢所 / 那英換錢所：位於西面市場巷弄內，匯率通常不錯。",
-          "準備美金或台幣 1000 元面額更換。",
+          "先確認店家接受的幣別與匯率，換匯後當場點清金額。",
         ],
       },
       {
@@ -387,7 +376,7 @@ export const itineraryData = [
         lat: 35.1548,
         lon: 129.0592,
         icon: <Utensils />,
-        desc: "釜山必吃美食！熱騰騰的濃郁豚骨湯頭，營養滿分。",
+        desc: "以西面豬肉湯飯作為抵達後的第一餐，依口味加入韭菜與蝦醬；帶孩子用餐可先詢問不加辣的作法。",
         highlights: [
           "松亭3代 (70年老店) 或 秀玲豬肉湯飯。",
           "吃法：加入韭菜、蝦醬調味，麵線先丟進去吃。",
@@ -401,7 +390,7 @@ export const itineraryData = [
         lat: 35.1578,
         lon: 129.06,
         icon: <ShoppingBag />,
-        desc: "媽媽的購物時間！傍晚回飯店拿行李正式 Check-in，晚餐可於商圈自由安排。",
+        desc: "沿地下街與百貨慢慢逛，穿插飲水與休息。傍晚回飯店辦理入住，再於西面商圈安排晚餐。",
         tips: [
           "NC百貨：平價好逛，有多款童裝及 Shoopen 特價鞋子。",
           "樂天百貨 釜山總店：可逛免稅店或高階美妝品牌。",
@@ -414,11 +403,15 @@ export const itineraryData = [
     day: "Day 2",
     locationKey: "haeundae",
     date: "7/3 (五)",
-    title: "機張海線：天空膠囊、Outlet血拼與滑車",
+    title: "機張海線：天空膠囊、購物與滑車",
+    intro:
+      "沿著海岸搭膠囊列車，在青沙浦看海，再轉往東釜山用餐與採買。下午的滑車依家人年齡、身高與體力安排。",
     stay: "Lotte Hotel Busan (西面)",
     routeInfo: {
-      summary: "尾浦站 (膠囊列車) → 青沙浦 → 樂天 Premium Outlet 東釜山店 → Skyline Luge",
-      mapUrl: "https://www.google.com/maps/dir/?api=1&origin=35.1633,129.1837&destination=35.161,129.1605&waypoints=35.1608,129.1931%7C35.193,129.213%7C35.195,129.215&travelmode=driving",
+      summary:
+        "尾浦站 (膠囊列車) → 青沙浦 → 樂天 Premium Outlet 東釜山店 → Skyline Luge",
+      mapUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=35.1633,129.1837&destination=35.161,129.1605&waypoints=35.1608,129.1931%7C35.193,129.213%7C35.195,129.215&travelmode=driving",
     },
     events: [
       {
@@ -448,7 +441,7 @@ export const itineraryData = [
           "車程約 30 分鐘，車廂獨立，可盡情拍照。",
         ],
         tips: [
-          "⚠️ 務必提早 2-3 週官網預約！",
+          "事先在官網確認開放售票日、出發站與搭乘時段；天空膠囊須另確認票券，不能直接以 VBP 取代預約。",
         ],
       },
       {
@@ -461,18 +454,18 @@ export const itineraryData = [
         desc: "在青沙浦紅白燈塔拍完照後，直接搭計程車前往機張東釜山區。",
         transport: {
           mode: "計程車",
-          duration: "約 15 分鐘",
+          duration: "約 20–30 分鐘，依路況調整",
           route: "青沙浦 → 樂天 Premium Outlet",
         },
       },
       {
         time: "12:00",
-        title: "午餐與血拼：樂天 Premium Outlet 東釜山店",
+        title: "午餐與購物：東釜山 Outlet",
         mapQuery: "樂天 Premium Outlet 東釜山店",
         lat: 35.193,
         lon: 129.213,
         icon: <ShoppingBag />,
-        desc: "亞洲最大的 Outlet 之一！媽媽的名牌購物天堂，全家可於 3F 美食街輕鬆吃午餐。",
+        desc: "中午在東釜山 Outlet 用餐與採買，先找好集合點，再依家人的興趣分區逛。為下午滑車預留移動與報到時間。",
         highlights: [
           "運動品牌：Nike, Adidas 款式齊全常有折扣。",
           "兒童專區：除了買童裝，附近也有旋轉木馬等小型遊樂設施。",
@@ -485,10 +478,10 @@ export const itineraryData = [
         lat: 35.195,
         lon: 129.215,
         icon: <Star />,
-        desc: "就在 Outlet 旁邊，搭乘吊椅上山，然後坐滑車衝下坡，小孩超愛！",
+        desc: "前往機張的 Skyline Luge，先聽取操作說明，再搭吊椅上山體驗滑車。排隊、裝備與練習都要計入停留時間。",
         tips: [
-          "身高超過 110cm 可單獨駕駛，85-110cm 需與成人共乘。",
-          "若家有幼童不搭滑車，可改至旁邊的「釜山樂天世界」玩溫和設施。",
+          "單獨搭乘須同時符合至少 6 歲及身高 110cm，並由現場人員確認；未滿 85cm 不可搭乘。",
+          "共乘須另確認兒童票、身高條件及成人監護人資格。未能搭乘的家人可改為休息，不臨時加排另一座主題樂園。",
         ],
       },
       {
@@ -498,8 +491,11 @@ export const itineraryData = [
         lat: 35.161,
         lon: 129.1605,
         icon: <Utensils />,
-        desc: "搭車返回海雲台市區，吃釜山超強厚切燒肉補充體力。",
-        tips: ["專人代烤，不用自己動手，非常適合帶小孩的家庭。", "一定要加點石鍋飯 (附大醬湯)。"],
+        desc: "返回海雲台用晚餐，以烤肉與米飯為一天收尾；若候位較久，可改選附近其他餐廳。",
+        tips: [
+          "專人代烤，不用自己動手，非常適合帶小孩的家庭。",
+          "可搭配米飯與湯品，點餐時先確認份量與是否含辣。",
+        ],
       },
     ],
   },
@@ -508,10 +504,13 @@ export const itineraryData = [
     locationKey: "gwangalli",
     date: "7/4 (六)",
     title: "水族館、新世界百貨與無人機秀",
+    intro:
+      "上午走進海底世界，下午回到室內用餐與休息。晚上再前往廣安里，讓城市海景與無人機表演為一天收尾。",
     stay: "Lotte Hotel Busan (西面)",
     routeInfo: {
-      summary: "SEA LIFE 水族館 → 新世界百貨 (KidZania) → 廣安里",
-      mapUrl: "https://www.google.com/maps/dir/?api=1&origin=35.159,129.16&destination=35.1532,129.1186&waypoints=35.169,129.1293&travelmode=transit",
+      summary: "SEA LIFE 水族館 → Centum City 用餐與購物 → 廣安里",
+      mapUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=35.159,129.16&destination=35.1532,129.1186&waypoints=35.169,129.1293&travelmode=transit",
     },
     events: [
       {
@@ -521,24 +520,24 @@ export const itineraryData = [
         lat: 35.159,
         lon: 129.16,
         icon: <Star />,
-        desc: "位於海雲台沙灘旁，非常適合親子的室內景點，冷氣強又好逛。",
+        desc: "在海雲台沙灘旁安排室內海洋生物觀察，避開中午日曬；午餐與前往 Centum City 的交通另留時間。",
         highlights: [
-          "必看表演：美人魚秀、鯊魚企鵝餵食秀。",
+          "入館後先查看當日活動與餵食時刻，再安排海洋生物展區。",
           "海底隧道與透明玻璃船 (需另購票) 體驗。",
         ],
       },
       {
         time: "13:30",
-        title: "新世界百貨 Centum City (購物 & KidZania)",
+        title: "新世界百貨 Centum City：用餐與購物",
         mapQuery: "新世界百貨 Centum City",
         lat: 35.169,
         lon: 129.1293,
         icon: <ShoppingBag />,
-        desc: "世界最大百貨，完美滿足媽媽與小孩！地下美食街解決午餐。",
+        desc: "在 Centum City 用餐、逛街與休息。今天晚間安排廣安里，下午以能彈性離開的活動為主。",
         highlights: [
-          "小孩：可至商城 4F 的 KidZania (兒童職業體驗) 放電，或去室內溜冰場玩。",
-          "媽媽：逛 Tamburins 香氛、高奢名品、地下室超多韓國甜點。",
-          "★ 備案：若小孩大於國小，也可選擇去百貨內的 Spa Land 汗蒸幕放鬆。",
+          "KidZania 須另購票並核對場次；若要完整體驗，應改排半天行程，避免與晚間廣安里活動互相壓縮。",
+          "購物與甜點可依興趣分組安排，先約好會合地點。",
+          "Spa Land 有兒童入場與陪同規則，請先核對館方條件；不作為幼童通用備案。",
         ],
       },
       {
@@ -558,8 +557,10 @@ export const itineraryData = [
         lat: 35.1532,
         lon: 129.1186,
         icon: <Star />,
-        desc: "週六晚上有精彩無人機表演 (20:00 / 22:00)，全家一起在沙灘上欣賞超壯觀。",
-        tips: ["可以買些炸雞在沙灘上吃，小孩可以在旁邊玩沙。"],
+        desc: "依夏季常態安排，週六 20:00、22:00 於廣安里海邊演出；親子行程可優先看第一場，再依體力決定返程。",
+        tips: [
+          "出發前查看主辦方當日公告；雨勢、強風或通訊狀況可能造成延後或取消。",
+        ],
       },
     ],
   },
@@ -568,10 +569,13 @@ export const itineraryData = [
     locationKey: "nampo",
     date: "7/5 (日)",
     title: "文化探索：甘川洞與南浦洞",
+    intro:
+      "從山城的彩色街屋走到松島海岸，再回南浦商圈吃小吃。坡路與階梯較多，散策路段依同行家人的體力選擇。",
     stay: "Lotte Hotel Busan (西面)",
     routeInfo: {
       summary: "甘川洞文化村 → 松島纜車 → BIFF廣場 → 富平罐頭市場",
-      mapUrl: "https://www.google.com/maps/dir/?api=1&origin=35.0975,129.0106&destination=35.1011,129.0238&waypoints=35.0768,129.0205%7C35.0986,129.0267&travelmode=transit",
+      mapUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=35.0975,129.0106&destination=35.1011,129.0238&waypoints=35.0768,129.0205%7C35.0986,129.0267&travelmode=transit",
     },
     events: [
       {
@@ -584,7 +588,7 @@ export const itineraryData = [
         desc: "韓國的馬丘比丘，彩色積木房子。",
         highlights: [
           "必拍：小王子與狐狸的背影 (需排隊)。",
-          "★ 親子必玩：鼓勵小孩參與「尋找小王子與買地圖集章」活動，非常有趣！",
+          "可先在遊客中心了解地圖與散策路線，再依坡度與家人體力選擇路段。",
           "穿韓服：這裡全家穿韓服拍照非常有氛圍。",
         ],
         tips: [
@@ -602,10 +606,12 @@ export const itineraryData = [
         desc: "搭乘纜車跨越海面，前往岩南公園。",
         highlights: [
           "水晶車廂：地板透明，可看到腳下大海。",
-          "龍宮雲橋：走在海上的步道 (需另外購票或 VBP 包含)。",
+          "龍宮雲橋與纜車是不同設施，先確認開放情況與各自票券。",
           "松島天空步道 (Skywalk)：免費的海上步道。",
         ],
-        tips: ["VBP 可免費搭乘一般車廂 (來回)，水晶車廂需補差價。"],
+        tips: [
+          "使用 VBP 前，先核對當次票種適用的車廂、搭乘次數與兌票方式；水晶車廂及其他設施另依官方規則購票。",
+        ],
       },
       {
         time: "16:00",
@@ -614,21 +620,21 @@ export const itineraryData = [
         lat: 35.0986,
         lon: 129.0267,
         icon: <ShoppingBag />,
-        desc: "媽媽繼續逛街的好地方！路邊攤也是美食天堂。",
+        desc: "沿 BIFF 廣場與光復路散步，將街頭小吃、服飾與文具採買穿插安排。",
         highlights: [
-          "光復路時尚街：美妝店、韓國服飾店集散地，媽媽買保養品首選！",
+          "光復路時尚街：可挑選美妝與服飾，先比較款式、價格與付款方式。",
           "元祖黑糖餅：排隊名店，包堅果超好吃，小孩會喜歡的甜點。",
           "ARTBOX：南浦洞也有超大文具店，買可愛文具給小孩。",
         ],
       },
       {
         time: "18:00",
-        title: "晚餐：札嘎其市場 / 豬腳",
+        title: "晚餐：富平市場與南浦小吃",
         mapQuery: "富平罐頭市場",
         lat: 35.1011,
         lon: 129.0238,
         icon: <Utensils />,
-        desc: "晚餐選擇。",
+        desc: "在南浦商圈挑選晚餐；想吃市場小吃或豬腳都可就近安排，不必再跨區移動。",
         highlights: [
           "方案A：富平罐頭市場夜市 (巨人炸雞、綠豆煎餅)。",
           "方案B：霸王豬腳 (南浦洞豬腳街)。",
@@ -641,10 +647,14 @@ export const itineraryData = [
     locationKey: "huinnyeoul",
     date: "7/6 (一)",
     title: "樂天超市掃貨、影島海景與搭機返台",
+    intro:
+      "上午完成伴手禮採買，下午視時間在白淺灘短暫看海。回程以領行李、準時報到為主，海景咖啡可彈性省略。",
     stay: "溫暖的家",
     routeInfo: {
-      summary: "飯店 Check-out → 樂天超市光復店 → 白淺灘文化村 → 機場 → 飛往台北",
-      mapUrl: "https://www.google.com/maps/dir/?api=1&origin=35.1565,129.0558&destination=35.1732,128.9464&waypoints=35.097,129.035%7C35.0788,129.0435&travelmode=driving",
+      summary:
+        "飯店 Check-out → 樂天超市光復店 → 白淺灘文化村 → 機場 → 飛往台北",
+      mapUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=35.1565,129.0558&destination=35.1732,128.9464&waypoints=35.097,129.035%7C35.0788,129.0435%7C35.1565,129.0558&travelmode=driving",
     },
     events: [
       {
@@ -663,11 +673,11 @@ export const itineraryData = [
         lat: 35.097,
         lon: 129.035,
         icon: <ShoppingBag />,
-        desc: "媽媽最期待的超市掃貨時間！前往南浦洞的樂天百貨光復店的地下 B1 Lotte Mart。",
+        desc: "前往光復店商場與超市採買伴手禮，入館先查樓層導覽與營業時間，避免拖著戰利品反覆找路。",
         highlights: [
           "掃貨重點：海苔、韓國泡麵、Market O 零食、各式伴手禮。",
-          "★ 兒童驚喜：百貨內有「世界最大室內音樂噴泉」，每小時表演一次，小孩超愛看。",
-          "買完可直接在旁邊櫃台辦理退稅手續並裝箱。",
+          "若商場當日有噴泉演出，可依現場時刻短暫停留，不為等待演出影響回程。",
+          "購物時先詢問店家退稅方式，保存護照、收據與商品，依單據指示辦理。",
         ],
       },
       {
@@ -681,36 +691,36 @@ export const itineraryData = [
       },
       {
         time: "14:30",
-        title: "遠眺絕美看海：影島白淺灘文化村",
+        title: "影島白淺灘文化村：海景小歇",
         mapQuery: "白淺灘文化村",
         lat: 35.0788,
         lon: 129.0435,
         icon: <Coffee />,
-        desc: "搭計程車前往不遠的白淺灘文化村，在回國前找間海景咖啡廳坐坐，吃點冰淇淋放鬆。",
+        desc: "視行李、路況與剩餘時間，在白淺灘上方街區短暫看海。若上午採買延後，就省略此站，優先回飯店領行李。",
         tips: ["推著嬰兒車不方便走階梯，建議在上面大路的咖啡廳看海即可。"],
       },
       {
-        time: "16:30",
+        time: "15:30",
         title: "回飯店拿行李，前往金海機場 (PUS)",
         mapQuery: "金海國際機場",
         lat: 35.1732,
         lon: 128.9464,
         icon: <Train />,
-        desc: "回 Lotte Hotel 領取行李後，前往機場。準備搭乘 CI187 航班。",
+        desc: "從白淺灘返回西面飯店領取行李，再前往機場；以起飛前約三小時抵達為目標，班機與報到期限請核對訂單。",
         transport: {
-          mode: "機場巴士 或 計程車",
-          duration: "約 30-40 分鐘",
-          route: "西面 → 金海機場",
+          mode: "計程車 或 輕軌轉地鐵",
+          duration: "約 45–60 分鐘，另留候車時間",
+          route: "白淺灘 → 西面飯店取行李 → 金海機場",
         },
       },
       {
-        time: "17:30",
-        title: "退稅 & 免稅店購物",
+        time: "16:45",
+        title: "機場報到、退稅與候機",
         mapQuery: "金海機場免稅店",
         lat: 35.1732,
         lon: 128.9464,
         icon: <ShoppingBag />,
-        desc: "辦理退稅手續，逛逛機場免稅店，或吃頓簡單晚餐。",
+        desc: "先完成航空公司報到，需海關查驗的退稅商品先依指示處理，再交付託運行李。完成安檢與出境後，確認登機門再用餐或採買。",
         highlights: [
           "7-11：把交通卡餘額花完的好地方。",
           "免稅店：雪花秀、正官庄人蔘。",
@@ -1206,7 +1216,7 @@ export const tripConfig = {
 // ============================================================================
 export const checklistData = [
   { id: 1, text: "護照 (效期6個月以上)", checked: false },
-  { id: 2, text: "Q-CODE / 入境卡截圖 (若有填)", checked: false },
+  { id: 2, text: "核對電子入境卡、K-ETA／簽證與適用檢疫申報", checked: false },
   { id: 3, text: "E-SIM / 網卡開通", checked: false },
   { id: 4, text: "WOWPASS / T-money 交通卡", checked: false },
   { id: 5, text: "轉接頭 (韓國是圓孔 Type C/F)", checked: false },
