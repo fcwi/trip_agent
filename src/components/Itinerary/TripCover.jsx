@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react";
 import JournalIllustration from "./JournalIllustration.jsx";
-import { TravelDoodle } from "./TravelDoodles.jsx";
+import { TripStudies } from "./artwork/DailyArtwork.jsx";
 
 export default function TripCover({
   tripConfig,
@@ -53,11 +53,7 @@ export default function TripCover({
               .map((location) => location.name)
               .join(" · ")}
         </p>
-        <div className="journal-cover-keepsakes" aria-hidden="true">
-          <TravelDoodle kind="suitcase" />
-          <TravelDoodle kind="ticket" />
-          <TravelDoodle kind="camera" />
-        </div>
+        <TripStudies tripId={tripConfig.id} />
       </div>
     </section>
   );

@@ -10,7 +10,7 @@ export function SceneFrame({ id, children }) {
     >
       <g
         stroke="var(--journal-ink)"
-        strokeWidth="2.5"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -32,6 +32,11 @@ export function SnowPine({ x, y, scale = 1 }) {
         fill="var(--journal-snow, var(--travel-surface))"
       />
       <path d="M0 82v13" />
+      <path
+        d="M0 22v53m-9-34 9 5 9-5m-15 22 15 5 15-5"
+        strokeWidth=".8"
+        opacity=".6"
+      />
     </g>
   );
 }
@@ -73,6 +78,10 @@ export function SceneCoach() {
         fill="var(--journal-yellow)"
       />
       <path d="M26 18v15m14-15v15M8 39h47m16-1h4" />
+      <path
+        d="m15 20 3 3m11-3 3 3m11-3 3 3m13 13v6m-43-7h33m-31 0v5m15-5v5m15-5v5M7 34H3v-9h3m67 10h3v5h-3"
+        strokeWidth=".65"
+      />
       <circle cx="21" cy="46" r="7" fill="var(--travel-surface)" />
       <circle cx="61" cy="46" r="7" fill="var(--travel-surface)" />
       <circle cx="21" cy="46" r="2" fill="var(--journal-ink)" stroke="none" />

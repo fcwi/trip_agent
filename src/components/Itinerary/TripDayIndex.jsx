@@ -27,10 +27,7 @@ export default function TripDayIndex({
             >
               <span className="travel-day-index__number">
                 <span className="journal-index-picture" aria-hidden="true">
-                  <DayStamp
-                    title={day.title}
-                    season={tripConfig.artwork.season}
-                  />
+                  <DayStamp tripId={tripConfig.id} dayIndex={index} />
                 </span>
                 {day.day}
                 <small>{day.date}</small>

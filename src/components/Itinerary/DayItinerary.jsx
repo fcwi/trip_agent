@@ -1,7 +1,6 @@
 import { AlertCircle, ArrowUpRight, Hotel, Navigation } from "lucide-react";
 import TimelineEvent from "./TimelineEvent.jsx";
 import { DayStamp } from "./JournalIllustration.jsx";
-import { DayDoodles } from "./TravelDoodles.jsx";
 
 export default function DayItinerary({
   day,
@@ -29,7 +28,7 @@ export default function DayItinerary({
           data-journal-tone={activeDay % 3}
         >
           <div className="journal-day-picture">
-            <DayStamp title={day.title} season={tripConfig.artwork.season} />
+            <DayStamp tripId={tripConfig.id} dayIndex={activeDay} />
           </div>
           <div className="journal-day-title">
             <p className="travel-eyebrow">
@@ -57,7 +56,6 @@ export default function DayItinerary({
         {day.intro && (
           <div className="journal-day-note">
             <p className="journal-day-intro">{day.intro}</p>
-            <DayDoodles title={day.title} season={tripConfig.artwork.season} />
           </div>
         )}
         <button

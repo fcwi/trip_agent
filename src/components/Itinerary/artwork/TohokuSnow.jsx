@@ -4,6 +4,7 @@ import {
   Snowflakes,
   SceneCoach,
 } from "./ScenePrimitives.jsx";
+import { Windows } from "./DailyScenePrimitives.jsx";
 
 export default function TohokuSnow() {
   return (
@@ -36,7 +37,12 @@ export default function TohokuSnow() {
         d="M464 103h13v17h-13Zm22 0h13v17h-13Z"
         fill="var(--journal-yellow)"
       />
-      <path d="M425 222v-56h95v56" fill="var(--journal-yellow)" />
+      <path
+        d="m148 122 17 27m120-42-25 53m70-59 29 50m-135 34 23-22m117 41 21-18"
+        strokeWidth=".9"
+        opacity=".4"
+      />
+      <path d="M425 222v-65h95v65" fill="var(--journal-yellow)" />
       <path
         d="m414 168 58-44 60 44Z"
         fill="var(--journal-snow, var(--travel-surface))"
@@ -47,6 +53,21 @@ export default function TohokuSnow() {
       />
       <path d="M454 116q-9-9 0-18m19 16q-9-9 0-18" />
       <path
+        d="M424 170h97m-97 28h97m-90-36h82m-83 42h82m-86 13h88m-57-54v35m31-35v35"
+        strokeWidth=".9"
+      />
+      <Windows x={434} y={173} columns={5} rows={1} size={10} step={16} />
+      <path
+        d="m416 170 56-38 54 38m-85-24 8 9m16-22 8 8m15-3 8 8"
+        strokeWidth=".8"
+        opacity=".6"
+      />
+      <path
+        d="M426 225h96m-88 5h80m-68 5h55m-93-23v-30m-5 0h10v-12h-10Z"
+        fill="var(--journal-pink)"
+        strokeWidth="1"
+      />
+      <path
         d="M0 267q171-22 340-2t300-1"
         strokeWidth="12"
         stroke="var(--journal-blue)"
@@ -54,6 +75,9 @@ export default function TohokuSnow() {
       />
       <g transform="translate(251 173) scale(1.8)">
         <SceneCoach />
+      </g>
+      <g strokeWidth=".9" opacity=".65">
+        <path d="M65 284q18-8 38-2m66-14 24-3m211 18 33-1m54-29 36 1M191 93l7 9m-13-4 9-1M541 43l6 7m-8-3 9-1" />
       </g>
       <Snowflakes />
     </SceneFrame>

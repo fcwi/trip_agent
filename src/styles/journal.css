@@ -1316,51 +1316,37 @@
   text-wrap: pretty;
 }
 
-.journal-cover-keepsakes {
+/* Destination studies replace the repeated camera / ticket stickers. */
+.journal-cover-studies {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: clamp(8px, 3vw, 16px);
-  margin: 20px auto 0;
+  gap: clamp(8px, 3vw, 18px);
+  margin: 22px auto 2px;
   padding: 5px;
 }
-.journal-cover-keepsakes svg {
-  flex: 0 0 72px;
-  width: 72px;
-  height: 72px;
+.journal-cover-study {
+  width: clamp(76px, 21vw, 104px);
+  aspect-ratio: 1;
+  background: var(--travel-surface);
+  border: 1px solid color-mix(in srgb, var(--journal-ink) 40%, transparent);
+  border-radius: 3px;
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--journal-ink) 5%, transparent);
 }
-.journal-cover-keepsakes svg:first-child {
-  transform: rotate(-7deg);
+.journal-cover-study:first-child {
+  transform: rotate(-5deg);
 }
-.journal-cover-keepsakes svg:last-child {
-  transform: rotate(6deg);
+.journal-cover-study:last-child {
+  transform: rotate(5deg);
 }
 .journal-day-note {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   margin: 16px 4px 20px;
 }
 .journal-day-note .journal-day-intro {
   margin: 0;
-}
-.journal-doodle-pair {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px;
-}
-.journal-doodle-pair svg {
-  width: 80px;
-  height: 80px;
-  flex: 0 0 80px;
-}
-.journal-doodle-pair svg:first-child {
-  transform: rotate(-5deg);
-}
-.journal-doodle-pair svg:last-child {
-  transform: rotate(5deg);
 }
 .journal-index-picture {
   display: block;
@@ -1377,9 +1363,6 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
     margin-inline: 2px;
-  }
-  .journal-doodle-pair {
-    justify-self: end;
   }
 }
 .travel-shell[data-editorial="true"] .travel-section-heading {
