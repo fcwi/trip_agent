@@ -89,7 +89,12 @@ export default defineConfig(({ mode }) => {
   }
 
   const basePath = normalizeBasePath(env.VITE_BASE_PATH);
-  const tripMeta = loadTripMeta(tripFilePath);
+  const tripMeta = {
+    ...loadTripMeta(tripFilePath),
+    title: "Trip Agent 旅行手帳",
+    short_name: "Trip Agent",
+    description: "選擇旅程、查看每日行程，收藏走過的風景與下一次出發。",
+  };
   const publicSiteUrl = (env.VITE_PUBLIC_SITE_URL || "").replace(/\/$/, "");
   const ogImage = tripMeta.ogImage.startsWith("http")
     ? tripMeta.ogImage
@@ -108,10 +113,6 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: [
-        {
-          find: /^@trip-data-source$/,
-          replacement: path.resolve(__dirname, tripFilePath),
-        },
         {
           find: /^@trip-data$/,
           replacement: path.resolve(__dirname, "src/config/tripData.js"),

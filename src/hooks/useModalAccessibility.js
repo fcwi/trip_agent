@@ -46,7 +46,9 @@ export const useModalAccessibility = (isOpen, onClose) => {
         const firstElement = focusableElements[0];
         const lastElement = focusableElements.at(-1);
         const activeElement = document.activeElement;
-        const focusIsOutside = !dialogRef.current.contains(activeElement);
+        const focusIsOutside =
+          activeElement === dialogRef.current ||
+          !dialogRef.current.contains(activeElement);
 
         if (
           event.shiftKey &&

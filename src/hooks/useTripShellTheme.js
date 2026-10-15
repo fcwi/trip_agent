@@ -2,6 +2,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useThemeConfig } from "../config/ThemeConfig.jsx";
 
 const initialDarkMode = () => {
+  try {
+    const preference = localStorage.getItem("trip_agent:appearance");
+    if (preference === "dark" || preference === "light")
+      return preference === "dark";
+  } catch {
+    /* Use the time-based default when browser storage is unavailable. */
+  }
   const hour = new Date().getHours();
   return hour >= 17 || hour < 6;
 };
@@ -40,7 +47,15 @@ export const useTripShellTheme = (activeTab = "itinerary") => {
     setIsDarkMode(value);
   }, []);
 
-  const toggleTheme = () => setIsDarkMode((prev) => !prev);
+  const toggleTheme = () => {
+    const next = !isDarkMode;
+    try {
+      localStorage.setItem("trip_agent:appearance", next ? "dark" : "light");
+    } catch {
+      /* The current page can still change appearance. */
+    }
+    setIsDarkMode(next);
+  };
 
   const { currentTheme, componentStyles } = useThemeConfig(isDarkMode);
 

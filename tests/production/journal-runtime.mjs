@@ -4,6 +4,7 @@ import path from "node:path";
 import { webcrypto } from "node:crypto";
 import { build, preview } from "vite";
 import { chromium, expect } from "@playwright/test";
+import { tripCatalog, getTripSummary } from "../../src/config/tripCatalog.js";
 
 const requestedTrips = process.argv
   .slice(2)
@@ -220,7 +221,7 @@ try {
       for (const dark of [false, true]) {
         const { context, page, errors } = await newPage(dark, false);
         try {
-          await page.goto(root);
+          await page.goto(`${root}/?trip=${trip}`);
           await unlock(page, dark);
           await page.evaluate(() => navigator.serviceWorker.ready);
           // Prompt-based workers control the next navigation after installation.
@@ -378,6 +379,38 @@ try {
             true,
           );
           assert.deepEqual(errors, []);
+          // All itinerary sources and artwork must remain switchable offline.
+          for (const destination of [
+            ...tripCatalog.filter((item) => item.id !== trip),
+            getTripSummary(trip),
+          ]) {
+            await page.getByRole("button", { name: /^切換行程，目前/ }).click();
+            await page
+              .getByRole("dialog", { name: "選擇旅程" })
+              .getByRole("button", {
+                name: `切換至${destination.title}`,
+                exact: true,
+              })
+              .click();
+            await expect(page.locator(".travel-shell")).toHaveAttribute(
+              "data-artwork",
+              destination.artwork.id,
+            );
+            await expect(page.getByLabel("通關密碼")).toHaveCount(0);
+            await page
+              .getByRole("navigation", { name: "主要功能" })
+              .getByRole("button", { name: /^記錄/ })
+              .click();
+            if (destination.id !== trip) {
+              await expect(
+                page.getByText("離線保留測試", { exact: true }),
+              ).toHaveCount(0);
+            } else {
+              await expect(
+                page.locator(".journal-finance-record"),
+              ).toContainText("離線保留測試");
+            }
+          }
           results.push({
             trip,
             scenario: "offline restart",
@@ -387,6 +420,7 @@ try {
             offlineMapFallback: true,
             aiFailureDisplayed: true,
             expenseSurvivesReload: true,
+            offlineTripSwitching: true,
             mapEngineRecoversOnline: true,
             passed: true,
           });
@@ -410,7 +444,7 @@ try {
             await new Promise((resolve) => setTimeout(resolve, 6000));
             await route.continue();
           });
-          await slow.page.goto(root);
+          await slow.page.goto(`${root}/?trip=${trip}`);
           await unlock(slow.page, dark);
           const loadingFont = await slow.page.evaluate(() =>
             [...document.fonts].some(

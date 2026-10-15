@@ -102,7 +102,7 @@ export function TravelDoodle({ kind }) {
   );
 }
 
-export function DayDoodles({ title = "" }) {
+export function DayDoodles({ title = "", season = "summer" }) {
   const kinds = /樹冰|阿仁|纜車/.test(title)
     ? ["boots", "mug"]
     : /銀山|角館|古民家/.test(title)
@@ -111,7 +111,9 @@ export function DayDoodles({ title = "" }) {
         ? ["camera", "mug"]
         : /松島|海雲台|廣安|購物/.test(title)
           ? ["bag", "ticket"]
-          : ["suitcase", "mug"];
+          : season === "winter"
+            ? ["suitcase", "mug"]
+            : ["camera", "ticket"];
   return (
     <div className="journal-doodle-pair" aria-hidden="true">
       {kinds.map((kind) => (

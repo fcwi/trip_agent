@@ -1,5 +1,6 @@
 import { Key, Lock, Moon, Sun } from "lucide-react";
 import CurrencyWidget from "./CurrencyWidget.jsx";
+import TripSwitcher from "./TripSwitcher.jsx";
 
 const TripHeader = ({
   tripConfig,
@@ -65,6 +66,7 @@ const TripHeader = ({
           isOnline={isOnline}
           tripConfig={tripConfig}
         />
+        <TripSwitcher currentId={tripConfig.id} />
       </div>
     </header>
   );

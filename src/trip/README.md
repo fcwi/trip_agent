@@ -6,9 +6,14 @@
 
 1. 選一份最接近的旅程檔案複製，例如 `tripdata_2027_tohoku.jsx`。
 2. 命名為 `tripdata_<tripId>.jsx`；`tripId` 只能使用英文字母、數字、底線與連字號。
-3. 在 `.env` 設定相同的 `VITE_TRIP_ID=<tripId>`。
+3. 在 `src/config/tripCatalog.js` 登錄相同 ID、日期、時區與插畫 ID。
 4. 更新所有旅程內容與 `tripConfig`。
-5. 執行文末的驗證指令。
+5. 在 `src/components/Itinerary/artwork/` 新增對應 SVG 圖稿，並於 `TripArtwork.jsx` 登錄。
+6. 執行文末的驗證指令。`VITE_TRIP_ID` 保留為舊版資料及 GAS Property 的相容設定，不再用來決定畫面行程。
+
+網站內可由頁首的「切換行程」按鈕切換；網址 `?trip=<tripId>` 可直接指定。沒有指定時，優先選旅程中的行程，其次選最近的未出發行程；若皆已結束則選最近結束的旅程。日期以目的地時區判斷，結束當天仍算旅程中。
+
+切換會載入新的旅程脈絡並保持登入，記帳、聊天、清單與資料庫使用各自的旅程 ID；不要在 UI 加入可任意指定 GAS Property 的欄位。原先自訂的 GAS Property 僅套用於 `VITE_TRIP_ID` 對應的舊部署行程，其他旅程由後端依 tripId 取得資源。
 
 不要把 API Key、GAS Token、Spreadsheet ID 或 Drive Folder ID 寫進旅程檔案。GAS 只需要前端傳來的 `tripId`，並會在第一次請求時自動建立對應的雲端資源。
 
@@ -104,10 +109,9 @@ export const itineraryData = [
 
 ## 驗證
 
-先用目標旅程建置：
+建置會包含目錄內的旅程；保留原本的 `VITE_TRIP_ID`，不要為了預覽其他旅程而改動正式環境設定：
 
 ```powershell
-$env:VITE_TRIP_ID = "2027_tohoku"
 npm run check
 npm run build
 npm run build:verify
@@ -120,4 +124,4 @@ $env:E2E_TRIP_ID = "2027_tohoku"
 npm run test:e2e
 ```
 
-新增旅程後至少確認：標題與日期、幣別、時區、AI 口譯目的語言、每日地點對應、深淺色版面、GAS 請求所帶的 `tripId`。
+預覽其他旅程時使用網址 `?trip=2026_karuizawa` 或 `?trip=2026_busan`。新增旅程後至少確認：目錄與資料的 ID／日期／時區一致、幣別、AI 口譯目的語言、每日地點對應、深淺色版面、GAS 請求所帶的 `tripId`，以及往返切換後個別資料仍保留。

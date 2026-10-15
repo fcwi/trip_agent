@@ -1,16 +1,29 @@
-import * as source from "@trip-data-source";
 import { assertTripData } from "../utils/tripValidation.js";
+import { activeTripId } from "../utils/activeTrip.js";
+import { getTripSummary } from "./tripCatalog.js";
+
+const sources = import.meta.glob("../trip/tripdata_*.jsx", { eager: true });
+const source = sources[`../trip/tripdata_${activeTripId}.jsx`];
 
 assertTripData(source);
 
 const rawConfig = source.tripConfig;
-
-const activeTripId =
-  import.meta.env.VITE_TRIP_ID || rawConfig.id || "default-trip";
+const summary = getTripSummary(activeTripId);
+if (
+  rawConfig.id !== activeTripId ||
+  rawConfig.startDate.slice(0, 10) !== summary.startDate ||
+  rawConfig.endDate.slice(0, 10) !== summary.endDate ||
+  rawConfig.timeZone !== summary.timeZone
+) {
+  throw new Error(
+    "旅程目錄與行程資料的 ID、日期或時區不一致，請更新旅程設定。",
+  );
+}
 
 export const tripConfig = Object.freeze({
   ...rawConfig,
   id: activeTripId,
+  artwork: Object.freeze(summary.artwork),
   currency: Object.freeze({
     ...rawConfig.currency,
     code: rawConfig.currency.code.toLowerCase(),

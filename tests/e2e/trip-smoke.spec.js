@@ -85,6 +85,12 @@ const unlockTrip = async (page) => {
 };
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript((id) => {
+    if (!location.href.startsWith("http")) return;
+    const url = new URL(location.href);
+    url.searchParams.set("trip", id);
+    history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, EXPECTED_TRIP_ID);
   const errors = [];
   pageErrors.set(page, errors);
   page.on("pageerror", (error) => {
@@ -127,7 +133,7 @@ test("reports a wrong password and unlocks with the test credential", async ({
   await expect(page.getByRole("alert")).toBeFocused();
 
   await unlockTrip(page);
-  await expect(page).toHaveURL(/\?tab=itinerary$/);
+  await expect(page).toHaveURL(/[?&]tab=itinerary(?:&|$)/);
 });
 
 test("opens the trip when the browser does not provide speech synthesis", async ({
@@ -203,13 +209,13 @@ test("syncs bottom navigation with the URL and browser history", async ({
   await unlockTrip(page);
 
   await page.getByRole("button", { name: /^指南/ }).click();
-  await expect(page).toHaveURL(/\?tab=guides$/);
+  await expect(page).toHaveURL(/[?&]tab=guides(?:&|$)/);
   await expect(
     page.getByRole("button", { name: "指南（目前分頁）" }),
   ).toHaveAttribute("aria-current", "page");
 
   await page.goBack();
-  await expect(page).toHaveURL(/\?tab=itinerary$/);
+  await expect(page).toHaveURL(/[?&]tab=itinerary(?:&|$)/);
   await expect(
     page.getByRole("button", { name: "行程（目前分頁）" }),
   ).toHaveAttribute("aria-current", "page");
@@ -437,7 +443,7 @@ test("opens a deep-linked tab after restoring the session", async ({
   await expect(
     page.getByRole("button", { name: "商店（目前分頁）" }),
   ).toHaveAttribute("aria-current", "page");
-  await expect(page).toHaveURL(/\?tab=shops$/);
+  await expect(page).toHaveURL(/[?&]tab=shops(?:&|$)/);
 });
 
 test("operates the trip tools menu with keyboard focus and opens the calculator", async ({

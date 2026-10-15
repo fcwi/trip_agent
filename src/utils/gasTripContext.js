@@ -7,7 +7,10 @@ import {
 
 export const gasTripContext = createGasTripContext({
   tripId: tripConfig.id,
-  gasPropertyKey: import.meta.env?.VITE_GAS_TRIP_PROPERTY_KEY?.trim() || "",
+  gasPropertyKey:
+    tripConfig.id === import.meta.env?.VITE_TRIP_ID
+      ? import.meta.env?.VITE_GAS_TRIP_PROPERTY_KEY?.trim() || ""
+      : "",
 });
 
 export const withGasTripContext = (payload, context = gasTripContext) =>

@@ -1,5 +1,7 @@
+import TripArtwork from "./artwork/TripArtwork.jsx";
 /* Original, code-native drawings for the travel journal. */
-export function DayStamp({ title = "" }) {
+export function DayStamp({ title = "", season = "summer" }) {
+  const winter = season === "winter";
   const kind = /樹冰|阿仁|纜車|膠囊/.test(title)
     ? "cable"
     : /銀山|角館|古民家/.test(title)
@@ -8,10 +10,10 @@ export function DayStamp({ title = "" }) {
         ? "fruit"
         : /溫泉|SPA/.test(title)
           ? "bath"
-        : /松島|海雲台|廣安|遊船/.test(title)
-          ? "boat"
-          : /空港|機場/.test(title)
-            ? "plane"
+          : /松島|海雲台|廣安|遊船/.test(title)
+            ? "boat"
+            : /空港|機場/.test(title)
+              ? "plane"
               : "mountain";
   return (
     <svg
@@ -26,8 +28,22 @@ export function DayStamp({ title = "" }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <circle cx="63" cy="16" r="7" fill="var(--journal-yellow)" />
-        <path d="M0 66q20-8 40 0t40 0v14H0Z" fill="var(--journal-blue)" />
+        {winter ? (
+          <path
+            d="M51 17q-2-8 6-9 7-10 13 0 10 0 8 9Z"
+            fill="var(--journal-snow, var(--travel-surface))"
+          />
+        ) : (
+          <circle cx="63" cy="16" r="7" fill="var(--journal-yellow)" />
+        )}
+        <path
+          d="M0 66q20-8 40 0t40 0v14H0Z"
+          fill={
+            winter && !/boat|fruit|bath/.test(kind)
+              ? "var(--journal-snow, var(--travel-surface))"
+              : "var(--journal-blue)"
+          }
+        />
         {kind === "cable" ? (
           <>
             <path d="M3 16q35 19 74 1M40 27v9" />
@@ -52,7 +68,7 @@ export function DayStamp({ title = "" }) {
             />
             <path
               d="m6 33 21-15 22 15m-6 6 16-13 17 13"
-              fill="var(--travel-surface)"
+              fill="var(--journal-snow, var(--travel-surface))"
             />
             <path
               d="M17 38h8v9h-8zm14 0h8v9h-8zM22 61V52h10v9M52 44h12v9H52Z"
@@ -103,6 +119,9 @@ export function DayStamp({ title = "" }) {
           strokeWidth="1.2"
           strokeDasharray="2 4"
         />
+        {winter && (
+          <path d="M12 20h7m-3-3v6m47 22h6m-3-3v6" strokeWidth="1.2" />
+        )}
       </g>
     </svg>
   );
@@ -150,91 +169,6 @@ export function JourneyCar({ className }) {
   );
 }
 
-export default function JournalIllustration({
-  tripId = "",
-  miniature = false,
-}) {
-  const seaside = tripId.includes("busan");
-  return (
-    <svg
-      className={`journal-illustration ${miniature ? "journal-illustration--mini" : ""}`}
-      viewBox="64 -8 512 264"
-      fill="none"
-      aria-hidden="true"
-    >
-      <g
-        stroke="var(--journal-ink)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path
-          d="M0 183Q70 163 143 182T282 185T428 181T640 183V240H0Z"
-          fill="var(--journal-blue)"
-        />
-        <circle cx="544" cy="55" r="29" fill="var(--journal-yellow)" />
-        <path
-          d="M35 20h125m-125 7h62M488 111h101"
-          strokeWidth="1"
-          strokeDasharray="2 7"
-          opacity="0.35"
-        />
-        <path d="M544 10V4m0 102v-6m-45-45h-7m104 0h-7m-77-32-5-5m74 74-5-5m0-64 5-5m-74 74 5-5" />
-        {seaside ? (
-          <>
-            <path d="M18 180Q87 128 159 180Z" fill="var(--journal-green)" />
-            <path d="M76 158V97h28v61" fill="var(--journal-pink)" />
-            <path d="m70 98 20-29 21 29Z" fill="var(--journal-yellow)" />
-            <path d="M77 119h25m-25 20h25" />
-            <path d="m443 188 22 20h51l19-20Z" fill="var(--journal-pink)" />
-            <path d="M479 181v-54l35 54Z" fill="var(--travel-surface)" />
-            <path d="M461 181h51" />
-          </>
-        ) : (
-          <>
-            <path
-              d="m12 180 100-125 81 125 79-151 113 153Z"
-              fill="var(--journal-green)"
-            />
-            <path
-              d="m75 101 37-46 30 47-29-10-17 14Z"
-              fill="var(--travel-surface)"
-            />
-            <path
-              d="m242 86 30-57 42 57-26-9-15 15-16-15Z"
-              fill="var(--travel-surface)"
-            />
-            <path d="m426 167 51-37 51 37" fill="var(--journal-pink)" />
-            <path d="M437 167v42h80v-42" fill="var(--journal-yellow)" />
-            <path d="M468 209v-28h20v28" fill="var(--journal-pink)" />
-            <path d="M454 117q-9-8 0-16t0-16m21 30q-9-8 0-16t0-16" />
-            <path
-              d="m361 154 12-34 12 34m-24-12h24m-29 26h34"
-              fill="var(--journal-green)"
-            />
-          </>
-        )}
-        <path d="M250 219h140" />
-        <path
-          d="M8 228q90-16 180 0t180 0t180 0t100 0"
-          strokeWidth="1.2"
-          strokeDasharray="3 7"
-          opacity="0.5"
-        />
-        <path
-          d="m119 156 11-17m20 18 8-13m-75 7 8-11m175 11 11-16m35 22 8-14"
-          strokeWidth="1.2"
-          opacity="0.5"
-        />
-        <g transform="translate(246 124) scale(1.8)">
-          <CoachDrawing />
-        </g>
-        <path d="M199 60q8-9 16 0 8-9 16 0m-48-19q7-8 14 0 7-8 14 0" />
-        <path
-          d="M49 217h22m129-8h22m193 16h18m169-14h18"
-          stroke="var(--travel-surface)"
-        />
-      </g>
-    </svg>
-  );
+export default function JournalIllustration({ tripId = "" }) {
+  return <TripArtwork tripId={tripId} />;
 }

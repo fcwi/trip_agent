@@ -4,7 +4,8 @@ import {
   decryptCredentialBundle,
   EMPTY_CREDENTIALS,
 } from "../utils/credentialBundle.js";
-import { tripSessionStorage, tripStorage } from "../utils/tripStorage.js";
+import { tripStorage } from "../utils/tripStorage.js";
+import { authStorage } from "../utils/authStorage.js";
 
 const REMEMBERED_PASSWORD_KEY = "remembered-unlock-password-v1";
 
@@ -24,7 +25,7 @@ export const useTripAuthentication = () => {
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(() =>
-    Boolean(tripStorage.getItem(REMEMBERED_PASSWORD_KEY)),
+    Boolean(authStorage.getItem(REMEMBERED_PASSWORD_KEY)),
   );
   const [showEncryptTool, setShowEncryptTool] = useState(false);
   const [toolKey, setToolKey] = useState("");
@@ -46,20 +47,20 @@ export const useTripAuthentication = () => {
 
         setCredentials(decryptedCredentials);
         setIsVerified(true);
-        tripSessionStorage.setItem("password", inputPassword);
+        authStorage.setItem("password", inputPassword);
         if (persist) {
-          tripStorage.setItem(REMEMBERED_PASSWORD_KEY, inputPassword);
+          authStorage.setItem(REMEMBERED_PASSWORD_KEY, inputPassword);
         } else {
-          tripStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+          authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
         }
         tripStorage.removeItem("password");
         localStorage.removeItem("trip_agent_password");
       } catch {
         if (!isAuto) setAuthError("密碼錯誤，請再試一次");
         if (isAuto) {
-          tripSessionStorage.removeItem("password");
+          authStorage.removeItem("password");
           if (persist) {
-            tripStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+            authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
             setRememberDevice(false);
           }
         }
@@ -73,8 +74,8 @@ export const useTripAuthentication = () => {
   useEffect(() => {
     const restoreAuthentication = async () => {
       try {
-        const sessionPassword = tripSessionStorage.getItem("password");
-        const rememberedPassword = tripStorage.getItem(REMEMBERED_PASSWORD_KEY);
+        const sessionPassword = authStorage.getItem("password");
+        const rememberedPassword = authStorage.getItem(REMEMBERED_PASSWORD_KEY);
         const savedPassword = sessionPassword || rememberedPassword;
         const shouldPersist = Boolean(rememberedPassword);
 
@@ -121,13 +122,27 @@ export const useTripAuthentication = () => {
   }, [toolKey, toolPwd]);
 
   const lock = useCallback(() => {
-    tripSessionStorage.removeItem("password");
-    tripStorage.removeItem(REMEMBERED_PASSWORD_KEY);
+    authStorage.removeItem("password");
+    authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
     setCredentials(EMPTY_CREDENTIALS);
     setPassword("");
     setRememberDevice(false);
     setIsVerified(false);
   }, []);
+
+  useEffect(() => {
+    const restoreCachedPage = (event) => {
+      if (
+        event.persisted &&
+        ENCRYPTED_PAYLOADS.apiKey &&
+        !authStorage.getItem("password") &&
+        !authStorage.getItem(REMEMBERED_PASSWORD_KEY)
+      )
+        lock();
+    };
+    window.addEventListener("pageshow", restoreCachedPage);
+    return () => window.removeEventListener("pageshow", restoreCachedPage);
+  }, [lock]);
 
   return {
     isAuthReady,

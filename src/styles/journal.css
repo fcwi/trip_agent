@@ -1472,6 +1472,184 @@
 .travel-shell[data-editorial="true"] button[aria-busy="true"] {
   cursor: wait;
 }
+
+/* Seasonal artwork is selected by the trip, independently of UI components. */
+.travel-shell[data-season="winter"] {
+  --journal-snow: #f0f6fa;
+  --journal-green: #c3d2d9;
+}
+.travel-shell[data-season="winter"][data-theme="dark"] {
+  --journal-snow: #6a7d89;
+  --journal-green: #52656e;
+}
+.journal-trip-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 12px 14px 11px 13px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+.travel-header__currency {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.journal-trip-switch > svg {
+  flex: none;
+}
+.journal-trip-switch__hint {
+  color: var(--travel-muted);
+  font-size: 12px;
+}
+.journal-trip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+.journal-trip-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 48%);
+}
+.journal-trip-chooser {
+  font-family:
+    "Trip Journal", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+  --travel-page: #faf8f0;
+  --travel-surface: #ffffff;
+  --travel-text: #343a38;
+  --travel-muted: #62665f;
+  --journal-ink: #3d3c36;
+  --journal-pink: #eca89b;
+  --journal-blue: #a4cbd9;
+  --journal-yellow: #f4d581;
+  --journal-green: #ccdcba;
+  position: relative;
+  width: min(100%, 560px);
+  max-height: calc(
+    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 2px solid var(--journal-ink);
+  border-radius: 24px 26px 22px 25px;
+  background: var(--travel-page);
+  color: var(--travel-text);
+}
+.journal-trip-chooser button {
+  font-family: inherit;
+}
+.dark .journal-trip-chooser {
+  --travel-page: #242322;
+  --travel-surface: #302f2c;
+  --travel-text: #f1e9d7;
+  --travel-muted: #c1bbaa;
+  --journal-ink: #ded5c2;
+  --journal-pink: #985d56;
+  --journal-blue: #456773;
+  --journal-yellow: #806a3a;
+  --journal-green: #53644a;
+}
+.journal-trip-chooser__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.journal-trip-chooser h2 {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 700;
+}
+.journal-trip-chooser__hint {
+  margin: 12px 0 20px;
+  color: var(--travel-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.journal-trip-list {
+  display: grid;
+  gap: 16px;
+}
+.journal-trip-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 18px 20px 17px 19px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  text-align: left;
+}
+.journal-trip-card[aria-pressed="true"] {
+  outline: 3px solid var(--journal-blue);
+  outline-offset: 3px;
+}
+.journal-trip-card__art {
+  display: block;
+  height: 112px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--journal-ink);
+}
+.journal-trip-card__art .journal-illustration {
+  width: 100%;
+  height: 100%;
+}
+.journal-trip-card__art[data-artwork$="snow"] {
+  --journal-snow: #f0f6fa;
+  --journal-green: #c3d2d9;
+}
+.dark .journal-trip-card__art[data-artwork$="snow"] {
+  --journal-snow: #6a7d89;
+  --journal-green: #52656e;
+}
+.journal-trip-card__copy {
+  display: grid;
+  gap: 4px;
+  padding: 12px 40px 14px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.journal-trip-card__copy strong {
+  font-size: 18px;
+}
+.journal-trip-card__phase {
+  color: var(--travel-muted);
+  font-size: 12px;
+}
+.journal-trip-card__check {
+  position: absolute;
+  bottom: 20px;
+  right: 14px;
+}
+.journal-trip-chooser :focus-visible {
+  outline: 2px solid var(--journal-ink);
+  outline-offset: 4px;
+}
+@media (max-width: 374px) {
+  .journal-trip-switch__hint {
+    display: none;
+  }
+  .journal-trip-chooser {
+    padding: 16px;
+  }
+}
 .journal-auth input[aria-invalid="true"] {
   border-color: var(--auth-danger);
 }

@@ -2552,6 +2552,8 @@ const ItineraryApp = ({ authentication }) => {
       }}
       data-theme={isDarkMode ? "dark" : "light"}
       data-editorial="true"
+      data-season={tripConfig.artwork.season}
+      data-artwork={tripConfig.artwork.id}
       data-active-tab={activeTab}
       className={`travel-shell min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
       onTouchStart={handleMainTouchStart}

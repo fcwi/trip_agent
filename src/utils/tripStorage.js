@@ -1,4 +1,7 @@
-const activeTripId = import.meta.env?.VITE_TRIP_ID || "default-trip";
+import { activeTripId } from "./activeTrip.js";
+
+// Unscoped data belongs to the previously deployed trip, never every trip.
+const legacyTripId = import.meta.env?.VITE_TRIP_ID || "2026_busan";
 
 export const tripNamespaceId = String(activeTripId).replace(
   /[^a-z0-9_-]/gi,
@@ -33,7 +36,9 @@ export const tripStorage = {
     const scopedValue = localStorage.getItem(scopedKey);
     if (scopedValue !== null) return scopedValue;
 
-    for (const legacyKey of legacyKeys) {
+    for (const legacyKey of tripNamespaceId === legacyTripId
+      ? legacyKeys
+      : []) {
       const legacyValue = localStorage.getItem(legacyKey);
       if (legacyValue !== null) {
         localStorage.setItem(scopedKey, legacyValue);

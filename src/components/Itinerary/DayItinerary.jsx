@@ -29,7 +29,7 @@ export default function DayItinerary({
           data-journal-tone={activeDay % 3}
         >
           <div className="journal-day-picture">
-            <DayStamp title={day.title} />
+            <DayStamp title={day.title} season={tripConfig.artwork.season} />
           </div>
           <div className="journal-day-title">
             <p className="travel-eyebrow">
@@ -57,7 +57,7 @@ export default function DayItinerary({
         {day.intro && (
           <div className="journal-day-note">
             <p className="journal-day-intro">{day.intro}</p>
-            <DayDoodles title={day.title} />
+            <DayDoodles title={day.title} season={tripConfig.artwork.season} />
           </div>
         )}
         <button
