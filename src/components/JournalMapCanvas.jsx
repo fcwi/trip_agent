@@ -8,6 +8,7 @@ import {
 } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadJournalMapEngine } from "../utils/journalMapEngine.js";
+import { repairMapStyle } from "../utils/mapStyleRepair.js";
 import UtilityState from "./UtilityState.jsx";
 import {
   buildEventPopupHtml,
@@ -162,7 +163,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
         engineRef.current = maplibregl;
         currentMap = new maplibregl.Map({
           container: container.current,
-          style: `https://api.maptiler.com/maps/${isDarkMode ? "streets-v4-dark" : "streets-v4-pastel"}/style.json?key=${encodeURIComponent(MAPTILER_KEY)}`,
+          style: null,
           center: [validEvents[0].lon, validEvents[0].lat],
           zoom: 11,
           interactive,
@@ -367,6 +368,14 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
             duration: 0,
           });
         });
+        // Transform the downloaded style before any tile expressions are evaluated.
+        currentMap.setStyle(
+          `https://api.maptiler.com/maps/${isDarkMode ? "streets-v4-dark" : "streets-v4-pastel"}/style.json?key=${encodeURIComponent(MAPTILER_KEY)}`,
+          {
+            transformStyle: (_previous, next) =>
+              repairMapStyle(next, { isDarkMode }),
+          },
+        );
       } catch (error) {
         if (!disposed) {
           setFailure(classifyMapFailure(error));

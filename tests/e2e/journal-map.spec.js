@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { seaLabelTile } from "./sea-label-tile.js";
 
 const style = {
   version: 8,
@@ -154,6 +155,90 @@ test("map markers retain itinerary numbers and selection/reset work", async ({
     page.getByRole("button", { name: "開啟互動地圖" }),
   ).toBeFocused();
   expect(errors).toEqual([]);
+});
+
+test("dark sea labels are repaired before vector-tile evaluation and remain safe when zoomed out", async ({
+  page,
+}) => {
+  const warnings = [];
+  const reports = [];
+  page.on("console", (message) => {
+    if (
+      message.type() === "warning" &&
+      message.text().includes("Expected value to be of type number")
+    )
+      warnings.push(message.text());
+    if (
+      message.type() === "info" &&
+      message.text().startsWith("[TripAgent map diagnostic] {")
+    )
+      reports.push(JSON.parse(message.text().split("] ")[1]));
+  });
+  await page.route("**/sea-label-water/**", (route) =>
+    route.fulfill({
+      body: seaLabelTile(),
+      contentType: "application/x-protobuf",
+    }),
+  );
+  await page.route("https://api.maptiler.com/**", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        glyphs: `${new URL(page.url()).origin}/glyphs/{fontstack}/{range}.pbf`,
+        sources: {
+          maptiler_planet_v4: {
+            type: "vector",
+            tiles: [
+              `${new URL(page.url()).origin}/sea-label-water/{z}/{x}/{y}.pbf`,
+            ],
+          },
+        },
+        layers: [
+          {
+            id: "Sea labels",
+            type: "symbol",
+            source: "maptiler_planet_v4",
+            "source-layer": "water_label",
+            layout: {
+              "text-field": "{name}",
+              "text-size": [
+                "interpolate",
+                ["linear"],
+                ["get", "rank"],
+                0,
+                12,
+                6,
+                16,
+              ],
+            },
+          },
+        ],
+      },
+    }),
+  );
+  await mount(page, { mapDebug: true, isDarkMode: true });
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
+  await page.getByRole("button", { name: "開啟互動地圖" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
+  for (let i = 0; i < 6; i++) {
+    await dialog.getByRole("button", { name: "縮小地圖", exact: true }).click();
+    // The native map camera animates independently of React's reduced motion.
+    await page.waitForTimeout(400);
+  }
+  await expect
+    .poll(() =>
+      reports.some((report) => report.zoom < 4 && report.sampledLayers > 0),
+    )
+    .toBe(true);
+  expect(reports.flatMap((report) => report.issues)).toEqual([]);
+  expect(warnings).toEqual([]);
 });
 
 test("map failure can retry and offline reconnect recovers", async ({
