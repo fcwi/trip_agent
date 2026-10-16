@@ -11,6 +11,7 @@ import {
   getAiErrorText,
 } from "./utils/aiHelpers.js";
 import { resolveShareLandmark } from "./utils/geoPlaces.js";
+import { weatherClient } from "./utils/weatherClient.js";
 import {
   Sun,
   CloudSnow,
@@ -1295,8 +1296,7 @@ const ItineraryApp = ({ authentication }) => {
       ) => {
         try {
           const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
-          const weatherRes = await fetch(weatherUrl);
-          const weatherData = await weatherRes.json();
+          const weatherData = await weatherClient.request(weatherUrl);
 
           if (weatherData.error) {
             throw new Error(weatherData.reason || "Weather API error");
@@ -1332,6 +1332,7 @@ const ItineraryApp = ({ authentication }) => {
             isGeneric: isGeneric,
             lat: latitude,
             lon: longitude,
+            updatedAt: weatherClient.updatedAt(weatherUrl),
             loading: false,
             error: null,
           };
@@ -1346,12 +1347,12 @@ const ItineraryApp = ({ authentication }) => {
           return newWeatherData;
         } catch (err) {
           console.error("定位失敗:", err);
-          if (!isAppReady)
-            setUserWeather((prev) => ({
-              ...prev,
-              loading: false,
-              error: "連線失敗",
-            }));
+          setUserWeather((prev) => ({
+            ...prev,
+            loading: false,
+            error: "連線失敗",
+            retryAt: err.retryAt || 0,
+          }));
           return null;
         } finally {
           setIsAppReady(true);
@@ -1923,30 +1924,28 @@ const ItineraryApp = ({ authentication }) => {
       try {
         const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
 
-        const results = await Promise.all(
-          tripConfig.locations.map(async (loc) => {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
-            const response = await fetch(url, { signal: controller.signal });
-            if (!response.ok) {
-              throw new Error(`Weather API HTTP ${response.status}`);
-            }
+        const results = [];
+        // Stop the remaining locations as soon as the service asks us to wait.
+        for (const loc of tripConfig.locations) {
+          if (controller.signal.aborted) return false;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
+          const data = await weatherClient.request(url, {
+            signal: controller.signal,
+          });
 
-            const data = await response.json();
-            if (data.error) {
-              throw new Error(data.reason || `Weather API error: ${loc.key}`);
-            }
-
-            if (data.timezone) setAutoTimeZone(data.timezone);
-            return {
-              key: loc.key,
-              data: { ...data.daily, hourly: data.hourly },
-            };
-          }),
-        );
+          if (data.timezone) setAutoTimeZone(data.timezone);
+          results.push({
+            key: loc.key,
+            data: { ...data.daily, hourly: data.hourly },
+            updatedAt: weatherClient.updatedAt(url),
+          });
+        }
 
         if (controller.signal.aborted) return false;
 
-        const updatedAt = Date.now();
+        const updatedAt = Math.min(
+          ...results.map((result) => result.updatedAt),
+        );
         const newForecast = Object.fromEntries(
           results.map(({ key, data }) => [key, data]),
         );
@@ -1965,6 +1964,7 @@ const ItineraryApp = ({ authentication }) => {
           ...prev,
           loading: false,
           error: true,
+          retryAt: error.retryAt || 0,
         }));
         return false;
       } finally {
@@ -2498,6 +2498,7 @@ const ItineraryApp = ({ authentication }) => {
           locKey,
         loading: weatherForecast.loading,
         error: weatherForecast.error,
+        retryAt: weatherForecast.retryAt,
       };
 
     const code = forecast.weathercode?.[activeDay] ?? forecast.weathercode?.[0];
@@ -2518,6 +2519,7 @@ const ItineraryApp = ({ authentication }) => {
       loading: weatherForecast.loading,
       updatedAt: weatherForecast.updatedAt,
       error: weatherForecast.error,
+      retryAt: weatherForecast.retryAt,
     };
   }, [activeDay, userWeather, weatherForecast]);
 

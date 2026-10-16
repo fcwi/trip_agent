@@ -121,7 +121,9 @@ async function loadEvidence(page) {
         );
       });
     const optional = resources.filter((entry) =>
-      /\/(maplibre-gl|heic2any)-[^/]+\.js$/.test(new URL(entry.name).pathname),
+      /\/(maplibre-gl|heic2any|mapStyleDiagnostics)-[^/]+\.js$/.test(
+        new URL(entry.name).pathname,
+      ),
     );
     return {
       elapsedMs: Math.round(performance.now()),
@@ -250,6 +252,110 @@ try {
       preview: { host: "127.0.0.1", port: 5189, strictPort: true },
     });
     try {
+      if (process.argv.includes("--map-diagnostics")) {
+        const diagnostic = await newPage(true, true);
+        const reports = [];
+        diagnostic.page.on("console", (message) => {
+          if (
+            message.type() === "info" &&
+            message.text().startsWith("[TripAgent map diagnostic] {")
+          )
+            reports.push(JSON.parse(message.text().split("] ")[1]));
+        });
+        try {
+          await diagnostic.context.addInitScript(() => {
+            const original = window.fetch;
+            window.fetch = (input, options) => {
+              const url = new URL(
+                typeof input === "string" ? input : input.url,
+                location.href,
+              );
+              if (url.hostname === "api.maptiler.com")
+                return Promise.resolve(
+                  new Response(
+                    JSON.stringify({
+                      version: 8,
+                      sources: {
+                        probe: {
+                          type: "geojson",
+                          data: {
+                            type: "FeatureCollection",
+                            features: [
+                              {
+                                type: "Feature",
+                                properties: { private: "DO_NOT_PRINT" },
+                                geometry: {
+                                  type: "Point",
+                                  coordinates: [140.917, 38.139],
+                                },
+                              },
+                            ],
+                          },
+                        },
+                      },
+                      layers: [
+                        {
+                          id: "probe-radius",
+                          type: "circle",
+                          source: "probe",
+                          paint: {
+                            "circle-radius": [
+                              "interpolate",
+                              ["linear"],
+                              ["get", "rank"],
+                              0,
+                              4,
+                              10,
+                              12,
+                            ],
+                          },
+                        },
+                      ],
+                    }),
+                    { headers: { "content-type": "application/json" } },
+                  ),
+                );
+              return original(input, options);
+            };
+          });
+          await diagnostic.page.goto(`${root}/?trip=${trip}&mapDebug=1`);
+          await unlock(diagnostic.page, true);
+          await diagnostic.page
+            .locator('button[aria-label^="查看Day"]')
+            .first()
+            .click();
+          await diagnostic.page
+            .locator(".travel-day-route")
+            .scrollIntoViewIfNeeded();
+          await expect
+            .poll(
+              () =>
+                reports.some((report) =>
+                  report.issues.some(
+                    (issue) =>
+                      issue.layer === "probe-radius" &&
+                      issue.property === "circle-radius",
+                  ),
+                ),
+              { timeout: 30000 },
+            )
+            .toBe(true);
+          assert.equal(JSON.stringify(reports).includes("e2e-map-key"), false);
+          assert.equal(JSON.stringify(reports).includes("DO_NOT_PRINT"), false);
+          assert.equal(JSON.stringify(reports).includes("140.917"), false);
+          assert.deepEqual(diagnostic.errors, []);
+          results.push({
+            trip,
+            scenario: "opt-in production map diagnostics",
+            passed: true,
+          });
+          console.log(
+            `PASS ${trip}: production diagnostic output retained and sanitized`,
+          );
+        } finally {
+          await diagnostic.context.close();
+        }
+      }
       for (const dark of [false, true]) {
         const { context, page, errors } = await newPage(dark, false);
         try {

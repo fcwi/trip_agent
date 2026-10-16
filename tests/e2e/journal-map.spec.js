@@ -12,7 +12,7 @@ const style = {
   ],
 };
 async function mount(page, options = {}) {
-  await page.goto("/");
+  await page.goto(options.mapDebug ? "/?mapDebug=1" : "/");
   await page.evaluate(async (options) => {
     const { mountMap } = await import("/tests/e2e/map-fixture.jsx");
     mountMap(options);
@@ -47,6 +47,74 @@ test.beforeEach(async ({ page }) => {
       },
     }),
   );
+});
+
+test("opt-in map diagnostics identify a failing style layer without leaking source URLs or coordinates", async ({
+  page,
+}) => {
+  const reports = [];
+  page.on("console", (message) => {
+    if (
+      message.type() === "info" &&
+      message.text().startsWith("[TripAgent map diagnostic] {")
+    )
+      reports.push(JSON.parse(message.text().split("] ")[1]));
+  });
+  await page.route("https://api.maptiler.com/**", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        sources: {
+          probe: {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  properties: { private: "DO_NOT_PRINT" },
+                  geometry: { type: "Point", coordinates: [140.917, 38.139] },
+                },
+              ],
+            },
+          },
+        },
+        layers: [
+          {
+            id: "probe-radius",
+            type: "circle",
+            source: "probe",
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["get", "rank"],
+                0,
+                4,
+                10,
+                12,
+              ],
+            },
+          },
+        ],
+      },
+    }),
+  );
+  await mount(page, { mapDebug: true });
+  await expect
+    .poll(() =>
+      reports.some((report) =>
+        report.issues.some(
+          (issue) =>
+            issue.layer === "probe-radius" &&
+            issue.property === "circle-radius",
+        ),
+      ),
+    )
+    .toBe(true);
+  expect(JSON.stringify(reports)).not.toContain("DO_NOT_PRINT");
+  expect(JSON.stringify(reports)).not.toContain("e2e-map-key");
+  expect(JSON.stringify(reports)).not.toContain("140.917");
 });
 
 test("map markers retain itinerary numbers and selection/reset work", async ({

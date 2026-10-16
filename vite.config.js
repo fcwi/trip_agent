@@ -189,6 +189,7 @@ export default defineConfig(({ mode }) => {
           globIgnores: [
             "**/assets/maplibre-gl-*.js",
             "**/assets/heic2any-*.js",
+            "**/assets/mapStyleDiagnostics-*.js",
           ],
           // 自動清除舊版本快取
           cleanupOutdatedCaches: true,
@@ -332,7 +333,8 @@ export default defineConfig(({ mode }) => {
       minify: "terser",
       terserOptions: {
         compress: {
-          drop_console: true, // 如果要保留 console.log以便除錯，請設為 false
+          // Keep only the opt-in, sanitized map diagnostic output.
+          drop_console: ["log", "warn", "error", "debug", "trace"],
           drop_debugger: true, // 移除 debugger
         },
       },

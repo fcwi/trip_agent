@@ -145,9 +145,9 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     let loaded = false;
     let currentMap;
     let timeout;
+    let detachDiagnostics;
     const createdMarkers = [];
     // MapLibre is an external renderer; mirror its initialization and failures.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus("loading");
     setFailure("unknown");
     const clearMarkers = () => {
@@ -169,6 +169,22 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
           attributionControl: false,
         });
         mapRef.current = currentMap;
+        if (
+          new URLSearchParams(window.location.search).get("mapDebug") === "1"
+        ) {
+          // Load the analyzer only for an explicitly requested diagnostic visit.
+          import("../utils/mapStyleDiagnostics.js")
+            .then(({ attachMapStyleDiagnostics }) => {
+              if (!disposed)
+                detachDiagnostics = attachMapStyleDiagnostics(
+                  currentMap,
+                  isDarkMode ? "dark" : "light",
+                );
+            })
+            .catch(() =>
+              console.info("[TripAgent map diagnostic] analyzer unavailable"),
+            );
+        }
         currentMap.addControl(
           new maplibregl.AttributionControl({ compact: true }),
           "bottom-right",
@@ -362,6 +378,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     return () => {
       disposed = true;
       clearTimeout(timeout);
+      detachDiagnostics?.();
       clearMarkers();
       currentMap?.remove();
       mapRef.current = null;

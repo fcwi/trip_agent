@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./WeatherDetail.css";
 import UtilityState from "./UtilityState.jsx";
 import { useOnlineStatus } from "../hooks/useOnlineStatus.js";
@@ -192,6 +192,14 @@ const WeatherDetail = ({
   theme, // 外部傳入的主題配置
 }) => {
   const online = useOnlineStatus();
+  const [now, setNow] = useState(() => Date.now());
+  const retryAt = Number(weather?.retryAt) || 0;
+  const coolingDown = retryAt > now;
+  useEffect(() => {
+    if (!retryAt || !coolingDown) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [retryAt, coolingDown]);
   const isLoading = loading || weather?.loading;
   const hasData =
     Number.isFinite(weather?.temp) ||
@@ -401,7 +409,7 @@ const WeatherDetail = ({
             type="button"
             className="wc-icon-btn"
             onClick={onRefresh}
-            disabled={isLoading}
+            disabled={isLoading || coolingDown}
             aria-label={isLoading ? "正在更新天氣" : "重新整理天氣"}
           >
             <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
@@ -433,16 +441,20 @@ const WeatherDetail = ({
               ? "正在更新天氣"
               : !online
                 ? "目前離線"
-                : weather?.error
-                  ? "天氣暫時無法更新"
-                  : "尚無天氣資料"
+                : coolingDown
+                  ? "天氣服務忙碌，請稍後再試"
+                  : weather?.error
+                    ? "天氣暫時無法更新"
+                    : "尚無天氣資料"
           }
-          onRetry={!isLoading && online ? onRefresh : undefined}
+          onRetry={!isLoading && online && !coolingDown ? onRefresh : undefined}
           retryLabel="重新整理天氣"
         >
-          {hasData
-            ? "目前保留上次取得的資料，請留意更新時間。"
-            : "請確認網路後重新整理，天氣資料取得前不提供預報數值。"}
+          {coolingDown
+            ? `服務限制請求，預計 ${new Date(retryAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} 後可重試。${hasData ? "目前保留上次取得的資料。" : ""}`
+            : hasData
+              ? "目前保留上次取得的資料，請留意更新時間。"
+              : "請確認網路後重新整理，天氣資料取得前不提供預報數值。"}
         </UtilityState>
       )}
       {(hasData || isInitialLoading) && (

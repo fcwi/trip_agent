@@ -22,6 +22,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-style-spec": "24.6.0",
     "framer-motion": "^12.23.26",
     "heic2any": "^0.0.4",
     "lucide-react": "^0.559.0",
