@@ -1,0 +1,1 @@
+import{r as n}from"./icons-vendor-Bc7tNPUv.js";const e=n=>(window.addEventListener("online",n),window.addEventListener("offline",n),()=>{window.removeEventListener("online",n),window.removeEventListener("offline",n)});function o(){return n.useSyncExternalStore(e,()=>navigator.onLine,()=>!0)}export{o as u};
