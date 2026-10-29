@@ -188,7 +188,17 @@ export function createApp(env = process.env, fetchImpl = fetch) {
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(55000),
       });
-      if (!upstream.ok) return send(502, { error: "Upstream request failed" });
+      if (!upstream.ok) {
+        const groundingRequest =
+          path.startsWith("/api/gemini/") &&
+          body.tools?.some((tool) => tool.google_search || tool.googleMaps);
+        if (groundingRequest && [400, 403].includes(upstream.status))
+          return send(502, {
+            error: "Grounding request failed",
+            code: "GROUNDING_REQUEST_FAILED",
+          });
+        return send(502, { error: "Upstream request failed" });
+      }
       const data = await upstream.json();
       // Never relay upstream error text or accidentally echoed credentials.
       if (

@@ -1,4 +1,5 @@
-﻿import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
+import { extractAiGrounding } from "./utils/aiGrounding.js";
+import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import {
   fetchLocationsFromGasWithContext,
   uploadToGasWithContext,
@@ -2303,6 +2304,9 @@ const ItineraryApp = ({ authentication }) => {
           id: `model_${Date.now()}`,
           role: "model",
           text: aiText,
+          ...(aiMode === "guide"
+            ? { grounding: extractAiGrounding(data) }
+            : {}),
         },
       ]);
     } catch (error) {

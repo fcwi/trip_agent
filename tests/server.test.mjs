@@ -14,8 +14,13 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
     GAS_TOKEN: "private-gas-token",
   };
   const calls = [];
+  let rejectGrounding = false;
   const app = createApp(env, async (url, options) => {
     calls.push({ url, ...options });
+    if (rejectGrounding)
+      return new Response(JSON.stringify({ error: env.GEMINI_API_KEY }), {
+        status: 403,
+      });
     return new Response(
       JSON.stringify({ status: "success", data: [], echo: env.GAS_TOKEN }),
     );
@@ -95,15 +100,40 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
     assert.equal(JSON.parse(calls[0].body).token, env.GAS_TOKEN);
     const gemini = await post(
       "/api/gemini/gemini-3.5-flash-lite",
-      { contents: [] },
+      {
+        contents: [],
+        tools: [{ google_search: {} }, { googleMaps: {} }],
+        toolConfig: {
+          retrievalConfig: { latLng: { latitude: 35.6, longitude: 139.7 } },
+        },
+      },
       cookie,
     );
     assert.equal(gemini.status, 200);
     assert.equal(calls[1].headers["x-goog-api-key"], env.GEMINI_API_KEY);
+    const geminiPayload = JSON.parse(calls[1].body);
+    assert.deepEqual(geminiPayload.tools, [
+      { google_search: {} },
+      { googleMaps: {} },
+    ]);
+    assert.equal(
+      geminiPayload.toolConfig.retrievalConfig.latLng.latitude,
+      35.6,
+    );
     assert.equal(
       calls[1].url,
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
     );
+    rejectGrounding = true;
+    const rejected = await post(
+      "/api/gemini/gemini-3.5-flash-lite",
+      { contents: [], tools: [{ googleMaps: {} }] },
+      cookie,
+    );
+    assert.equal(rejected.status, 502);
+    const rejection = await rejected.json();
+    assert.equal(rejection.code, "GROUNDING_REQUEST_FAILED");
+    assert.ok(!JSON.stringify(rejection).includes(env.GEMINI_API_KEY));
     assert.equal((await post("/api/logout", {}, cookie)).status, 200);
     assert.equal(
       (await post("/api/gas", { action: "getAll" }, cookie)).status,

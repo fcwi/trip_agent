@@ -175,7 +175,8 @@ test("buildAiChatPayload builds translate vs guide payloads equivalently", () =>
   assert.equal(guide.generationConfig.temperature, 0.7);
   assert.match(guide.systemInstruction.parts[0].text, /海雲台/);
   assert.match(guide.systemInstruction.parts[0].text, /ITIN/);
-  assert.ok(guide.tools);
+  assert.deepEqual(guide.tools, [{ google_search: {} }, { googleMaps: {} }]);
+  assert.match(guide.systemInstruction.parts[0].text, /尚未查證/);
   assert.match(logs.join("\n"), /Search Filter/);
 });
 

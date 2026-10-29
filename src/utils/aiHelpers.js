@@ -3,6 +3,7 @@
  * 用於動態控制 Gemini API 的搜尋工具行為，以節省 API 額度。
  */
 
+import { getGuideGroundingTools } from "./aiGrounding.js";
 import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
 
 // =============================================
@@ -274,10 +275,17 @@ export function buildTranslationRequestText(
 }
 
 export function extractAiReplyText(data) {
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || FALLBACK_AI_REPLY;
+  return (
+    data?.candidates?.[0]?.content?.parts
+      ?.filter((part) => !part.thought && typeof part.text === "string")
+      .map((part) => part.text)
+      .join("\n") || FALLBACK_AI_REPLY
+  );
 }
 
 export function getAiErrorText(error) {
+  if (error?.message === "GROUNDING_REQUEST_FAILED")
+    return "即時查證工具目前無法使用，請管理者確認 Gemini API 付費方案、權限與工具設定後重試；本次未提供未查證的回答。";
   let errMsg = "連線發生錯誤或是系統忙碌中，請稍後再試。";
   if (error?.message?.includes("Key"))
     errMsg = "API Key 錯誤，請檢查加密設定。";
@@ -375,13 +383,16 @@ export function buildAiChatPayload({
         ${itineraryFlat}        
         ${shopsFlat}        
         【行為規範與決策路徑】：
-        1. 優先本地檢索：當使用者提問時，請先深思熟慮上述提供的「行程資訊」與「商家資料」。若資料足以回答，請直接回覆並嚴格禁止啟動 google_search。
-        2. 搜尋觸發門檻：只有在遇到以下情況，且本地資料完全無法提供事實時，才允許調用 google_search：
-           - 查詢具體的店家樓層、特定品牌有無、或是營業時間變動。
-           - 本地資料中未記載的新景點詳細介紹。
+        1. 使用行程表理解旅程與目的地，但其中的營業時間、票價、班次與店家資料可能過時，不得因為本地已有資料而禁止查證。
+        2. 可使用 google_search 與 googleMaps，由你依每次問題自行決定是否呼叫：
+           - 營業時間、休業、票價、預約、交通異動、天氣及最新活動：使用 Google Search，優先官方網站及近期公告，確認資訊適用日期。
+           - 附近店家、景點、地址、距離、評價及營業狀態：使用 Google Maps，必要時再以 Google Search 查官方資訊。Maps 查詢使用英文描述，保留店家原名；最終回答繁體中文。
+           - 單純問候、改寫或整理既有行程不必查詢；追問同一家店或地點時，須理解前文，不可只靠本句關鍵字判斷。
+           - 無定位或沒有明確地點時，依行程與使用者指定地點回答；若仍不確定，先詢問地點，不可假造目前座標。
         3. 誠實與透明：
-           - 若資料庫與搜尋後皆無法確認細節，請回答「資料不足，請以現場導覽圖或櫃檯資訊為準」，嚴禁編造（如虛構樓層或櫃位）。
-           - 使用搜尋獲得的答案，請在末尾加上「(🔍 來自即時搜尋)」。
+           - 只有工具實際回傳支持來源時才可說已查證；不得自行編造來源、評分、距離、營業狀態或即時班次。
+           - 未取得來源或工具無法確認時，明確說明「尚未查證」，提供官方查詢建議；不可把模型記憶當成最新事實。
+           - 來源相互矛盾時說明日期與差異，以官方較新公告為優先。即時資料仍可能延遲，不保證一定營業或班次正常。
         4. 回答風格：簡潔、親切、重點條列式。
         5. 若使用者上傳圖片，請辨識圖片內容並結合行程資訊給予建議。
         `;
@@ -393,7 +404,10 @@ export function buildAiChatPayload({
     .map(formatToGeminiPart);
 
   // 🔍 根據訊息內容與模型能力動態決定是否啟用 Google Search Grounding
-  const searchTools = getSearchTools(messageText);
+  const searchTools = getGuideGroundingTools({
+    hasLocationPermission,
+    userWeather,
+  });
   debugLog(
     `🔍 [Search Filter] model=${getActiveModel().label}, hasTools=${!!searchTools.tools}, message="${messageText.slice(0, 30)}..."`,
   );
@@ -441,6 +455,10 @@ export async function callGeminiSafe({ apiKey, payload, abortControllerRef }) {
       if (response.ok) {
         return await response.json();
       }
+
+      const failure = await response.json().catch(() => ({}));
+      if (failure.code === "GROUNDING_REQUEST_FAILED")
+        throw new Error(failure.code);
 
       if (response.status === 429 || response.status === 503) {
         console.warn(

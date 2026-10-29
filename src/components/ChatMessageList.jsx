@@ -1,3 +1,4 @@
+import GroundingSources from "./AI/GroundingSources.jsx";
 import React from "react";
 import {
   Bot,
@@ -148,6 +149,9 @@ const ChatMessageList = ({
                     <div className={shouldCollapse ? "line-clamp-4" : ""}>
                       {renderMessage(msg.text)}
                     </div>
+                    {msg.role === "model" && (
+                      <GroundingSources grounding={msg.grounding} />
+                    )}
                     {isLongMessage && (
                       <button
                         onClick={() => toggleMessageExpand(idx)}

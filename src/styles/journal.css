@@ -2041,3 +2041,47 @@
   button:not(:disabled):hover {
   box-shadow: inset 0 0 0 1px currentColor;
 }
+
+.journal-grounding {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--journal-rule);
+  white-space: normal;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--travel-muted);
+}
+.journal-grounding ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.journal-grounding li {
+  margin: 8px 0;
+}
+.journal-grounding a {
+  display: block;
+  color: var(--travel-text);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+  padding: 6px 0;
+}
+.journal-maps-attribution {
+  font-family: Roboto, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  white-space: nowrap;
+  color: #1f1f1f;
+}
+.travel-shell[data-theme="dark"] .journal-maps-attribution {
+  color: #fff;
+}
+.journal-grounding iframe {
+  width: 100%;
+  min-height: 150px;
+  border: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 8px;
+}
