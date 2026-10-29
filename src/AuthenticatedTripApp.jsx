@@ -689,6 +689,7 @@ const ItineraryApp = ({ authentication }) => {
   const forecastAbortControllerRef = useRef(null);
 
   const [aiMode, setAiMode] = useState("translate");
+  const aiRequestIdRef = useRef(0);
   // 初始訊息設為空陣列，等待 IndexedDB 載入後再決定
   const [messages, setMessages] = useState([]);
   const isAiChatLoadedRef = useRef(false); // 追蹤初始載入是否完成
@@ -696,6 +697,11 @@ const ItineraryApp = ({ authentication }) => {
   // 初始化 IndexedDB 並加載聊天記錄
   // 邏輯：先檢查 IndexedDB 是否有快取，沒有才顯示預設歡迎訊息
   useEffect(() => {
+    let cancelled = false;
+    isAiChatLoadedRef.current = false;
+    const applyMessages = (next) => {
+      if (!cancelled) setMessages(next);
+    };
     const initAndLoad = async () => {
       try {
         const { aiChatDB } = await import("./utils/indexedDBManager.js");
@@ -757,7 +763,7 @@ const ItineraryApp = ({ authentication }) => {
               console.warn("Failed to refresh welcome message", e);
             }
           }
-          setMessages(messagesWithImages);
+          applyMessages(messagesWithImages);
         } else {
           // IndexedDB 為空，檢查 localStorage 進行遷移
           const oldData = tripStorage.getItem(`chat-history-${aiMode}`, [
@@ -773,35 +779,38 @@ const ItineraryApp = ({ authentication }) => {
                 }));
                 await aiChatDB.saveMessages(aiMode, messagesToSave);
                 tripStorage.removeItem(`chat-history-${aiMode}`);
-                setMessages(oldMessages);
+                applyMessages(oldMessages);
                 debugLog(`✅ 已將聊天記錄從 localStorage 遷移至 IndexedDB`);
               } else {
                 // localStorage 也沒有數據，使用默認歡迎消息
                 debugLog("📭 無快取資料，顯示預設歡迎訊息");
-                setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
+                applyMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
               }
             } catch (error) {
               console.error("遷移 localStorage 數據失敗:", error);
-              setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
+              applyMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
             }
           } else {
             // IndexedDB 和 localStorage 都沒有數據，使用默認歡迎消息
             debugLog("📭 無快取資料，顯示預設歡迎訊息");
-            setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
+            applyMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
           }
         }
 
         // 標記初始載入完成
-        isAiChatLoadedRef.current = true;
+        if (!cancelled) isAiChatLoadedRef.current = true;
       } catch (error) {
         console.error("初始化 IndexedDB 失敗:", error);
         // 發生錯誤時也顯示默認歡迎消息
-        setMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
-        isAiChatLoadedRef.current = true;
+        applyMessages([getAiWelcomeTemplate(aiMode, tripConfig)]);
+        if (!cancelled) isAiChatLoadedRef.current = true;
       }
     };
 
     initAndLoad();
+    return () => {
+      cancelled = true;
+    };
   }, [aiMode]);
 
   // 保存聊天記錄到 IndexedDB
@@ -2181,6 +2190,13 @@ const ItineraryApp = ({ authentication }) => {
 
   const handleSwitchMode = async (newMode) => {
     if (aiMode === newMode) return;
+    aiRequestIdRef.current++;
+    abortAiRequests();
+    isAiChatLoadedRef.current = false;
+    setIsLoading(false);
+    setMessages([]);
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
     setAiMode(newMode);
     // 切換模式時，useEffect 會自動載入對應的對話記錄
   };
@@ -2217,6 +2233,7 @@ const ItineraryApp = ({ authentication }) => {
     } else {
       abortAiRequests();
       abortPlacesRequests();
+      aiRequestIdRef.current++;
       gasUrlRef.current = "";
       gasTokenRef.current = "";
       setOtherUsersLocations([]);
@@ -2230,6 +2247,9 @@ const ItineraryApp = ({ authentication }) => {
         `確定要清除「${aiMode === "translate" ? "口譯" : "導遊"}」的所有紀錄嗎？`,
       )
     ) {
+      aiRequestIdRef.current++;
+      abortAiRequests();
+      setIsLoading(false);
       const resetMsg = getAiWelcomeTemplate(aiMode, tripConfig);
       setMessages([resetMsg]);
 
@@ -2244,7 +2264,13 @@ const ItineraryApp = ({ authentication }) => {
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() && !selectedImage) return;
+    if (
+      isLoading ||
+      !isAiChatLoadedRef.current ||
+      (!inputMessage.trim() && !selectedImage)
+    )
+      return;
+    const requestId = ++aiRequestIdRef.current;
 
     const tz = autoTimeZone || tripConfig.timeZone || "Asia/Taipei";
     const displayTime = isTestMode ? testDateTime : new Date();
@@ -2297,6 +2323,7 @@ const ItineraryApp = ({ authentication }) => {
       });
 
       const data = await callGeminiSafe(payload);
+      if (requestId !== aiRequestIdRef.current) return;
       const aiText = extractAiReplyText(data);
       setMessages((prev) => [
         ...prev,
@@ -2310,6 +2337,8 @@ const ItineraryApp = ({ authentication }) => {
         },
       ]);
     } catch (error) {
+      if (requestId !== aiRequestIdRef.current || error.name === "AbortError")
+        return;
       console.error("AI Error:", error);
       const errMsg = getAiErrorText(error);
 
@@ -2322,7 +2351,7 @@ const ItineraryApp = ({ authentication }) => {
         },
       ]);
     } finally {
-      setIsLoading(false);
+      if (requestId === aiRequestIdRef.current) setIsLoading(false);
     }
   };
 
