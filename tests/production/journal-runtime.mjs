@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { webcrypto } from "node:crypto";
+import { scryptSync } from "node:crypto";
+import { createApp } from "../../server/app.mjs";
 import { build, preview } from "vite";
 import { chromium, expect } from "@playwright/test";
 import { tripCatalog, getTripSummary } from "../../src/config/tripCatalog.js";
@@ -16,36 +17,10 @@ const password = "trip-e2e-password";
 const root = "http://127.0.0.1:5189";
 const reportDirectory = path.resolve("test-run.local/production-audit");
 await fs.mkdir(reportDirectory, { recursive: true });
-async function encrypt(value) {
-  const bytes = new TextEncoder();
-  const salt = webcrypto.getRandomValues(new Uint8Array(16));
-  const iv = webcrypto.getRandomValues(new Uint8Array(12));
-  const material = await webcrypto.subtle.importKey(
-    "raw",
-    bytes.encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
-  const key = await webcrypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
-    material,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt"],
-  );
-  const encrypted = await webcrypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    bytes.encode(value),
-  );
-  return [salt, iv, encrypted]
-    .map((part) => Buffer.from(part).toString("hex"))
-    .join(":");
-}
 const results = [];
 const browser = await chromium.launch({
   channel: process.env.PRODUCTION_TEST_BROWSER || undefined,
+  executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined,
 });
 async function newPage(dark, slow) {
   const context = await browser.newContext({
@@ -68,7 +43,10 @@ async function newPage(dark, slow) {
         typeof input === "string" ? input : input.url,
         location.href,
       );
-      if (url.pathname.includes("__e2e_gas__"))
+      if (
+        url.pathname === "/api/gas" ||
+        url.pathname.startsWith("/api/gemini/")
+      )
         return Promise.reject(new TypeError("controlled finance unavailable"));
       if (url.origin !== location.origin)
         return Promise.reject(
@@ -232,11 +210,6 @@ try {
       VITE_TRIP_ID: trip,
       VITE_BASE_PATH: "/",
       VITE_PUBLIC_SITE_URL: root,
-      VITE_ENCODED_KEY: await encrypt("e2e-gemini-key"),
-      VITE_ENCODED_MAPS_KEY: "",
-      VITE_ENCODED_MAPTILER_KEY: await encrypt("e2e-map-key"),
-      VITE_ENCODED_GAS_URL: await encrypt(`${root}/__e2e_gas__`),
-      VITE_ENCODED_GAS_TOKEN: await encrypt("e2e-gas-token"),
     });
     console.log(`BUILD ${trip}: production bundle with test credentials`);
     if (!process.argv.includes("--reuse"))
@@ -245,8 +218,33 @@ try {
         logLevel: "warn",
         build: { outDir: output, emptyOutDir: true },
       });
+    let testTime = Date.now();
+    const api = createApp(
+      {
+        APP_ORIGIN: root,
+        APP_PASSWORD_HASH: `production-test:${scryptSync(password, "production-test", 64).toString("hex")}`,
+        GEMINI_API_KEY: "e2e-only",
+        MAPTILER_PUBLIC_KEY: "e2e-map-key",
+        GAS_URL: "https://script.google.com/macros/s/e2e/exec",
+        GAS_TOKEN: "e2e-token",
+      },
+      async () => new Response(JSON.stringify({ status: "success", data: [] })),
+      () => testTime,
+    );
     const server = await preview({
       mode: "e2e",
+      plugins: [
+        {
+          name: "production-test-api",
+          configurePreviewServer(vite) {
+            vite.middlewares.use((req, res, next) => {
+              if (!req.url.startsWith("/api/")) return next();
+              if (req.url === "/api/login") testTime += 61000;
+              api.emit("request", req, res);
+            });
+          },
+        },
+      ],
       logLevel: "warn",
       build: { outDir: output },
       preview: { host: "127.0.0.1", port: 5189, strictPort: true },
@@ -402,6 +400,13 @@ try {
             true,
             "uncached network request must fail",
           );
+          // A cold offline start must remain locked: no local flag bypasses
+          // server authentication. Restore connectivity, authenticate, then
+          // test offline use of the already-open application.
+          await expect(page.getByLabel("通關密碼")).toBeVisible();
+          await context.setOffline(false);
+          await unlock(page, dark);
+          await context.setOffline(true);
           await expect(
             page.getByRole("navigation", { name: "主要功能" }),
           ).toBeVisible();
@@ -491,6 +496,10 @@ try {
             "離線保留測試",
           );
           await page.reload();
+          await expect(page.getByLabel("通關密碼")).toBeVisible();
+          await context.setOffline(false);
+          await unlock(page, dark);
+          await context.setOffline(true);
           await expect(page.locator(".journal-finance-record")).toContainText(
             "離線保留測試",
           );
@@ -517,7 +526,7 @@ try {
             true,
           );
           assert.deepEqual(errors, []);
-          // All itinerary sources and artwork must remain switchable offline.
+          // Each offline trip navigation must stay locked until online authentication.
           for (const destination of [
             ...tripCatalog.filter((item) => item.id !== trip),
             getTripSummary(trip),
@@ -530,6 +539,10 @@ try {
                 exact: true,
               })
               .click();
+            await expect(page.getByLabel("通關密碼")).toBeVisible();
+            await context.setOffline(false);
+            await unlock(page, dark);
+            await context.setOffline(true);
             await expect(page.locator(".travel-shell")).toHaveAttribute(
               "data-artwork",
               destination.artwork.id,
@@ -558,7 +571,8 @@ try {
             offlineMapFallback: true,
             aiFailureDisplayed: true,
             expenseSurvivesReload: true,
-            offlineTripSwitching: true,
+            offlineTripSwitchRequiresReauthentication: true,
+            offlineColdStartStaysLocked: true,
             mapEngineRecoversOnline: true,
             passed: true,
           });

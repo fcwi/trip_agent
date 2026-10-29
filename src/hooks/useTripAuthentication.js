@@ -1,23 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EMPTY_CREDENTIALS } from "../utils/credentialBundle.js";
 import { authStorage } from "../utils/authStorage.js";
 import { tripStorage } from "../utils/tripStorage.js";
 
-const requestSession = async (path, body) => {
-  const response = await fetch(`/api/${path}`, {
-    credentials: "same-origin",
-    cache: "no-store",
-    ...(body
-      ? {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }
-      : {}),
-  });
-  if (!response.ok) throw new Error("登入失敗，請確認密碼與伺服器連線後重試");
-  return response.json();
-};
+import { requestSession } from "../utils/authClient.js";
+
+const PENDING_LOGOUT = "logout-pending-v1";
+const LOCK_REVISION = "last-lock-v1";
+
 export const useTripAuthentication = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -26,20 +16,37 @@ export const useTripAuthentication = () => {
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(false);
+  const lockRevisionRef = useRef(authStorage.getItem(LOCK_REVISION));
+  const clearAuthentication = useCallback(() => {
+    setCredentials(EMPTY_CREDENTIALS);
+    setPassword("");
+    setIsVerified(false);
+  }, []);
   useEffect(() => {
     let active = true;
     authStorage.removeItem("password");
     authStorage.removeItem("remembered-unlock-password-v1");
     tripStorage.removeItem("password");
     localStorage.removeItem("trip_agent_password");
-    requestSession("session")
+    const restore = async () => {
+      if (authStorage.getItem(PENDING_LOGOUT)) {
+        await requestSession("logout", {});
+        authStorage.removeItem(PENDING_LOGOUT);
+        return null;
+      }
+      return requestSession("session");
+    };
+    restore()
       .then((data) => {
-        if (active) {
+        if (active && data) {
+          lockRevisionRef.current = authStorage.getItem(LOCK_REVISION);
           setCredentials(data);
           setIsVerified(true);
         }
       })
-      .catch(() => {})
+      .catch((error) => {
+        if (active && error.status !== 401) setAuthError(error.message);
+      })
       .finally(() => {
         if (active) setIsAuthReady(true);
       });
@@ -53,10 +60,15 @@ export const useTripAuthentication = () => {
       setIsAuthLoading(true);
       setAuthError("");
       try {
+        if (authStorage.getItem(PENDING_LOGOUT)) {
+          await requestSession("logout", {});
+          authStorage.removeItem(PENDING_LOGOUT);
+        }
         const data = await requestSession("login", {
           password,
           remember: rememberDevice,
         });
+        lockRevisionRef.current = authStorage.getItem(LOCK_REVISION);
         setCredentials(data);
         setPassword("");
         setIsVerified(true);
@@ -69,13 +81,50 @@ export const useTripAuthentication = () => {
     [password, rememberDevice],
   );
   const lock = useCallback(() => {
-    setCredentials(EMPTY_CREDENTIALS);
-    setPassword("");
-    setIsVerified(false);
-    return requestSession("logout", {}).catch(() => {
-      setAuthError("登出未完成，請恢復連線後再次登出");
-    });
-  }, []);
+    authStorage.setItem(PENDING_LOGOUT, "true");
+    authStorage.setItem(LOCK_REVISION, `${Date.now()}-${Math.random()}`);
+    clearAuthentication();
+    return requestSession("logout", {})
+      .then(() => {
+        authStorage.removeItem(PENDING_LOGOUT);
+      })
+      .catch(() => {
+        setAuthError("網站已鎖定；請恢復連線完成伺服器登出，再重新登入。");
+      });
+  }, [clearAuthentication]);
+
+  useEffect(() => {
+    let active = true;
+    const restoreCachedPage = async (event) => {
+      if (!event.persisted) return;
+      if (
+        authStorage.getItem(PENDING_LOGOUT) ||
+        authStorage.getItem(LOCK_REVISION) !== lockRevisionRef.current
+      ) {
+        clearAuthentication();
+        return;
+      }
+      try {
+        await requestSession("session");
+      } catch (error) {
+        if (active && error.status === 401) clearAuthentication();
+      }
+    };
+    const syncLock = (event) => {
+      if (
+        event.key === "trip_agent:auth:last-lock-v1" &&
+        event.newValue !== lockRevisionRef.current
+      )
+        clearAuthentication();
+    };
+    window.addEventListener("pageshow", restoreCachedPage);
+    window.addEventListener("storage", syncLock);
+    return () => {
+      active = false;
+      window.removeEventListener("pageshow", restoreCachedPage);
+      window.removeEventListener("storage", syncLock);
+    };
+  }, [clearAuthentication]);
   return {
     isAuthReady,
     isVerified,

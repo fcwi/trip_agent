@@ -27,7 +27,7 @@ const trips = [
 test.beforeEach(async ({ page }) => {
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname.includes("__e2e_gas__"))
+    if (url.pathname.includes("api/gas"))
       return route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -66,6 +66,7 @@ test("trip identity and phase stay visible across overview, daily and guide page
   ]) {
     await page.clock.setFixedTime(new Date(date));
     await page.goto(`/?trip=${id}`);
+    await page.locator(".travel-shell, #lockScreenPassword").first().waitFor();
     if (await page.getByLabel("通關密碼").count()) await unlock(page);
     const trip = trips.find((item) => item.id === id);
     const header = page.locator(".travel-header");
@@ -125,7 +126,7 @@ test("switches three itineraries without logging out and keeps custom checklists
 }) => {
   const requests = [];
   page.on("request", (request) => {
-    if (request.url().includes("__e2e_gas__"))
+    if (request.url().includes("api/gas"))
       requests.push({ url: request.url(), body: request.postData() });
   });
   await page.goto("/?trip=2027_tohoku");
@@ -221,8 +222,7 @@ test("a cached page cannot restore an itinerary after its shared login was locke
   await page.goto("/?trip=2027_tohoku");
   await unlock(page);
   await page.evaluate(() => {
-    sessionStorage.removeItem("trip_agent:auth:password");
-    localStorage.removeItem("trip_agent:auth:remembered-unlock-password-v1");
+    localStorage.setItem("trip_agent:auth:last-lock-v1", "other-tab-lock");
     window.dispatchEvent(
       new PageTransitionEvent("pageshow", { persisted: true }),
     );

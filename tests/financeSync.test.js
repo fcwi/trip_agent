@@ -56,3 +56,21 @@ test("deduplicates and removes pending deletes by normalized id", () => {
   assert.deepEqual(queued, [{ id: "8", type: "finance" }]);
   assert.deepEqual(removePendingDelete(queued, 8), []);
 });
+
+test("offline amounts without an exchange rate are not presented as a zero conversion", async () => {
+  const { hasRecordedConversion } = await import("../src/utils/financeSync.js");
+  assert.equal(
+    hasRecordedConversion({ amount: 123, rate: 0, targetAmount: 0 }),
+    false,
+  );
+  assert.equal(
+    hasRecordedConversion({ amount: 0, rate: 0.2, targetAmount: 0 }),
+    true,
+  );
+  assert.equal(
+    hasRecordedConversion({ amount: 123, rate: 0.2, targetAmount: 25 }),
+    true,
+  );
+  assert.equal(hasRecordedConversion({ amount: 123, targetAmount: 25 }), true);
+  assert.equal(hasRecordedConversion({ amount: 123 }), false);
+});

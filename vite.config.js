@@ -196,7 +196,10 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
           // 離線導航 fallback：確保離線啟動時回傳預快取的 index.html
           navigateFallback: "index.html",
-          navigateFallbackDenylist: [new RegExp(`^${basePath}api`)],
+          navigateFallbackDenylist: [
+            /^\/api(?:\/|$)/,
+            new RegExp(`^${basePath}api`),
+          ],
 
           // 2. 執行時快取 (Runtime Caching)
           runtimeCaching: [

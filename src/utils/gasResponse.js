@@ -1,4 +1,5 @@
 const GAS_ERROR_MESSAGES = Object.freeze({
+  SESSION_EXPIRED: "登入已到期，請鎖定網站後重新登入；本機紀錄會保留",
   UNAUTHORIZED: "雲端驗證失敗，請重新確認連線設定",
   MISSING_TRIP_ID: "旅程 ID 未設定，無法選擇雲端資料",
   TRIP_STORAGE_NOT_CONFIGURED: "找不到此旅程的雲端儲存設定",

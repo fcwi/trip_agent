@@ -7,7 +7,11 @@ import {
 } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
-export function createApp(env = process.env, fetchImpl = fetch) {
+export function createApp(
+  env = process.env,
+  fetchImpl = fetch,
+  clock = Date.now,
+) {
   if (!env.APP_ORIGIN || !env.APP_PASSWORD_HASH)
     throw new Error("APP_ORIGIN and APP_PASSWORD_HASH required");
   const origin = new URL(env.APP_ORIGIN).origin;
@@ -41,7 +45,7 @@ export function createApp(env = process.env, fetchImpl = fetch) {
         return send(403, { error: "Origin rejected" });
       if (req.method !== "GET" && req.headers.origin !== origin)
         return send(403, { error: "Origin required" });
-      const now = Date.now();
+      const now = clock();
       for (const [key, value] of sessions)
         if (value.expires <= now) sessions.delete(key);
       for (const [key, value] of limits)
@@ -191,7 +195,8 @@ export function createApp(env = process.env, fetchImpl = fetch) {
       if (!upstream.ok) {
         const groundingRequest =
           path.startsWith("/api/gemini/") &&
-          body.tools?.some((tool) => tool.google_search || tool.googleMaps);
+          Array.isArray(body.tools) &&
+          body.tools.some((tool) => tool?.google_search || tool?.googleMaps);
         if (groundingRequest && [400, 403].includes(upstream.status))
           return send(502, {
             error: "Grounding request failed",
@@ -201,12 +206,25 @@ export function createApp(env = process.env, fetchImpl = fetch) {
       }
       const data = await upstream.json();
       // Never relay upstream error text or accidentally echoed credentials.
-      if (
-        path === "/api/gas" &&
-        data.status === "error" &&
-        data.code === "BUSY"
-      )
-        return send(200, { status: "error", code: "BUSY", message: "Busy" });
+      if (path === "/api/gas" && data.status === "error") {
+        const codes = [
+          "UNAUTHORIZED",
+          "MISSING_TRIP_ID",
+          "TRIP_STORAGE_NOT_CONFIGURED",
+          "SPREADSHEET_NOT_CONFIGURED",
+          "FOLDER_NOT_CONFIGURED",
+          "SCHEMA_MISMATCH",
+          "INVALID_PAYLOAD",
+          "BUSY",
+          "IMAGE_UPLOAD_FAILED",
+          "IMAGE_DELETE_FAILED",
+          "SYSTEM_ERROR",
+        ];
+        return send(200, {
+          status: "error",
+          code: codes.includes(data.code) ? data.code : "SYSTEM_ERROR",
+        });
+      }
       if (data.error || data.status === "error")
         return send(502, { error: "Upstream request failed" });
       let output = JSON.stringify(data);

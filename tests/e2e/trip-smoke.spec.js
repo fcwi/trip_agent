@@ -48,7 +48,7 @@ const blockExternalRequests = async (page) => {
 const interceptGasRequests = async (page) => {
   const calls = [];
   gasCallsByPage.set(page, calls);
-  await page.route("**/__e2e_gas__**", async (route) => {
+  await page.route("**/api/gas**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     let body = {};
@@ -184,22 +184,24 @@ test("remembers an opted-in unlock and clears it when the trip is locked", async
   ).toBeVisible();
 });
 
-test("generates and copies an encrypted credential", async ({ page }) => {
+test("does not expose credential tools or persist the login password", async ({
+  page,
+}) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /設定／加密 API Key/ }).click();
-  await page.getByLabel("Gemini API Key").fill("test-api-key-1234567890");
-  await page.getByLabel("設定通關密碼").fill("local-test-password");
-  await page.getByRole("button", { name: "生成加密字串" }).click();
-
-  const encryptedValue = await page.locator("output").textContent();
-  expect(encryptedValue?.split(":")).toHaveLength(3);
-  await page.getByRole("button", { name: "複製加密字串" }).click();
-  await expect(page.locator('p[role="status"]')).toContainText(
-    "已複製加密字串",
+  await expect(
+    page.getByRole("button", { name: /設定／加密 API Key/ }),
+  ).toHaveCount(0);
+  await unlockTrip(page);
+  const stored = await page.evaluate(() =>
+    [...Object.values(localStorage), ...Object.values(sessionStorage)].some(
+      (value) => value.includes("trip-e2e-password"),
+    ),
   );
-  await expect
-    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe(encryptedValue);
+  expect(stored).toBe(false);
+  const cookies = await page.context().cookies();
+  expect(
+    cookies.find((cookie) => cookie.name === "trip_session")?.httpOnly,
+  ).toBe(true);
 });
 
 test("syncs bottom navigation with the URL and browser history", async ({
@@ -327,7 +329,8 @@ test("orders homepage information for preparation, travel and review", async ({
     date.setUTCDate(date.getUTCDate() + scenario.offset);
     await page.clock.setFixedTime(date);
     await page.goto("/");
-    await unlockTrip(page);
+    await page.locator(".travel-shell, #lockScreenPassword").first().waitFor();
+    if (await page.getByLabel("通關密碼").count()) await unlockTrip(page);
     await page.getByRole("button", { name: /^總覽/ }).click();
     const overview = page.locator(".journal-overview");
     await expect(overview).toHaveAttribute("data-trip-phase", scenario.phase);
@@ -755,21 +758,18 @@ test("sends an explicit destination-language translation task", async ({
   page,
 }) => {
   let geminiPayload = null;
-  await page.route(
-    "https://generativelanguage.googleapis.com/**",
-    async (route) => {
-      geminiPayload = JSON.parse(route.request().postData() || "{}");
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          candidates: [
-            { content: { parts: [{ text: "テスト訳 (Tesuto-yaku)" }] } },
-          ],
-        }),
-      });
-    },
-  );
+  await page.route("**/api/gemini/**", async (route) => {
+    geminiPayload = JSON.parse(route.request().postData() || "{}");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        candidates: [
+          { content: { parts: [{ text: "テスト訳 (Tesuto-yaku)" }] } },
+        ],
+      }),
+    });
+  });
 
   await page.goto("/");
   await unlockTrip(page);
@@ -934,7 +934,7 @@ test("renders every journal page with the bundled font in narrow light and dark 
 test("guide chat keeps input, reply and search working with journal bubbles", async ({
   page,
 }) => {
-  await page.route("https://generativelanguage.googleapis.com/**", (route) =>
+  await page.route("**/api/gemini/**", (route) =>
     route.fulfill({
       json: {
         candidates: [

@@ -2085,3 +2085,14 @@
   background: white;
   border-radius: 8px;
 }
+
+.journal-record-actions:focus-within,
+.journal-receipt-remove:focus-visible {
+  opacity: 1;
+}
+@media (hover: none), (pointer: coarse) {
+  .journal-record-actions,
+  .journal-receipt-remove {
+    opacity: 1;
+  }
+}

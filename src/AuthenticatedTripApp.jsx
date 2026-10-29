@@ -1,3 +1,4 @@
+import { persistAiConversation } from "./utils/chatPersistence.js";
 import { extractAiGrounding } from "./utils/aiGrounding.js";
 import React, { useState, useRef, useEffect, lazy, Suspense } from "react";
 import {
@@ -819,51 +820,9 @@ const ItineraryApp = ({ authentication }) => {
     if (!isAiChatLoadedRef.current || messages.length === 0) return;
 
     const debounceTimer = setTimeout(() => {
-      const saveMessages = async () => {
-        try {
-          const { aiChatDB } = await import("./utils/indexedDBManager.js");
-
-          // 先保存圖片並獲取 imageId
-          const messagesWithImageIds = await Promise.all(
-            messages.map(async (msg) => {
-              if (msg.image && msg.image.data && msg.id) {
-                try {
-                  // 如果已有 imageId 就重用，否則生成新的
-                  const imageId =
-                    msg.image.id ||
-                    (await aiChatDB.saveImage(
-                      msg.id,
-                      msg.image.data,
-                      msg.image.filename,
-                    ));
-                  return {
-                    ...msg,
-                    image: { id: imageId, filename: msg.image.filename },
-                  };
-                } catch (error) {
-                  console.error(`保存圖片失敗 (msg: ${msg.id}):`, error);
-                  // 圖片保存失敗時，移除圖片但保留消息
-                  return { ...msg, image: null };
-                }
-              }
-              return {
-                ...msg,
-                image: msg.image
-                  ? { id: msg.image.id, filename: msg.image.filename }
-                  : null,
-              };
-            }),
-          );
-
-          // 初始化 IndexedDB 後再保存
-          await aiChatDB.init();
-          await aiChatDB.saveMessages(aiMode, messagesWithImageIds);
-        } catch (error) {
-          console.error("保存到 IndexedDB 失敗:", error);
-        }
-      };
-
-      saveMessages();
+      persistAiConversation(aiMode, messages).catch((error) =>
+        console.error("保存到 IndexedDB 失敗:", error),
+      );
     }, 500);
 
     return () => clearTimeout(debounceTimer);
@@ -2190,15 +2149,23 @@ const ItineraryApp = ({ authentication }) => {
 
   const handleSwitchMode = async (newMode) => {
     if (aiMode === newMode) return;
-    aiRequestIdRef.current++;
+    const switchId = ++aiRequestIdRef.current;
     abortAiRequests();
     isAiChatLoadedRef.current = false;
     setIsLoading(false);
-    setMessages([]);
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     setIsSpeaking(false);
-    setAiMode(newMode);
-    // 切換模式時，useEffect 會自動載入對應的對話記錄
+    try {
+      await persistAiConversation(aiMode, messages);
+      if (switchId !== aiRequestIdRef.current) return;
+      setMessages([]);
+      setAiMode(newMode);
+    } catch {
+      if (switchId === aiRequestIdRef.current) {
+        isAiChatLoadedRef.current = true;
+        showToast("聊天紀錄尚未保存，請確認儲存空間後再切換", "error");
+      }
+    }
   };
 
   // --- 測試模式觸發邏輯 (彩蛋) ---

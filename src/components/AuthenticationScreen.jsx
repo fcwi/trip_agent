@@ -85,7 +85,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
                 在此裝置保持登入
               </span>
               <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-neutral-400">
-                重開瀏覽器或 PWA 後自動解鎖，僅建議用於私人裝置。
+                在有效登入期間連線重開可自動解鎖，僅建議用於私人裝置。離線重開仍需恢復連線驗證。
               </span>
             </span>
           </label>

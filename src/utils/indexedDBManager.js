@@ -78,50 +78,39 @@ export const aiChatDB = {
   async saveMessages(mode, messages) {
     const db = this.dbInstance || (await this.init());
 
-    // 第一步：先刪除該模式的所有舊訊息
-    await new Promise((resolve, reject) => {
-      const deleteTx = db.transaction("messages", "readwrite");
-      const deleteStore = deleteTx.objectStore("messages");
-      const modeIndex = deleteStore.index("mode");
-      const range = IDBKeyRange.only(mode);
-      const deleteRequest = modeIndex.openCursor(range);
-
-      deleteRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
+    // Replace one mode in one transaction: a quota/write failure rolls back
+    // deletion as well, keeping the previous conversation intact.
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("messages", "readwrite");
+      const store = tx.objectStore("messages");
+      const cursorRequest = store
+        .index("mode")
+        .openCursor(IDBKeyRange.only(mode));
+      cursorRequest.onsuccess = () => {
+        const cursor = cursorRequest.result;
         if (cursor) {
           cursor.delete();
           cursor.continue();
+          return;
+        }
+        try {
+          for (const [index, msg] of messages.entries()) {
+            store.put({
+              ...msg,
+              mode,
+              timestamp: msg.timestamp || Date.now(),
+              order: index,
+            });
+          }
+        } catch (error) {
+          tx.abort();
+          reject(error);
         }
       };
-
-      deleteRequest.onerror = () => reject(deleteRequest.error);
-      deleteTx.oncomplete = () => resolve();
-      deleteTx.onerror = () => reject(deleteTx.error);
-    });
-
-    // 第二步：在刪除完成後，插入新訊息
-    if (messages.length === 0) {
-      return;
-    }
-
-    return new Promise((resolve, reject) => {
-      const insertTx = db.transaction("messages", "readwrite");
-      const insertStore = insertTx.objectStore("messages");
-
-      messages.forEach((msg, index) => {
-        const record = {
-          ...msg,
-          mode,
-          timestamp: msg.timestamp || Date.now(),
-          order: index,
-        };
-        // 使用 put 而非 add，允許覆蓋現有記錄
-        const insertRequest = insertStore.put(record);
-        insertRequest.onerror = () => reject(insertRequest.error);
-      });
-
-      insertTx.oncomplete = () => resolve();
-      insertTx.onerror = () => reject(insertTx.error);
+      cursorRequest.onerror = () => tx.abort();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("保存聊天紀錄失敗"));
+      tx.onabort = () => reject(tx.error || new Error("保存聊天紀錄已取消"));
     });
   },
 
@@ -336,6 +325,22 @@ export const financeDB = {
     });
   },
 
+  async saveRecordBatch(records) {
+    const db = this.dbInstance || (await this.init());
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("records", "readwrite");
+      try {
+        for (const record of records) tx.objectStore("records").put(record);
+      } catch (error) {
+        tx.abort();
+        reject(error);
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("保存批次記帳失敗"));
+      tx.onabort = () => reject(tx.error || new Error("保存批次記帳已取消"));
+    });
+  },
+
   async saveRecords(records) {
     const db = this.dbInstance || (await this.init());
 
@@ -404,6 +409,8 @@ export const financeDB = {
 
       recordRequest.onerror = () => reject(recordRequest.error);
       tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("刪除記帳資料失敗"));
+      tx.onabort = () => reject(tx.error || new Error("刪除記帳資料已取消"));
     });
   },
 

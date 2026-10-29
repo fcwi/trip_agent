@@ -309,6 +309,8 @@ export function extractAiReplyText(data) {
 }
 
 export function getAiErrorText(error) {
+  if (error?.status === 401)
+    return "登入已到期，請鎖定網站後重新登入；本機紀錄會保留。";
   if (error?.message === "GROUNDING_REQUEST_FAILED")
     return "即時查證工具目前無法使用，請管理者確認 Gemini API 付費方案、權限與工具設定後重試；本次未提供未查證的回答。";
   let errMsg = "連線發生錯誤或是系統忙碌中，請稍後再試。";

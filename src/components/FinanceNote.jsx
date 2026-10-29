@@ -43,6 +43,7 @@ import {
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import { logger } from "../utils/logger.js";
 import {
+  hasRecordedConversion,
   enqueuePendingDelete,
   mergeFinanceRecords,
   normalizeFinanceRecordId,
@@ -1301,7 +1302,9 @@ const FinanceScreen = ({
             await new Promise((resolve) => setTimeout(resolve, 100));
           }
         }
-        showToast(`已上傳 ${noteImages.length} 則記事（圖片已保存至雲端）`);
+        showToast(
+          `已在本機保存 ${noteImages.length} 則記事，雲端狀態請查看紀錄圖示`,
+        );
       } else {
         await addRecord(inputText, amount, null);
       }
@@ -1409,7 +1412,10 @@ const FinanceScreen = ({
         }
       }
 
-      // 更新 React State
+      // Commit the import as one local transaction before showing success.
+      await financeDB.saveRecordBatch(
+        localItems.map((item) => ({ ...item, image: null, syncing: false })),
+      );
       setRecords((prev) => [...prev, ...localItems]);
 
       // 3. 執行批次上傳
@@ -1520,6 +1526,12 @@ const FinanceScreen = ({
       await financeDB.deleteRecord(id);
     } catch (err) {
       console.error("從 IndexedDB 刪除失敗:", err);
+      if (shouldDeleteFromCloud)
+        writePendingDeletes(
+          removePendingDelete(readPendingDeletes(), normalizedId),
+        );
+      showToast("無法刪除本機紀錄，請確認裝置儲存空間後重試", "error");
+      return;
     }
 
     setRecords((prev) => {
@@ -1595,8 +1607,24 @@ const FinanceScreen = ({
       }
       return r;
     });
+    const changed = updatedRecords.find(
+      (record) => record.id === editingRecord.id,
+    );
+    try {
+      await financeDB.saveRecord({
+        ...changed,
+        image:
+          typeof changed.image === "string" && changed.image.startsWith("http")
+            ? changed.image
+            : null,
+        syncing: false,
+      });
+    } catch {
+      showToast("無法儲存修改，請保留編輯內容並確認裝置儲存空間", "error");
+      return;
+    }
     setRecords(updatedRecords);
-    showToast("已更新，正在同步...", "success");
+    showToast("已在本機更新，雲端狀態請查看紀錄圖示", "success");
     cancelEditing();
 
     // 2. 後端同步 (Cloud Sync)
@@ -2132,6 +2160,9 @@ const FinanceScreen = ({
                 mode === "finance"
                   ? dateRecords.reduce((sum, r) => sum + (r.amount || 0), 0)
                   : dateRecords.length;
+              const conversionComplete = dateRecords.every(
+                hasRecordedConversion,
+              );
               const dayTargetTotal =
                 mode === "finance"
                   ? dateRecords.reduce(
@@ -2179,7 +2210,9 @@ const FinanceScreen = ({
                           {formatCurrency(dayTotal, sourceCurrency)}
                         </span>
                         <span className={`text-[10px] ml-1.5 ${theme.textSec}`}>
-                          ≈ {formatCurrency(dayTargetTotal, targetCurrency)}
+                          {conversionComplete
+                            ? `≈ ${formatCurrency(dayTargetTotal, targetCurrency)}`
+                            : "含尚未換算的紀錄"}
                         </span>
                       </div>
                     )}
@@ -2191,25 +2224,25 @@ const FinanceScreen = ({
                       // Flex 容器
                       <div
                         key={record.id}
-                        className={`group flex gap-3 ${record.user.name === user.name ? "flex-row-reverse" : "flex-row"}`}
+                        className={`group flex gap-3 ${record.user?.name === user.name ? "flex-row-reverse" : "flex-row"}`}
                       >
                         {/* 1. 頭像區域 */}
                         <div className="flex-shrink-0 flex flex-col items-center gap-1">
                           <div
                             className={`w-9 h-9 rounded-full flex items-center justify-center text-lg shadow-sm border transition-all ${isDarkMode ? "bg-neutral-800 border-neutral-700" : "bg-white border-stone-200"}`}
                           >
-                            {record.user.avatar}
+                            {record.user?.avatar}
                           </div>
                           <span
                             className={`text-[10px] opacity-70 leading-tight max-w-[4rem] truncate text-center font-medium ${theme.textSec}`}
                           >
-                            {record.user.name}
+                            {record.user?.name}
                           </span>
                         </div>
 
                         {/* 2. 內容卡片區域 - 統一使用半透明風格（與 AI 導遊回覆一致） */}
                         <div
-                          className={`flex flex-col max-w-[75%] ${record.user.name === user.name ? "items-end" : "items-start"}`}
+                          className={`flex flex-col max-w-[75%] ${record.user?.name === user.name ? "items-end" : "items-start"}`}
                         >
                           <div
                             id={`record-${record.timestamp}`}
@@ -2219,7 +2252,7 @@ const FinanceScreen = ({
                                     ? "bg-neutral-800/85 backdrop-blur-lg text-neutral-200 border-neutral-700/60 ring-1 ring-neutral-600/30 shadow-md"
                                     : "bg-white/85 backdrop-blur-lg text-stone-700 border-white/40 ring-1 ring-black/5 shadow-md"
                                 }
-                                ${record.user.name === user.name ? "rounded-2xl rounded-tr-none" : "rounded-2xl rounded-tl-none"}
+                                ${record.user?.name === user.name ? "rounded-2xl rounded-tr-none" : "rounded-2xl rounded-tl-none"}
                                 ${record.type === "finance" ? "w-60" : ""}
                            `}
                           >
@@ -2258,11 +2291,9 @@ const FinanceScreen = ({
                                     <div
                                       className={`text-[10px] mt-0.5 ${theme.textSec}`}
                                     >
-                                      ≈{" "}
-                                      {formatCurrency(
-                                        record.targetAmount ?? record.twdAmount,
-                                        targetCurrency,
-                                      )}
+                                      {hasRecordedConversion(record)
+                                        ? `≈ ${formatCurrency(record.targetAmount ?? record.twdAmount, targetCurrency)}`
+                                        : "尚未取得匯率，未換算"}
                                     </div>
                                   </div>
                                 </div>
@@ -2334,8 +2365,8 @@ const FinanceScreen = ({
                         </div>
 
                         {/* 3. 操作按鈕區域 */}
-                        {record.user.name === user.name && (
-                          <div className="flex flex-col justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {record.user?.name === user.name && (
+                          <div className="journal-record-actions flex flex-col justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <button
                               type="button"
                               onClick={() => startEditing(record)}
@@ -2604,7 +2635,7 @@ const FinanceScreen = ({
                             e.stopPropagation();
                             handleRemoveReceiptImage(idx);
                           }}
-                          className="absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                          className="journal-receipt-remove absolute top-1 left-1 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
                           aria-label={`移除已辨識發票 ${idx + 1}`}
                         >
                           <X className="w-3 h-3" />

@@ -15,16 +15,30 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
   };
   const calls = [];
   let rejectGrounding = false;
-  const app = createApp(env, async (url, options) => {
-    calls.push({ url, ...options });
-    if (rejectGrounding)
-      return new Response(JSON.stringify({ error: env.GEMINI_API_KEY }), {
-        status: 403,
-      });
-    return new Response(
-      JSON.stringify({ status: "success", data: [], echo: env.GAS_TOKEN }),
-    );
-  });
+  let gasErrorCode = "";
+  let testTime = Date.now();
+  const app = createApp(
+    env,
+    async (url, options) => {
+      calls.push({ url, ...options });
+      if (gasErrorCode)
+        return new Response(
+          JSON.stringify({
+            status: "error",
+            code: gasErrorCode,
+            message: env.GAS_TOKEN,
+          }),
+        );
+      if (rejectGrounding)
+        return new Response(JSON.stringify({ error: env.GEMINI_API_KEY }), {
+          status: 403,
+        });
+      return new Response(
+        JSON.stringify({ status: "success", data: [], echo: env.GAS_TOKEN }),
+      );
+    },
+    () => testTime,
+  );
   const request = (path, options = {}) =>
     new Promise((resolve) => {
       const req = Readable.from(
@@ -124,6 +138,13 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
       calls[1].url,
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
     );
+    gasErrorCode = "SCHEMA_MISMATCH";
+    const schemaError = await post("/api/gas", { action: "getAll" }, cookie);
+    assert.deepEqual(await schemaError.json(), {
+      status: "error",
+      code: "SCHEMA_MISMATCH",
+    });
+    gasErrorCode = "";
     rejectGrounding = true;
     const rejected = await post(
       "/api/gemini/gemini-3.5-flash-lite",
@@ -134,6 +155,11 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
     const rejection = await rejected.json();
     assert.equal(rejection.code, "GROUNDING_REQUEST_FAILED");
     assert.ok(!JSON.stringify(rejection).includes(env.GEMINI_API_KEY));
+    testTime += 8 * 86400 * 1000;
+    assert.equal(
+      (await post("/api/gas", { action: "getAll" }, cookie)).status,
+      401,
+    );
     assert.equal((await post("/api/logout", {}, cookie)).status, 200);
     assert.equal(
       (await post("/api/gas", { action: "getAll" }, cookie)).status,

@@ -38,6 +38,8 @@ export const uploadToGasWithContext = async ({
     return requireGasSuccess(result, [gasToken, gasUrl]);
   } catch (error) {
     if (error instanceof GasResponseError) throw error;
+    if (error.status === 401)
+      throw new GasResponseError({ status: "error", code: "SESSION_EXPIRED" });
     throw new Error("無法連線至雲端服務，請檢查網路後重試", {
       cause: error,
     });

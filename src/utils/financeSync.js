@@ -51,3 +51,11 @@ export const removePendingDelete = (queue = [], recordId) => {
   const id = normalizeFinanceRecordId(recordId);
   return queue.filter((entry) => normalizeFinanceRecordId(entry.id) !== id);
 };
+
+// A missing exchange rate must not make an offline expense look like TWD 0.
+export const hasRecordedConversion = (record) => {
+  if (record?.rate !== undefined && record?.rate !== null)
+    return Number.isFinite(Number(record.rate)) && Number(record.rate) > 0;
+  const converted = Number(record?.targetAmount ?? record?.twdAmount);
+  return Number.isFinite(converted) && converted > 0;
+};
