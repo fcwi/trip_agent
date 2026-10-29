@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { supplyEmptyRoadShield } from "../utils/mapStyleRepair.js";
 import { isPlaceNameLayer } from "../utils/journalMap.js";
 
 /**
@@ -85,6 +86,8 @@ const MapPicker = ({
       zoom: 13,
       attributionControl: false,
     });
+
+    map.on("styleimagemissing", (event) => supplyEmptyRoadShield(map, event));
 
     map.on("load", () => {
       setMapLoaded(true);

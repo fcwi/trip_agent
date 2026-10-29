@@ -8,7 +8,10 @@ import {
 } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadJournalMapEngine } from "../utils/journalMapEngine.js";
-import { repairMapStyle } from "../utils/mapStyleRepair.js";
+import {
+  repairMapStyle,
+  supplyEmptyRoadShield,
+} from "../utils/mapStyleRepair.js";
 import UtilityState from "./UtilityState.jsx";
 import {
   buildEventPopupHtml,
@@ -170,6 +173,9 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
           attributionControl: false,
         });
         mapRef.current = currentMap;
+        currentMap.on("styleimagemissing", (event) =>
+          supplyEmptyRoadShield(currentMap, event),
+        );
         if (
           new URLSearchParams(window.location.search).get("mapDebug") === "1"
         ) {

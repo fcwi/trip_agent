@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createExpression, latest } from "@maplibre/maplibre-gl-style-spec";
-import { repairMapStyle } from "../src/utils/mapStyleRepair.js";
+import {
+  repairMapStyle,
+  supplyEmptyRoadShield,
+} from "../src/utils/mapStyleRepair.js";
 const sea = {
   id: "Sea labels",
   type: "symbol",
@@ -74,4 +77,29 @@ test("style repair preserves unrelated labels and source definitions in both the
     const untouched = { ...style, layers: [{ ...sea, ...patch }] };
     assert.equal(repairMapStyle(untouched, { isDarkMode: true }), untouched);
   }
+});
+
+test("only supplies an invisible optional road shield and preserves unknown missing images", () => {
+  const images = new Map();
+  let calls = 0;
+  const map = {
+    hasImage: (id) => images.has(id),
+    addImage: (id, image) => {
+      calls++;
+      images.set(id, image);
+    },
+  };
+  supplyEmptyRoadShield(map, { id: "transportation:road_" });
+  assert.equal(calls, 1);
+  assert.deepEqual(
+    Array.from(images.get("transportation:road_").data),
+    [0, 0, 0, 0],
+  );
+  supplyEmptyRoadShield(map, { id: "transportation:road_" });
+  supplyEmptyRoadShield(map, { id: "transportation:road_5" });
+  supplyEmptyRoadShield(map, { id: "unknown-icon" });
+  assert.equal(calls, 1);
+  images.clear(); // A style switch clears images; a later tile can request it again.
+  supplyEmptyRoadShield(map, { id: "transportation:road_" });
+  assert.equal(calls, 2);
 });

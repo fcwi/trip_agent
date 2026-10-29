@@ -167,7 +167,12 @@ export function attachMapStyleDiagnostics(map, theme) {
     timer = setTimeout(run, 200);
   };
   const missing = (event) => {
-    if (!disposed && !missingImages.has(event.id) && missingImages.size < 16) {
+    if (
+      !disposed &&
+      !map.hasImage(event.id) &&
+      !missingImages.has(event.id) &&
+      missingImages.size < 16
+    ) {
       missingImages.add(event.id);
       console.info(
         "[TripAgent map missing image] " +

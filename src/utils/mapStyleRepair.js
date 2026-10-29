@@ -32,3 +32,15 @@ export function repairMapStyle(style) {
   });
   return changed ? { ...style, layers } : style;
 }
+
+// Some regional tiles request a road shield with an empty suffix. There is no
+// corresponding sprite. Keep that optional shield invisible, preserving labels
+// and leaving every other missing image available for normal error reporting.
+export function supplyEmptyRoadShield(map, { id }) {
+  if (id !== "transportation:road_" || map.hasImage(id)) return;
+  map.addImage(id, {
+    width: 1,
+    height: 1,
+    data: new Uint8Array(4),
+  });
+}
