@@ -131,6 +131,7 @@ export function createApp(env = process.env, fetchImpl = fetch) {
       if (path.startsWith("/api/gemini/")) {
         const model = path.slice("/api/gemini/".length);
         const models = [
+          "gemini-3.5-flash-lite",
           "gemini-3-flash-preview",
           "gemini-3.1-flash-lite-preview",
           "gemini-2.5-flash-lite-preview-09-2025",

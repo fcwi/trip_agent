@@ -8,8 +8,8 @@ import { buildGeminiGenerateContentRequest } from "./geminiClient.js";
 // =============================================
 // 🔧 模型切換設定 — 修改這裡即可一鍵切換
 // =============================================
-// 可選值："gemini3flash" | "gemini31lite" | "gemini25lite"
-export const ACTIVE_MODEL = "gemini31lite";
+// 可選值："gemini35lite" | "gemini3flash" | "gemini31lite" | "gemini25lite"
+export const ACTIVE_MODEL = "gemini35lite";
 
 /**
  * 模型定義表
@@ -20,6 +20,11 @@ export const ACTIVE_MODEL = "gemini31lite";
  *     "basic"     → google_search (簡易版，無動態閾值)
  */
 export const MODELS = {
+  gemini35lite: {
+    id: "gemini-3.5-flash-lite",
+    label: "Gemini 3.5 Flash-Lite",
+    searchToolType: "basic",
+  },
   gemini3flash: {
     id: "gemini-3-flash-preview",
     label: "Gemini 3 Flash",
@@ -42,7 +47,7 @@ export const MODELS = {
  * @returns {{ id: string, label: string, searchToolType: string }}
  */
 export function getActiveModel() {
-  return MODELS[ACTIVE_MODEL] || MODELS.gemini3flash;
+  return MODELS[ACTIVE_MODEL] || MODELS.gemini35lite;
 }
 
 /**

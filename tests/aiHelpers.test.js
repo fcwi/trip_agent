@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  getActiveModel,
+  getSearchTools,
   getNextAiLoadingText,
   formatToGeminiPart,
   extractAiReplyText,
@@ -175,4 +177,12 @@ test("buildAiChatPayload builds translate vs guide payloads equivalently", () =>
   assert.match(guide.systemInstruction.parts[0].text, /ITIN/);
   assert.ok(guide.tools);
   assert.match(logs.join("\n"), /Search Filter/);
+});
+
+test("uses Gemini 3.5 Flash-Lite with current search tools only when needed", () => {
+  assert.equal(getActiveModel().id, "gemini-3.5-flash-lite");
+  assert.deepEqual(getSearchTools("附近的餐廳在哪裡？"), {
+    tools: [{ google_search: {} }],
+  });
+  assert.deepEqual(getSearchTools("謝謝"), {});
 });

@@ -94,12 +94,16 @@ test("authentication, cookie, fixed upstream, redaction, logout and throttling",
     assert.equal(calls[0].url, env.GAS_URL);
     assert.equal(JSON.parse(calls[0].body).token, env.GAS_TOKEN);
     const gemini = await post(
-      "/api/gemini/gemini-3-flash-preview",
+      "/api/gemini/gemini-3.5-flash-lite",
       { contents: [] },
       cookie,
     );
     assert.equal(gemini.status, 200);
     assert.equal(calls[1].headers["x-goog-api-key"], env.GEMINI_API_KEY);
+    assert.equal(
+      calls[1].url,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+    );
     assert.equal((await post("/api/logout", {}, cookie)).status, 200);
     assert.equal(
       (await post("/api/gas", { action: "getAll" }, cookie)).status,
