@@ -1711,10 +1711,6 @@ const FinanceScreen = ({
     );
   }
 
-  // ★ UI 修改重點：
-  // 1. 使用 min-h-[calc(100vh-130px)]：最小高度確保底部靠近導覽列。
-  // 2. 使用 pb-28：底部留白微調以貼近 AI 導遊。
-  // 3. 內容多時會撐開卡片，捲動行為在外層 window。
   return (
     <div
       className={`journal-finance px-4 pb-24 animate-fadeIn flex flex-col min-h-[calc(100vh-85px)] relative`}
@@ -2051,18 +2047,45 @@ const FinanceScreen = ({
           )}
         </div>
 
-        {/* 列表區域：內容自然撐開卡片 */}
+        {/* 紀錄區域獨立捲動，輸入區保持在卡片底部。 */}
         <div
-          className={`flex-1 p-4 space-y-3 flex flex-col backdrop-blur-md ${isDarkMode ? "bg-black/15" : "bg-[#F9F9F6]/70"}`}
+          className={`journal-finance-log flex-1 p-4 space-y-3 flex flex-col backdrop-blur-md ${isDarkMode ? "bg-black/15" : "bg-[#F9F9F6]/70"}`}
         >
           {records.filter((r) => r.type === mode).length === 0 && (
-            <div
-              className={`flex-1 flex flex-col items-center justify-center opacity-40 ${theme.textSec}`}
-            >
-              <Wallet className="w-12 h-12 mb-2 stroke-1" />
-              <p className="text-sm">
-                尚無任何{mode === "finance" ? "消費" : "記事"}紀錄
+            <div className="journal-finance-empty">
+              <span className="journal-finance-empty__eyebrow">旅途手帳</span>
+              <div className="journal-finance-empty__icon" aria-hidden="true">
+                {mode === "finance" ? <Wallet /> : <Edit3 />}
+              </div>
+              <h3>
+                {mode === "finance"
+                  ? "從第一筆花費，收藏旅途日常"
+                  : "把今天值得記住的事，留在這裡"}
+              </h3>
+              <p>
+                {mode === "finance"
+                  ? "一杯咖啡、一段車程，讓每一筆開銷都有跡可循。"
+                  : "路上的風景、偶遇的小店，或一句想留下的心情。"}
               </p>
+              <button
+                type="button"
+                className="journal-finance-empty__action"
+                onClick={() =>
+                  document
+                    .getElementById(
+                      mode === "finance" ? "financeAmount" : "financeTextInput",
+                    )
+                    ?.focus()
+                }
+              >
+                <Plus aria-hidden="true" className="h-4 w-4" />
+                {mode === "finance" ? "記下第一筆花費" : "寫下第一則記事"}
+              </button>
+              <span className="journal-finance-empty__hint">
+                {mode === "finance"
+                  ? "也可以點下方相機，上傳收據辨識"
+                  : "也可以點下方相機，附上旅途照片"}
+              </span>
             </div>
           )}
 
@@ -2336,8 +2359,6 @@ const FinanceScreen = ({
             });
           })()}
           <div ref={messagesEndRef} />
-          {/* 底部固定空間，確保滾到底時與無訊息時空間一致 */}
-          <div className="h-16"></div>
         </div>
 
         {/* Footer 輸入區 - 固定在卡片內容的最下方 */}

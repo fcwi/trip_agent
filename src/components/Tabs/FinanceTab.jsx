@@ -12,7 +12,7 @@ const FinanceTab = ({
   showToast,
 }) => {
   return (
-    <div className="flex-1 animate-fadeIn">
+    <div className="journal-finance-tab flex-1 animate-fadeIn">
       <FinanceNote
         isDarkMode={isDarkMode}
         theme={theme}
