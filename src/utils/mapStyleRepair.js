@@ -1,7 +1,7 @@
-// The reported MapTiler dark water_label text-size evaluates nullable tile data.
+// The reported MapTiler light and dark water_label text-size evaluates nullable tile data.
 // A camera-only size avoids that dependency while retaining gradual zoom scaling.
-export function repairMapStyle(style, { isDarkMode = false } = {}) {
-  if (!isDarkMode || !Array.isArray(style?.layers)) return style;
+export function repairMapStyle(style) {
+  if (!Array.isArray(style?.layers)) return style;
   let changed = false;
   const layers = style.layers.map((layer) => {
     if (

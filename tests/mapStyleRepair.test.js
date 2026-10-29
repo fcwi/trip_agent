@@ -12,41 +12,49 @@ const sea = {
     "text-size": ["interpolate", ["linear"], ["get", "rank"], 0, 12, 6, 16],
   },
 };
-test("dark sea labels remain finite with missing tile data and scale gradually with zoom", () => {
-  const style = { version: 8, sources: {}, layers: [sea] };
-  const original = createExpression(
-    sea.layout["text-size"],
-    latest.layout_symbol["text-size"],
-  );
-  assert.throws(
-    () =>
-      original.value.evaluateWithoutErrorHandling(
-        { zoom: 2.9 },
+for (const isDarkMode of [false, true]) {
+  test(`${isDarkMode ? "dark" : "light"} sea labels remain finite with missing tile data and scale gradually with zoom`, () => {
+    const style = { version: 8, sources: {}, layers: [sea] };
+    const original = createExpression(
+      sea.layout["text-size"],
+      latest.layout_symbol["text-size"],
+    );
+    assert.throws(
+      () =>
+        original.value.evaluateWithoutErrorHandling(
+          { zoom: 2.9 },
+          { type: 1, properties: { rank: null } },
+        ),
+      /number.*null/,
+    );
+    const result = repairMapStyle(style, { isDarkMode });
+    const expression = createExpression(
+      result.layers[0].layout["text-size"],
+      latest.layout_symbol["text-size"],
+    );
+    assert.equal(expression.result, "success");
+    let previous = 0;
+    for (const zoom of [0, 2.9, 6, 10, 12, 20]) {
+      const value = expression.value.evaluateWithoutErrorHandling(
+        { zoom },
         { type: 1, properties: { rank: null } },
-      ),
-    /number.*null/,
-  );
-  const result = repairMapStyle(style, { isDarkMode: true });
-  const expression = createExpression(
-    result.layers[0].layout["text-size"],
-    latest.layout_symbol["text-size"],
-  );
-  assert.equal(expression.result, "success");
-  let previous = 0;
-  for (const zoom of [0, 2.9, 6, 10, 12, 20]) {
-    const value = expression.value.evaluateWithoutErrorHandling(
-      { zoom },
-      { type: 1, properties: { rank: null } },
+      );
+      assert.ok(
+        Number.isFinite(value) &&
+          value >= 12 &&
+          value <= 20 &&
+          value >= previous,
+      );
+      previous = value;
+    }
+    assert.equal(
+      result.layers[0].layout["text-field"],
+      sea.layout["text-field"],
     );
-    assert.ok(
-      Number.isFinite(value) && value >= 12 && value <= 20 && value >= previous,
-    );
-    previous = value;
-  }
-  assert.equal(result.layers[0].layout["text-field"], sea.layout["text-field"]);
-  assert.deepEqual(style.layers[0], sea);
-});
-test("style repair preserves light mode, unrelated labels and source definitions", () => {
+    assert.deepEqual(style.layers[0], sea);
+  });
+}
+test("style repair preserves unrelated labels and source definitions in both themes", () => {
   const other = { ...sea, id: "Lake labels" };
   const style = {
     version: 8,
@@ -54,7 +62,6 @@ test("style repair preserves light mode, unrelated labels and source definitions
     sources: { basemap: { type: "vector" } },
     layers: [other, sea],
   };
-  assert.equal(repairMapStyle(style), style);
   const result = repairMapStyle(style, { isDarkMode: true });
   assert.equal(result.sources, style.sources);
   assert.equal(result.sprite, style.sprite);
