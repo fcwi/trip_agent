@@ -31,3 +31,6 @@ technical_manual.md
 *.sw?
 .shared
 .gas_script
+
+.env.*
+!.env.example

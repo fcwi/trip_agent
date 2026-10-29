@@ -103,6 +103,7 @@ export default defineConfig(({ mode }) => {
   console.log(`🛠️ Current Trip: ${tripId} (${tripFilePath})`);
 
   return {
+    server: { proxy: { "/api": "http://127.0.0.1:3001" } },
     // 🆕 定義環境變數
     define: {
       "import.meta.env.VITE_BUILD_VERSION": JSON.stringify(

@@ -1,23 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Key, Loader, Lock, Unlock } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Loader, Lock, Unlock } from "lucide-react";
 
 const fieldClasses =
   "w-full rounded-xl border border-stone-200/70 bg-white/90 px-4 py-3 text-base shadow-inner outline-none ring-black/5 transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-neutral-700/70 dark:bg-neutral-900/80 dark:ring-white/5";
 
-const SERVICES = {
-  gemini: { label: "Gemini API Key", field: "VITE_ENCODED_KEY" },
-  maps: { label: "Google Maps API Key", field: "VITE_ENCODED_MAPS_KEY" },
-  maptiler: { label: "MapTiler API Key", field: "VITE_ENCODED_MAPTILER_KEY" },
-  gasUrl: { label: "雲端服務網址", field: "VITE_ENCODED_GAS_URL" },
-  gasToken: { label: "雲端服務 Token", field: "VITE_ENCODED_GAS_TOKEN" },
-};
-
 const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
   const authErrorRef = useRef(null);
-  const [copyFeedback, setCopyFeedback] = useState({
-    value: "",
-    message: "",
-  });
   const {
     password,
     setPassword,
@@ -25,18 +13,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
     isAuthLoading,
     rememberDevice,
     setRememberDevice,
-    showEncryptTool,
-    setShowEncryptTool,
-    toolKey,
-    setToolKey,
-    toolPwd,
-    setToolPwd,
-    toolResult,
-    setToolResult,
-    keyType,
-    setKeyType,
     handleAuthSubmit,
-    generateEncryptedString,
   } = authentication;
 
   const submitUnlock = (event) => {
@@ -47,21 +24,6 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
   useEffect(() => {
     if (authError) authErrorRef.current?.focus();
   }, [authError]);
-
-  const canCopyToolResult = toolResult.split(":").length === 3;
-  const copyStatus =
-    copyFeedback.value === toolResult ? copyFeedback.message : "";
-  const copyToolResult = async () => {
-    try {
-      await navigator.clipboard.writeText(toolResult);
-      setCopyFeedback({ value: toolResult, message: "已複製加密字串" });
-    } catch {
-      setCopyFeedback({
-        value: toolResult,
-        message: "無法自動複製，請長按字串後手動複製",
-      });
-    }
-  };
 
   return (
     <main
@@ -133,7 +95,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 px-4 py-3.5 font-bold text-white shadow-lg transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isAuthLoading ? (
-              "解鎖與解密中…"
+              "登入驗證中…"
             ) : (
               <>
                 <Unlock aria-hidden="true" className="h-5 w-5" /> 解鎖行程
@@ -152,108 +114,6 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             </div>
           ) : null}
         </form>
-
-        <div className="mt-8 border-t border-dashed border-stone-200 pt-6 dark:border-neutral-700">
-          <button
-            type="button"
-            aria-expanded={showEncryptTool}
-            onClick={() => setShowEncryptTool(!showEncryptTool)}
-            className="flex min-h-11 w-full items-center justify-center gap-1.5 text-xs text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-neutral-100"
-          >
-            <Key aria-hidden="true" className="h-3.5 w-3.5" />
-            {showEncryptTool ? "隱藏加密工具" : "管理者設定／加密 API Key"}
-          </button>
-
-          {showEncryptTool ? (
-            <div className="mt-4 space-y-3 rounded-xl border border-stone-200 bg-stone-50/80 p-4 text-sm dark:border-neutral-700 dark:bg-black/20">
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(SERVICES).map(([type, { label }]) => (
-                  <button
-                    key={type}
-                    type="button"
-                    aria-pressed={keyType === type}
-                    onClick={() => {
-                      setKeyType(type);
-                      setToolResult("");
-                    }}
-                    className={`min-h-11 rounded-lg px-2 text-xs font-bold ${
-                      keyType === type
-                        ? "bg-sky-600 text-white"
-                        : "bg-stone-200 text-stone-600 dark:bg-neutral-700 dark:text-neutral-300"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <label htmlFor="encryptApiKey" className="text-xs font-bold">
-                {SERVICES[keyType]?.label || "Gemini"}
-              </label>
-              <input
-                type="password"
-                id="encryptApiKey"
-                name="encryptApiKey"
-                placeholder="貼上 API Key…"
-                autoComplete="off"
-                spellCheck={false}
-                value={toolKey}
-                onChange={(event) => setToolKey(event.target.value)}
-                className={fieldClasses}
-              />
-              <label htmlFor="encryptPassword" className="text-xs font-bold">
-                設定通關密碼
-              </label>
-              <input
-                type="password"
-                id="encryptPassword"
-                name="encryptPassword"
-                placeholder="設定您的通關密碼"
-                autoComplete="new-password"
-                value={toolPwd}
-                onChange={(event) => setToolPwd(event.target.value)}
-                className={fieldClasses}
-              />
-              <button
-                type="button"
-                onClick={generateEncryptedString}
-                className="min-h-11 w-full rounded-xl bg-sky-600 px-3 py-2 text-xs font-bold text-white"
-              >
-                生成加密字串
-              </button>
-
-              {toolResult ? (
-                <div className="animate-fadeIn">
-                  <p className="mb-1 text-xs font-bold">
-                    請存入正式設定檔的 {SERVICES[keyType]?.field} 欄位：
-                  </p>
-                  <output className="block break-all rounded-lg border border-stone-300 bg-white p-2 font-mono text-xs text-stone-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-green-400">
-                    {toolResult}
-                  </output>
-                  {canCopyToolResult ? (
-                    <button
-                      type="button"
-                      onClick={copyToolResult}
-                      className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-700 transition-[background-color,border-color,color] hover:bg-stone-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
-                    >
-                      {copyStatus ? (
-                        <Check aria-hidden="true" className="h-4 w-4" />
-                      ) : (
-                        <Copy aria-hidden="true" className="h-4 w-4" />
-                      )}
-                      {copyStatus || "複製加密字串"}
-                    </button>
-                  ) : null}
-                  {copyStatus ? (
-                    <p className="sr-only" role="status" aria-live="polite">
-                      {copyStatus}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
       </div>
     </main>
   );

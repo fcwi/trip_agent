@@ -115,7 +115,7 @@ export async function fetchGooglePlaces({
 
     if (!mapsApiKey) return null;
 
-    const url = `https://places.googleapis.com/v1/places:searchNearby`;
+    const url = "/api/places";
 
     const body = {
       includedTypes: GOOGLE_PLACES_TYPES,
@@ -137,7 +137,6 @@ export async function fetchGooglePlaces({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Goog-Api-Key": mapsApiKey,
           "X-Goog-FieldMask": "places.displayName,places.addressDescriptor",
         },
         body: JSON.stringify(body),

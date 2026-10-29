@@ -26,7 +26,6 @@ export const uploadToGasWithContext = async ({
 
   const payload = {
     ...addGasTripContextToPayload(data, context),
-    token: gasToken,
   };
   try {
     const result = await requestGas(gasUrl, {

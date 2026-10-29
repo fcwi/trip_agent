@@ -112,7 +112,7 @@ test("adds tripId to getAll and getLocations POST bodies without a query token",
     assert.equal(request.options.method, "POST");
     const body = JSON.parse(request.options.body);
     assert.equal(body.tripId, "2026_karuizawa");
-    assert.equal(body.token, "private-token");
+    assert.equal(body.token, undefined);
     assert.equal("gasPropertyKey" in body, false);
     assert.equal(new URL(request.url).search, "");
   }

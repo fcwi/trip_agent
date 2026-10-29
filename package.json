@@ -19,7 +19,10 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,css}\" \"*.{js,json,html}\"",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "server": "node --env-file=.env.server server/app.mjs",
+    "test:server": "node --test tests/server.test.mjs",
+    "start": "node server/production.mjs"
   },
   "dependencies": {
     "@maplibre/maplibre-gl-style-spec": "24.6.0",

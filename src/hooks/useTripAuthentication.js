@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
-import { CryptoUtils } from "../utils/crypto.js";
-import {
-  decryptCredentialBundle,
-  EMPTY_CREDENTIALS,
-} from "../utils/credentialBundle.js";
-import { tripStorage } from "../utils/tripStorage.js";
+import { EMPTY_CREDENTIALS } from "../utils/credentialBundle.js";
 import { authStorage } from "../utils/authStorage.js";
+import { tripStorage } from "../utils/tripStorage.js";
 
-const REMEMBERED_PASSWORD_KEY = "remembered-unlock-password-v1";
-
-const ENCRYPTED_PAYLOADS = Object.freeze({
-  apiKey: (import.meta.env?.VITE_ENCODED_KEY || "").trim(),
-  mapsApiKey: (import.meta.env?.VITE_ENCODED_MAPS_KEY || "").trim(),
-  gasUrl: (import.meta.env?.VITE_ENCODED_GAS_URL || "").trim(),
-  gasToken: (import.meta.env?.VITE_ENCODED_GAS_TOKEN || "").trim(),
-  maptilerKey: (import.meta.env?.VITE_ENCODED_MAPTILER_KEY || "").trim(),
-});
-
+const requestSession = async (path, body) => {
+  const response = await fetch(`/api/${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...(body
+      ? {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      : {}),
+  });
+  if (!response.ok) throw new Error("登入失敗，請確認密碼與伺服器連線後重試");
+  return response.json();
+};
 export const useTripAuthentication = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -24,126 +25,57 @@ export const useTripAuthentication = () => {
   const [credentials, setCredentials] = useState(EMPTY_CREDENTIALS);
   const [authError, setAuthError] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [rememberDevice, setRememberDevice] = useState(() =>
-    Boolean(authStorage.getItem(REMEMBERED_PASSWORD_KEY)),
-  );
-  const [showEncryptTool, setShowEncryptTool] = useState(false);
-  const [toolKey, setToolKey] = useState("");
-  const [toolPwd, setToolPwd] = useState("");
-  const [toolResult, setToolResult] = useState("");
-  const [keyType, setKeyType] = useState("gemini");
-
-  const attemptUnlock = useCallback(
-    async (inputPassword, { isAuto = false, persist = false } = {}) => {
+  const [rememberDevice, setRememberDevice] = useState(false);
+  useEffect(() => {
+    let active = true;
+    authStorage.removeItem("password");
+    authStorage.removeItem("remembered-unlock-password-v1");
+    tripStorage.removeItem("password");
+    localStorage.removeItem("trip_agent_password");
+    requestSession("session")
+      .then((data) => {
+        if (active) {
+          setCredentials(data);
+          setIsVerified(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setIsAuthReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const handleAuthSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
       setIsAuthLoading(true);
       setAuthError("");
-
       try {
-        const decryptedCredentials = await decryptCredentialBundle({
-          payloads: ENCRYPTED_PAYLOADS,
-          password: inputPassword,
-          decrypt: CryptoUtils.decrypt,
+        const data = await requestSession("login", {
+          password,
+          remember: rememberDevice,
         });
-
-        setCredentials(decryptedCredentials);
+        setCredentials(data);
+        setPassword("");
         setIsVerified(true);
-        authStorage.setItem("password", inputPassword);
-        if (persist) {
-          authStorage.setItem(REMEMBERED_PASSWORD_KEY, inputPassword);
-        } else {
-          authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
-        }
-        tripStorage.removeItem("password");
-        localStorage.removeItem("trip_agent_password");
-      } catch {
-        if (!isAuto) setAuthError("密碼錯誤，請再試一次");
-        if (isAuto) {
-          authStorage.removeItem("password");
-          if (persist) {
-            authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
-            setRememberDevice(false);
-          }
-        }
+      } catch (error) {
+        setAuthError(error.message);
       } finally {
         setIsAuthLoading(false);
       }
     },
-    [],
+    [password, rememberDevice],
   );
-
-  useEffect(() => {
-    const restoreAuthentication = async () => {
-      try {
-        const sessionPassword = authStorage.getItem("password");
-        const rememberedPassword = authStorage.getItem(REMEMBERED_PASSWORD_KEY);
-        const savedPassword = sessionPassword || rememberedPassword;
-        const shouldPersist = Boolean(rememberedPassword);
-
-        setRememberDevice(shouldPersist);
-
-        tripStorage.removeItem("password");
-        localStorage.removeItem("trip_agent_password");
-
-        if (savedPassword && ENCRYPTED_PAYLOADS.apiKey) {
-          await attemptUnlock(savedPassword, {
-            isAuto: true,
-            persist: shouldPersist,
-          });
-        } else if (!ENCRYPTED_PAYLOADS.apiKey) {
-          setIsVerified(true);
-        }
-      } finally {
-        setIsAuthReady(true);
-      }
-    };
-
-    restoreAuthentication();
-  }, [attemptUnlock]);
-
-  const handleAuthSubmit = useCallback(
-    (event) => {
-      event.preventDefault();
-      attemptUnlock(password, { persist: rememberDevice });
-    },
-    [attemptUnlock, password, rememberDevice],
-  );
-
-  const generateEncryptedString = useCallback(async () => {
-    if (!toolKey || !toolPwd) {
-      setToolResult("請輸入 Key 與密碼");
-      return;
-    }
-
-    try {
-      setToolResult(await CryptoUtils.encrypt(toolKey, toolPwd));
-    } catch {
-      setToolResult("加密失敗");
-    }
-  }, [toolKey, toolPwd]);
-
   const lock = useCallback(() => {
-    authStorage.removeItem("password");
-    authStorage.removeItem(REMEMBERED_PASSWORD_KEY);
     setCredentials(EMPTY_CREDENTIALS);
     setPassword("");
-    setRememberDevice(false);
     setIsVerified(false);
+    return requestSession("logout", {}).catch(() => {
+      setAuthError("登出未完成，請恢復連線後再次登出");
+    });
   }, []);
-
-  useEffect(() => {
-    const restoreCachedPage = (event) => {
-      if (
-        event.persisted &&
-        ENCRYPTED_PAYLOADS.apiKey &&
-        !authStorage.getItem("password") &&
-        !authStorage.getItem(REMEMBERED_PASSWORD_KEY)
-      )
-        lock();
-    };
-    window.addEventListener("pageshow", restoreCachedPage);
-    return () => window.removeEventListener("pageshow", restoreCachedPage);
-  }, [lock]);
-
   return {
     isAuthReady,
     isVerified,
@@ -154,18 +86,7 @@ export const useTripAuthentication = () => {
     isAuthLoading,
     rememberDevice,
     setRememberDevice,
-    showEncryptTool,
-    setShowEncryptTool,
-    toolKey,
-    setToolKey,
-    toolPwd,
-    setToolPwd,
-    toolResult,
-    setToolResult,
-    keyType,
-    setKeyType,
     handleAuthSubmit,
-    generateEncryptedString,
     lock,
   };
 };
