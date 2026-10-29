@@ -1767,10 +1767,10 @@ const FinanceScreen = ({
       >
         {/* Header */}
         <div
-          className={`shrink-0 p-4 border-b backdrop-blur-xl transition-all duration-300 ${isDarkMode ? "border-white/20 bg-neutral-800/50 ring-1 ring-white/5" : "border-stone-200/60 bg-white/70 ring-1 ring-black/5"}`}
+          className={`journal-finance-header shrink-0 p-4 border-b backdrop-blur-xl transition-all duration-300 ${isDarkMode ? "border-white/20 bg-neutral-800/50 ring-1 ring-white/5" : "border-stone-200/60 bg-white/70 ring-1 ring-black/5"}`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="journal-finance-toolbar flex items-center justify-between">
+            <div className="journal-finance-account flex items-center gap-3">
               {/* 🆕 頭像按鈕 - 點擊顯示選單 */}
               {user && (
                 <>
@@ -1779,6 +1779,8 @@ const FinanceScreen = ({
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="w-10 h-10 rounded-full flex items-center justify-center bg-stone-100 text-2xl shadow-sm border border-white/50 hover:scale-105 active:scale-95 transition-transform"
                     title="使用者選單"
+                    aria-label="使用者選單"
+                    aria-expanded={showUserMenu}
                   >
                     {user.avatar}
                   </button>
@@ -1839,6 +1841,24 @@ const FinanceScreen = ({
                           </div>
                         </button>
 
+                        {currentModeRecords.length > 0 && (
+                          <button
+                            onClick={handleToggleAllExpanded}
+                            className={`w-full px-4 py-3 flex items-center gap-2 text-left text-sm transition-all active:scale-95 ${
+                              allExpanded
+                                ? isDarkMode
+                                  ? "bg-sky-600/20 border-sky-500/50 text-sky-400"
+                                  : "bg-sky-50 border-sky-200 text-sky-600"
+                                : isDarkMode
+                                  ? "bg-neutral-800/80 border-white/10 text-neutral-400 hover:text-sky-400 hover:border-sky-500/50"
+                                  : "bg-white/60 border-white/30 text-stone-500 hover:text-sky-600 hover:border-sky-400/50"
+                            }`}
+                            title={allExpanded ? "全部收折" : "全部展開"}
+                          >
+                            <ChevronsUpDown className="w-3.5 h-3.5" />
+                            <span>{allExpanded ? "全部收折" : "全部展開"}</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             handleLogout();
@@ -1861,17 +1881,17 @@ const FinanceScreen = ({
 
               {user && (
                 <div
-                  className={`text-base font-bold ${theme.text} self-center`}
+                  className={`journal-finance-account-name text-base font-bold ${theme.text} self-center`}
                 >
                   {user.name}
                 </div>
               )}
             </div>
 
-            {/* 🆕 按鈕組 - 重新排列：模式切換在上，功能按鈕在下 */}
-            <div className="flex flex-col items-end gap-1.5">
+            {/* 模式切換與操作按鈕共用單行工具列。 */}
+            <div className="journal-finance-tools flex items-center gap-1">
               <div
-                className={`flex p-1 rounded-xl border gap-1 ${isDarkMode ? "bg-neutral-900/60 border-white/10" : "bg-stone-100/80 border-white/30"}`}
+                className={`journal-finance-modes flex p-1 rounded-xl border gap-1 ${isDarkMode ? "bg-neutral-900/60 border-white/10" : "bg-stone-100/80 border-white/30"}`}
               >
                 <button
                   onClick={() => setMode("finance")}
@@ -1892,24 +1912,7 @@ const FinanceScreen = ({
                   記事
                 </button>
               </div>
-              <div className="flex items-center gap-2">
-                {currentModeRecords.length > 0 && (
-                  <button
-                    onClick={handleToggleAllExpanded}
-                    className={`p-1.5 rounded-lg border transition-all active:scale-95 ${
-                      allExpanded
-                        ? isDarkMode
-                          ? "bg-sky-600/20 border-sky-500/50 text-sky-400"
-                          : "bg-sky-50 border-sky-200 text-sky-600"
-                        : isDarkMode
-                          ? "bg-neutral-800/80 border-white/10 text-neutral-400 hover:text-sky-400 hover:border-sky-500/50"
-                          : "bg-white/60 border-white/30 text-stone-500 hover:text-sky-600 hover:border-sky-400/50"
-                    }`}
-                    title={allExpanded ? "全部收折" : "全部展開"}
-                  >
-                    <ChevronsUpDown className="w-3.5 h-3.5" />
-                  </button>
-                )}
+              <div className="journal-finance-actions flex items-center gap-1">
                 <button
                   onClick={() => setShowSearch(!showSearch)}
                   className={`p-1.5 rounded-lg border transition-all active:scale-95 ${
@@ -1922,6 +1925,8 @@ const FinanceScreen = ({
                         : "bg-white/60 border-white/30 text-stone-500 hover:text-sky-600 hover:border-sky-400/50"
                   }`}
                   title="搜尋紀錄"
+                  aria-label="搜尋紀錄"
+                  aria-expanded={showSearch}
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
@@ -1930,6 +1935,7 @@ const FinanceScreen = ({
                   disabled={isSyncing}
                   className={`p-1.5 rounded-lg border transition-all active:scale-95 backdrop-blur-md ${isDarkMode ? "bg-neutral-800/70 border-white/15 text-neutral-400 hover:text-sky-400 hover:border-sky-500/50 ring-1 ring-white/5" : "bg-white/80 border-white/40 text-stone-500 hover:text-[#5D737E] hover:border-[#5D737E]/50 ring-1 ring-black/5"}`}
                   title="同步資料"
+                  aria-label="同步資料"
                 >
                   <RefreshCcw
                     className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-sky-500" : ""}`}

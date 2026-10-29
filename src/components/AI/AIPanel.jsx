@@ -122,10 +122,10 @@ const AIPanel = ({
       >
         {/* 對話視窗標題與模式切換 */}
         <div
-          className={`p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
+          className={`journal-ai-header shrink-0 p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="journal-ai-toolbar flex items-center justify-between gap-2">
+            <div className="journal-ai-identity flex items-center gap-3">
               {/* 模式頭像：隨導遊/口譯模式切換顏色與圖示 */}
               <div
                 className={`journal-sticker w-10 h-10 rounded-full flex items-center justify-center shadow-sm border border-white/50 transition-all duration-500
@@ -143,7 +143,7 @@ const AIPanel = ({
                 )}
               </div>
 
-              <div className="flex flex-col">
+              <div className="journal-ai-title flex flex-col">
                 <div
                   className={`text-base font-bold transition-colors duration-300 ${theme.text}`}
                 >
@@ -159,11 +159,11 @@ const AIPanel = ({
               </div>
             </div>
 
-            {/* 按鈕組 - 重新排列 */}
-            <div className="flex flex-col items-end gap-1.5">
+            {/* 模式切換與操作按鈕共用單行工具列。 */}
+            <div className="journal-ai-tools flex items-center gap-1">
               {/* 模式切換開關 */}
               <div
-                className={`flex p-1 rounded-xl border gap-1 backdrop-blur-md transition-all duration-300 ${
+                className={`journal-ai-modes flex p-1 rounded-xl border gap-1 backdrop-blur-md transition-all duration-300 ${
                   isDarkMode
                     ? "bg-neutral-900/60 border-white/10 ring-1 ring-white/5"
                     : "bg-white/70 border-white/40 ring-1 ring-black/5"
@@ -205,7 +205,7 @@ const AIPanel = ({
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="journal-ai-actions flex items-center gap-1">
                 <button
                   onClick={() => setShowAiSearch(!showAiSearch)}
                   className={`p-1.5 rounded-lg border backdrop-blur-md transition-all duration-300 active:scale-95 hover:scale-105 ${
@@ -218,6 +218,8 @@ const AIPanel = ({
                         : "bg-white/70 border-white/40 text-stone-500 hover:text-sky-600 hover:bg-white/90 hover:border-sky-400/50 ring-1 ring-black/5"
                   }`}
                   title="搜尋對話"
+                  aria-label="搜尋對話"
+                  aria-expanded={showAiSearch}
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
@@ -229,6 +231,7 @@ const AIPanel = ({
                       : "bg-white/70 border-white/40 text-stone-500 hover:text-red-600 hover:bg-white/90 hover:border-red-400/50 ring-1 ring-black/5"
                   }`}
                   title="清除聊天紀錄"
+                  aria-label="清除聊天紀錄"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
