@@ -1,9 +1,12 @@
 /* Small original travel studies: quiet washes, fine ink, destination details. */
+import { useId } from "react";
 import { paint } from "./artPalette.js";
 import { useArtworkNight } from "./artworkTheme.js";
 import NightSky from "./NightSky.jsx";
+import SketchTexture from "./SketchTexture.jsx";
 
 export function Study({ id, children }) {
+  const textureId = useId();
   const night = useArtworkNight();
   return (
     <svg
@@ -15,10 +18,12 @@ export function Study({ id, children }) {
       aria-hidden="true"
       focusable="false"
     >
+      <SketchTexture id={textureId} />
       {night && (
         <path d="M10 28Q100 4 190 28v150H10Z" fill="var(--journal-sky)" />
       )}
       <g
+        mask={`url(#${textureId})`}
         stroke="var(--journal-art-ink, var(--journal-ink))"
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -38,12 +43,12 @@ export function Wash({ color = paint.blue }) {
         d="M16 89C9 46 44 16 94 19c54-9 87 21 90 63 12 48-16 88-70 90-58 13-98-19-98-83Z"
         fill={color}
         stroke="none"
-        opacity=".13"
+        opacity=".17"
       />
       <path
         d="M22 87C16 51 49 28 88 30c44-8 83 14 85 51 7 36-18 64-58 69-52 9-86-14-93-63Z"
         fill={color}
-        opacity=".08"
+        opacity=".10"
       />
     </g>
   );
@@ -84,11 +89,8 @@ export function Windows({
         const top = y + Math.floor(i / columns) * step;
         return (
           <g key={i}>
-            <rect
-              x={left}
-              y={top}
-              width={size}
-              height={size + 2}
+            <path
+              d={`M${left} ${top}q${size / 2} -.5 ${size} 0l-.2 ${size + 2}q${-size / 2} .4 ${-size + 0.2} 0Z`}
               fill={`var(--journal-window, ${color})`}
             />
             <path
@@ -179,7 +181,7 @@ export function House({ x, y, scale = 1, color = paint.pink, snow = false }) {
         stroke="none"
         opacity=".08"
       />
-      <path d="M0 22h51v48H0Z" fill={color} />
+      <path d="M0 22q25-.8 51 0l-.5 48Q25 71 0 70Z" fill={color} />
       <path
         d="m-5 24Q10 10 25 0q17 11 31 24Z"
         fill={snow ? paint.snow : paint.gold}

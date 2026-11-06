@@ -1,9 +1,11 @@
 import { useId } from "react";
 import { useArtworkNight } from "./artworkTheme.js";
 import NightSky from "./NightSky.jsx";
+import SketchTexture from "./SketchTexture.jsx";
 
 export function SceneFrame({ id, children }) {
   const washId = useId();
+  const textureId = useId();
   const night = useArtworkNight();
   return (
     <svg
@@ -15,6 +17,7 @@ export function SceneFrame({ id, children }) {
       aria-hidden="true"
       focusable="false"
     >
+      <SketchTexture id={textureId} />
       <defs>
         <linearGradient id={washId} x1="0" y1="0" x2=".85" y2="1">
           <stop stopColor="var(--journal-blue)" stopOpacity=".16" />
@@ -31,6 +34,7 @@ export function SceneFrame({ id, children }) {
         fill={night ? "var(--journal-sky)" : `url(#${washId})`}
       />
       <g
+        mask={`url(#${textureId})`}
         stroke="var(--journal-art-ink, var(--journal-ink))"
         strokeWidth="1.45"
         strokeLinecap="round"

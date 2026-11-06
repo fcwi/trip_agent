@@ -404,6 +404,7 @@ export const itineraryData = [
       {
         time: "暫定 11:50",
         title: "班機：星宇 JX862",
+        artworkSticker: "ticket",
         mapQuery: "桃園國際機場",
         // Wikipedia 臺灣桃園國際機場：25.077758, 121.232822
         lat: 25.077758,
@@ -457,6 +458,7 @@ export const itineraryData = [
       {
         time: "約 19:00",
         title: "晚餐與入住",
+        artworkSticker: "onsen",
         locationPending: true,
         mapQuery: "山形 天童温泉 上山温泉",
         icon: <Utensils />,
@@ -889,7 +891,7 @@ export const itineraryData = [
       {
         time: "約 12:00",
         title: "AEON Mall 名取",
-        artworkSticker: "suitcase",
+        artworkSticker: "shopping",
         mapQuery: "イオンモール名取",
         // Wikipedia イオンモール名取：北緯 38.163917、東経 140.895972
         lat: 38.163917,

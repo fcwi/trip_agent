@@ -488,6 +488,7 @@ export const itineraryData = [
       {
         time: "15:40",
         title: "交通：成田 → 上野",
+        artworkSticker: "ticket",
         mapQuery: "京成上野站",
         lat: 35.71131,
         lon: 139.774945,
@@ -613,6 +614,7 @@ export const itineraryData = [
       {
         time: "12:30",
         title: "午餐：Outlet 美食街",
+        artworkSticker: "meal",
         mapQuery: "輕井澤王子購物廣場 Food Court",
         lat: 36.3415,
         lon: 138.634,
@@ -631,7 +633,7 @@ export const itineraryData = [
       {
         time: "14:00",
         title: "Outlet 深度購物",
-        artworkSticker: "suitcase",
+        artworkSticker: "shopping",
         mapQuery: "輕井澤王子購物廣場",
         lat: 36.34,
         lon: 138.633,

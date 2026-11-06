@@ -13,7 +13,83 @@ export default function JournalSticker({ kind = "passport", className = "" }) {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {kind === "suitcase" ? (
+          {kind === "ticket" ? (
+            <>
+              <path
+                d="m8 17 46-2 2 11q-7 3 .5 9L58 47 10 50 9 38q6-4-.5-8Z"
+                fill="var(--journal-snow)"
+              />
+              <path d="m39 17 2 30" strokeDasharray="2 4" />
+              <path d="m15 23 17-.7m-17 18 13-.5" strokeWidth="1" />
+              <path
+                d="m16 31 7 1 4-6 3 .5-2 7 5 3-1 2-6-1-4 4-2-1 2-5-6-2Z"
+                fill="var(--journal-blue)"
+              />
+              <path d="m45 23 5-.3m-4 5 5-.2m-4 11 5-.3" strokeWidth="1" />
+            </>
+          ) : kind === "meal" ? (
+            <>
+              <ellipse
+                cx="31"
+                cy="51"
+                rx="23"
+                ry="3"
+                fill="var(--journal-snow)"
+                stroke="none"
+              />
+              <path
+                d="M10 28q2 22 21 23 20-2 23-23Z"
+                fill="var(--journal-blue)"
+              />
+              <ellipse
+                cx="32"
+                cy="28"
+                rx="22"
+                ry="7"
+                fill="var(--journal-yellow)"
+              />
+              <path
+                d="m17 29 8-2 8 3 10-3m-28 9q16 7 35 0m-28 14v4h20v-4"
+                strokeWidth="1"
+              />
+              <path d="m39 22 14-16m-9 19L59 9" />
+              <path d="M20 19q-4-4 0-8m9 9q-4-5 0-10" strokeWidth="1" />
+            </>
+          ) : kind === "onsen" ? (
+            <>
+              <path
+                d="M12 37q20-9 41 0l-2 14q-18 9-37 0Z"
+                fill="var(--journal-blue)"
+              />
+              <ellipse
+                cx="32"
+                cy="37"
+                rx="20"
+                ry="7"
+                fill="var(--journal-snow)"
+              />
+              <path
+                d="M21 28q-6-5 0-11t0-10m11 20q-6-5 0-11t0-10m11 22q-6-5 0-11t0-10"
+                strokeWidth="1.3"
+              />
+              <path d="m8 47 17-3 4 12-18 3Z" fill="var(--journal-pink)" />
+              <path d="m12 49 12-2m-11 6 12-2m8-6q8 2 14-1" strokeWidth=".8" />
+            </>
+          ) : kind === "shopping" ? (
+            <>
+              <path
+                d="m13 22 36-1 5 34q-22 3-44 0Z"
+                fill="var(--journal-pink)"
+              />
+              <path d="M23 26V15q9-13 18 0v11" />
+              <path
+                d="m16 25-2 27 35 1m-9-29 3 27"
+                strokeWidth=".8"
+                opacity=".5"
+              />
+              <path d="m25 38 6-5 7 5-3 8-8-1Z" fill="var(--journal-yellow)" />
+            </>
+          ) : kind === "suitcase" ? (
             <>
               <path d="M24 16v-5q8-6 16 0v5" />
               <path

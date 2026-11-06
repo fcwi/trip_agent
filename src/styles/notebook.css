@@ -1,4 +1,11 @@
 /* A compact travel notebook: information first, illustrations at natural pauses. */
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"] {
+  /* Texture belongs to the paper beneath the content, never above text or controls. */
+  background-image: url("/artwork/notebook-paper.svg");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
 .travel-shell[data-aesthetic="editorial"] .journal-summary-heading h2 {
   text-wrap: balance;
   word-break: keep-all;
@@ -255,6 +262,29 @@
   width: 46px;
   height: 46px;
   transform: rotate(-9deg);
+}
+.journal-paper-sticker[data-sticker="ticket"] {
+  transform: rotate(-6deg);
+}
+.journal-paper-sticker[data-sticker="onsen"] {
+  transform: rotate(-3deg);
+}
+/* A quiet marker stroke belongs to the reminder label, not the reading text. */
+.travel-shell[data-aesthetic="editorial"] .journal-event-reminder h4 {
+  display: inline-block;
+  position: relative;
+  isolation: isolate;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-event-reminder h4::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 48% -3px 0;
+  background: var(--journal-yellow);
+  opacity: 0.28;
+  clip-path: polygon(1% 12%, 98% 0, 100% 81%, 3% 100%, 0 65%);
+  transform: rotate(-1deg);
+  pointer-events: none;
 }
 .journal-checklist-actions {
   display: flex;

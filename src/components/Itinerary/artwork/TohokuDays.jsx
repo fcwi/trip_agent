@@ -39,7 +39,10 @@ export function GinzanStreet() {
     <Study id="ginzan-street">
       <Wash />
       <path d="M79 107h42l22 79H57Z" fill={p.blue} />
-      <path d="M17 76h58v85H17Zm109-19h57v103h-57Z" fill={p.pink} />
+      <path
+        d="M17 76q29-.7 58 0l-.4 85q-29 .6-57.6 0Zm109-19q28-.6 57 0l-.5 103q-28 .8-56.5 0Z"
+        fill={p.pink}
+      />
       <path d="m10 76 37-28 35 28Zm109-19 35-29 36 29Z" fill={p.snow} />
       <path
         d="M20 82h53m56-18h51M19 119h55m55-16h51M21 145h48m61-17h47"

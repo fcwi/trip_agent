@@ -463,7 +463,7 @@ export const itineraryData = [
       {
         time: "12:00",
         title: "午餐與購物：東釜山 Outlet",
-        artworkSticker: "suitcase",
+        artworkSticker: "shopping",
         mapQuery: "樂天 Premium Outlet 東釜山店",
         lat: 35.193,
         lon: 129.213,
@@ -490,6 +490,7 @@ export const itineraryData = [
       {
         time: "18:00",
         title: "晚餐：海雲台味贊王鹽烤肉",
+        artworkSticker: "meal",
         mapQuery: "味贊王鹽烤肉 海雲台",
         lat: 35.161,
         lon: 129.1605,
@@ -724,6 +725,7 @@ export const itineraryData = [
       {
         time: "16:45",
         title: "機場報到、退稅與候機",
+        artworkSticker: "ticket",
         mapQuery: "金海機場免稅店",
         lat: 35.1732,
         lon: 128.9464,
