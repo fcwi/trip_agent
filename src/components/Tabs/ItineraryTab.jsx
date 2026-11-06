@@ -244,6 +244,7 @@ const ItineraryTab = ({
       </div>
 
       <DaySelector
+        tripId={tripConfig.id}
         {...{
           activeDay,
           changeDay,

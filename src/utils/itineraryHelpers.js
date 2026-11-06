@@ -13,22 +13,44 @@ export const flattenItinerary = (data) =>
   data
     .map((day) => {
       const events = day.events
-        .map((e) => `  - ${e.time} ${e.title}: ${e.desc}`)
+        .map((e) =>
+          [
+            `  - ${e.time} ${e.title}: ${e.desc}`,
+            e.locationPending ? "    地點尚未確認，不可推定已預約店家。" : "",
+            ...(e.highlights || []).map((item) => `    重點：${item}`),
+            ...(e.tips || []).map((item) => `    提醒：${item}`),
+            ...(e.sources || []).map(
+              (source) => `    來源：${source.text} ${source.url}`,
+            ),
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        )
         .join("\n");
-      return `📅 ${day.day} (${day.locationKey}):\n${events}`;
+      return `📅 ${day.day} (${day.locationKey}):\n${day.timingNote || ""}\n${events}`; // taste-skill-ignore: Internal AI context delimiter, never rendered as UI.
     })
     .join("\n\n");
 
 export const flattenGuides = (data) =>
-  data.map((g) => `📘 ${g.title}: ${g.summary}`).join("\n");
+  data.map((g) => `📘 ${g.title}: ${g.summary}`).join("\n"); // taste-skill-ignore: Internal AI context delimiter, never rendered as UI.
 
 export const flattenShops = (data) =>
   data
     .map((area) => {
-      const shops = area.mainShops
-        .map((s) => `  * ${s.name}: ${s.note}`)
+      const shops = [...(area.mainShops || []), ...(area.specialShops || [])]
+        .map((s) =>
+          [
+            `  * ${s.name}: ${s.note}`,
+            s.location && `    位置：${s.location}`,
+            s.hours && `    參考營業時間：${s.hours}`,
+            s.officialUrl &&
+              `    ${s.sourceLabel || "官方店鋪資訊"}：${s.officialUrl}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        )
         .join("\n");
-      return `🛍️ ${area.area}:\n${shops}`;
+      return `🛍️ ${area.area}:\n${area.visitNote || ""}\n${area.verifiedAt ? `資料核對日：${area.verifiedAt}；不保證旅行當天營業。` : ""}\n${shops}`; // taste-skill-ignore: Internal AI context delimiter, never rendered as UI.
     })
     .join("\n\n");
 
@@ -86,13 +108,13 @@ export const getAiWelcomeTemplate = (mode, tripConfig) => {
     return {
       id: `welcome_translate_${Date.now()}`,
       role: "model",
-      text: `您好！我是您的隨身 AI 口譯員 🌍\n\n💡 口譯模式功能：\n🎤 點「中」說話：我會將中文翻成${name} (附拼音)。\n🎤 點「${label}」說話：錄下對方說的${name}，我會直接翻成中文！`,
+      text: `您好！我是您的隨身 AI 口譯員。\n\n口譯模式功能：\n點「中」說話：我會將中文翻成${name}（附拼音）。\n點「${label}」說話：錄下對方說的${name}，我會直接翻成中文。`,
     };
   }
   return {
     id: `welcome_guide_${Date.now()}`,
     role: "model",
-    text: `您好！我是您的專屬 AI 導遊 ✨\n我已經熟讀了您的行程。\n\n💡 導遊模式功能：\n🎤 點「中」說話：您可以詢問行程細節、交通方式或周邊推薦。`,
+    text: `您好！我是您的專屬 AI 導遊。\n我已經熟讀了您的行程。\n\n導遊模式功能：\n點「中」說話：您可以詢問行程細節、交通方式或周邊推薦。`,
   };
 };
 

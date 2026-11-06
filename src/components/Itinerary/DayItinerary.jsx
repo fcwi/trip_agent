@@ -1,4 +1,6 @@
-import { AlertCircle, ArrowUpRight, Hotel, Navigation } from "lucide-react";
+import { AlertCircle, Hotel, Navigation } from "lucide-react";
+import { JournalTurn } from "./JournalMarks.jsx";
+import JournalSticker from "./JournalSticker.jsx";
 import TimelineEvent from "./TimelineEvent.jsx";
 import { DayStamp } from "./JournalIllustration.jsx";
 
@@ -36,27 +38,37 @@ export default function DayItinerary({
             </p>
             <h2>{day.title}</h2>
             <p className="travel-muted">{locationName}</p>
-            {day.stay && !day.stay.includes("溫暖的家") && (
-              <a
-                className="travel-text-button"
-                href={getMapLink(day.stay.split("(")[0])}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
-                {day.stay}
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="h-4 w-4 flex-none"
-                />
-              </a>
-            )}
+            {day.stay &&
+              !day.stay.includes("溫暖的家") &&
+              (day.stayPending ? (
+                <p className="travel-muted">
+                  住宿區域：{day.stay}（飯店待確認）
+                </p>
+              ) : (
+                <a
+                  className="travel-text-button"
+                  href={getMapLink(day.stay.split("(")[0])}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
+                  {day.stay}
+                  <JournalTurn
+                    aria-hidden="true"
+                    className="h-4 w-4 flex-none"
+                  />
+                </a>
+              ))}
           </div>
         </header>
         {day.intro && (
           <div className="journal-day-note">
+            <JournalSticker kind="notebook" />
             <p className="journal-day-intro">{day.intro}</p>
           </div>
+        )}
+        {day.timingNote && (
+          <p className="journal-timing-note">{day.timingNote}</p>
         )}
         <button
           type="button"
@@ -73,7 +85,7 @@ export default function DayItinerary({
             </strong>
             <small>{displayWeather.advice}</small>
           </span>
-          <ArrowUpRight aria-hidden="true" className="h-4 w-4 flex-none" />
+          <JournalTurn className="h-4 w-4 flex-none" />
         </button>
         {day.notice && (
           <aside

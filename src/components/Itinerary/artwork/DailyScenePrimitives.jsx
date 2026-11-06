@@ -1,24 +1,32 @@
 /* Small original travel studies: quiet washes, fine ink, destination details. */
 import { paint } from "./artPalette.js";
+import { useArtworkNight } from "./artworkTheme.js";
+import NightSky from "./NightSky.jsx";
 
 export function Study({ id, children }) {
+  const night = useArtworkNight();
   return (
     <svg
       className="journal-day-stamp"
       data-scene={id}
+      data-artwork-theme={night ? "dark" : "light"}
       viewBox="0 0 200 200"
       fill="none"
       aria-hidden="true"
       focusable="false"
     >
+      {night && (
+        <path d="M10 28Q100 4 190 28v150H10Z" fill="var(--journal-sky)" />
+      )}
       <g
-        stroke="var(--journal-ink)"
+        stroke="var(--journal-art-ink, var(--journal-ink))"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
         {children}
       </g>
+      {night && <NightSky compact />}
     </svg>
   );
 }
@@ -70,7 +78,7 @@ export function Windows({
   color = paint.gold,
 }) {
   return (
-    <g strokeWidth=".9">
+    <g strokeWidth=".9" data-art-windows="true">
       {Array.from({ length: rows * columns }, (_, i) => {
         const left = x + (i % columns) * step;
         const top = y + Math.floor(i / columns) * step;
@@ -81,7 +89,7 @@ export function Windows({
               y={top}
               width={size}
               height={size + 2}
-              fill={color}
+              fill={`var(--journal-window, ${color})`}
             />
             <path
               d={`M${left + size / 2} ${top}v${size + 2}m${-size / 2} -5h${size}`}
@@ -146,11 +154,11 @@ export function Train({
           width="12"
           height="12"
           rx="2"
-          fill={paint.paper}
+          fill="var(--journal-window)"
           strokeWidth="1"
         />
       ))}
-      <path d="M104 9q9 7 12 14h-12Z" fill={paint.paper} />
+      <path d="M104 9q9 7 12 14h-12Z" fill="var(--journal-window)" />
       <path d="M21 38v5m78-5v5M-5 45h140m-140 5h140" />
       {[20, 100].map((n) => (
         <circle key={n} cx={n} cy="39" r="4" fill={paint.paper} />

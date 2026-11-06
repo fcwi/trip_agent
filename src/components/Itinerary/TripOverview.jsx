@@ -5,6 +5,7 @@ import TodayOverviewCard from "../TodayOverviewCard.jsx";
 import FlightInfoCard from "../FlightInfoCard.jsx";
 import ChecklistCard from "../ChecklistCard.jsx";
 import { getOverviewSectionOrder } from "../../utils/overviewLayout.js";
+import { JournalStar } from "./JournalMarks.jsx";
 
 export default function TripOverview(props) {
   const {
@@ -41,7 +42,10 @@ export default function TripOverview(props) {
         </div>
         <ul className="travel-highlights">
           {tripConfig.tripHighlights.map((spot, index) => (
-            <li key={index}>{spot}</li>
+            <li key={index}>
+              <JournalStar className="journal-footprint-star" />
+              <span>{spot}</span>
+            </li>
           ))}
         </ul>
       </section>
@@ -52,18 +56,22 @@ export default function TripOverview(props) {
       className="travel-overview journal-overview"
       data-trip-phase={tripStatus}
     >
-      <TripCover {...props} />
       {getOverviewSectionOrder(tripStatus)
-        .filter((key) => sections[key])
-        .map((key) => (
-          <div
-            key={key}
-            className={`journal-overview-section journal-overview-section--${key}`}
-            data-overview-section={key}
-          >
-            {sections[key]}
-          </div>
-        ))}
+        .flatMap((key) => (key === "today" ? [key, "cover"] : [key]))
+        .filter((key) => key === "cover" || sections[key])
+        .map((key) =>
+          key === "cover" ? (
+            <TripCover key={key} {...props} />
+          ) : (
+            <div
+              key={key}
+              className={`journal-overview-section journal-overview-section--${key}`}
+              data-overview-section={key}
+            >
+              {sections[key]}
+            </div>
+          ),
+        )}
     </div>
   );
 }

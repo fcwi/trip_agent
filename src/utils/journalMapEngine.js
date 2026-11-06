@@ -1,38 +1,25 @@
-import engineUrl from "maplibre-gl/dist/maplibre-gl.js?url";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import engineUrl from "virtual:journal-map-engine-url";
 
 let loading;
+let attempts = 0;
 
-// A failed native module import is remembered for the life of the document.
-// The packaged browser build can retry a failed download without reloading
-// the trip or losing the reader's current position.
+// MapLibre 6 ships ES modules and a separate worker. Let Vite resolve and
+// version those assets together instead of loading the removed UMD bundle.
 export function loadJournalMapEngine() {
   if (window.maplibregl) return Promise.resolve(window.maplibregl);
   if (loading) return loading;
-  loading = new Promise((resolve, reject) => {
-    let settled = false;
-    const script = document.createElement("script");
-    script.src = engineUrl;
-    script.async = true;
-    const fail = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      script.remove();
+  const url = new URL(engineUrl, window.location.href);
+  if (attempts++) url.searchParams.set("map-retry", String(attempts));
+  loading = import(/* @vite-ignore */ url.href)
+    .then((engine) => {
+      engine.setWorkerUrl(workerUrl);
+      window.maplibregl = engine;
+      return engine;
+    })
+    .catch((cause) => {
       loading = null;
-      reject(new Error("地圖引擎暫時無法載入"));
-    };
-    const timeout = setTimeout(fail, 12000);
-    script.onerror = fail;
-    script.onload = () => {
-      if (settled) return;
-      clearTimeout(timeout);
-      script.remove();
-      if (window.maplibregl) {
-        settled = true;
-        resolve(window.maplibregl);
-      } else fail();
-    };
-    document.head.appendChild(script);
-  });
+      throw new Error("地圖引擎暫時無法載入", { cause });
+    });
   return loading;
 }

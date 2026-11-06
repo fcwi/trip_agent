@@ -8,6 +8,8 @@ import { Loader } from "lucide-react";
 import "./index.css";
 import "./styles/travel.css";
 import "./styles/journal.css";
+import "./styles/editorial.css";
+import "./styles/notebook.css";
 import App from "./App.jsx";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt.jsx";

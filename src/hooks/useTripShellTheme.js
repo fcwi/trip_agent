@@ -17,19 +17,12 @@ const initialDarkMode = () => {
  * Dark/light mode, theme-color meta, and semantic color tokens for the trip shell.
  * Behavior-equivalent extraction from AuthenticatedTripApp.
  */
-export const useTripShellTheme = (activeTab = "itinerary") => {
+export const useTripShellTheme = () => {
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode);
 
   useEffect(() => {
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const color =
-      activeTab === "itinerary"
-        ? isDarkMode
-          ? "#242322"
-          : "#FAF8F0"
-        : isDarkMode
-          ? "#020617"
-          : "#FDFBF7";
+    const color = isDarkMode ? "#1a1614" : "#faf6e9";
     document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
     document.documentElement.classList.toggle("dark", isDarkMode);
 
@@ -41,7 +34,7 @@ export const useTripShellTheme = (activeTab = "itinerary") => {
       meta.content = color;
       document.head.appendChild(meta);
     }
-  }, [isDarkMode, activeTab]);
+  }, [isDarkMode]);
 
   const setDarkModeStable = useCallback((value) => {
     setIsDarkMode(value);

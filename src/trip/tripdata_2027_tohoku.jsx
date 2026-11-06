@@ -4,7 +4,8 @@
  * ============================================================================
  *
  * 可樂森吉樹冰團（阿仁／森吉），不是藏王樹冰。
- * 日序以手冊 v11／Top5 B 為準。未擴充 schema。
+ * 日序沿用原手冊 v11／Top5 B；具體場地與航班待出發通知。
+ * 2026-10-23 以店家／景區官方資訊精修內容，來源隨行程提供。
  *
  * 結構、主題與 `theme.componentStyles` 自 `src/trip/tripdata_2026_karuizawa.jsx`
  * 整檔複製；僅替換旅程內容。
@@ -172,16 +173,16 @@ export const guidesData = [
     title: "名取購物與扭蛋小提醒",
     icon: <Camera className="w-5 h-5" />,
     summary:
-      "第五天在 AEON 名取安排購物。先挑想看的店，再把少量時間留給扭蛋或文具，從容回到集合點。",
+      "第五天依樓層選店：1F 的イオンスタイル買食品，2F 的名取 LOFT 看文具，扭蛋專門店在 3F。",
     steps: [
       "先確認集合位置與停留時間，選擇一至兩個購物重點。",
-      "設定扭蛋預算，重複角色可與同行旅伴交換。",
+      "有餘裕再去 3F ドリームカプセル，先設定扭蛋次數與預算。",
       "保留購物紀錄，確認食品保存期限及返國攜帶規定。",
       "返回機場前整理行李，將需查驗商品放在方便取用處。",
     ],
     link: {
       text: "AEON Mall 名取｜樓層資訊",
-      url: "https://natori.aeonmall.jp/",
+      url: "https://natori.aeonmall.jp/floormap",
     },
     blogs: [],
   },
@@ -191,7 +192,9 @@ export const guidesData = [
     summary: "將容易遺漏的旅行資訊集中確認，出發當天就能少些匆忙。",
     steps: [
       "護照效期、航班時刻、行李額度與集合地點。",
-      "領隊聯絡方式、住宿地址與特殊餐食需求。",
+      "領隊聯絡方式、四晚實際飯店與地址；目前網站僅列住宿區域／候選。",
+      "草莓園名稱、魚板體驗承辦店與團體預約內容。",
+      "銀山冬季入場／接駁安排，以及秋田內陸線乘車方向與班次。",
       "雪地裝備、行動網路與充電用品。",
       "團體活動、自費項目及天候變更安排。",
     ],
@@ -357,147 +360,7 @@ export const usefulLinks = [
 //
 // 各區域推薦店家、特色與附近連鎖店，方便安排行程與購物。
 //
-export const shopGuideData = [
-  {
-    area: "AEON 名取 (Day 5)",
-    desc: "與杜せきのした站相連，集中挑選伴手禮與日常雜貨。",
-    mapQuerySuffix: "イオンモール名取",
-    mainShops: [
-      { name: "AEON Style 名取", tag: "超市", note: "伴手禮食品一次買" },
-      {
-        name: "藥妝與保健用品",
-        tag: "藥妝",
-        note: "購買前核對成分、用法與免稅條件",
-      },
-      { name: "美食街", tag: "美食", note: "依自由活動時間安排用餐" },
-    ],
-    specialShops: [
-      {
-        name: "扭蛋與小物",
-        tag: "玩具",
-        note: "設定小額預算，留意集合時間",
-      },
-      {
-        name: "名取ロフト",
-        tag: "文具",
-        note: "位於商場 2 樓，可挑選文具與生活雜貨",
-      },
-      {
-        name: "免稅購物服務",
-        tag: "退稅",
-        note: "向各店確認受理方式，保存購物紀錄與退款資料",
-      },
-    ],
-    nearbyChains: [
-      { name: "Starbucks", location: "Mall 內" },
-      { name: "7-Eleven", location: "杜せきのした站周邊" },
-      { name: "Lawson", location: "Mall 周邊" },
-    ],
-  },
-  {
-    area: "仙台市區 (Day 4 晚／Day 5)",
-    desc: "從車站周邊品嚐牛舌與挑選伴手禮，再依自由活動時間安排散步。",
-    mapQuerySuffix: "仙台駅",
-    mainShops: [
-      { name: "牛舌街／駅前", tag: "美食", note: "利久、喜助等" },
-      { name: "S-PAL 仙台", tag: "百貨", note: "車站直結" },
-      {
-        name: "藤崎／一番町",
-        tag: "購物",
-        note: "從車站步行前往，請預留往返時間",
-      },
-    ],
-    specialShops: [
-      {
-        name: "萩之月／支倉",
-        tag: "伴手禮",
-        note: "確認保存期限與包裝，依需求選購",
-      },
-      {
-        name: "唐吉訶德仙台",
-        tag: "雜貨",
-        note: "依住宿位置選擇分店，留意返回時間",
-      },
-      {
-        name: "仙台ロフト",
-        tag: "文具",
-        note: "依自由活動時間安排文具與雜貨購物",
-      },
-    ],
-    nearbyChains: [
-      { name: "Starbucks", location: "仙台駅構內" },
-      { name: "松屋", location: "駅前" },
-      { name: "FamilyMart", location: "飯店周邊" },
-    ],
-  },
-  {
-    area: "松島 (Day 5)",
-    desc: "沿海灣欣賞五大堂，品嚐宮城魚板與海產點心。",
-    mapQuerySuffix: "松島海岸",
-    mainShops: [
-      { name: "松島遊船賣店", tag: "伴手禮", note: "牡蠣／海產點心" },
-      { name: "五大堂周邊", tag: "散策", note: "透橋拍照，路滑慢走" },
-      { name: "日式點心", tag: "甜點", note: "點心品項與費用請詢問店家" },
-    ],
-    specialShops: [
-      {
-        name: "烤笹蒲鉾體驗",
-        tag: "體驗",
-        note: "依團體安排參加，操作烤架時遵從店員指示",
-      },
-      {
-        name: "牡蠣小屋",
-        tag: "美食",
-        note: "營業與供應依季節，請先確認用餐及集合時間",
-      },
-    ],
-    nearbyChains: [
-      { name: "7-Eleven", location: "松島海岸駅前" },
-      { name: "觀光案內所", location: "駅前" },
-    ],
-  },
-  {
-    area: "銀山／木戶／角館 (Day 2)",
-    desc: "在溫泉街與角館散策之間，留意古民家與在地工藝。",
-    mapQuerySuffix: "角館 武家屋敷",
-    mainShops: [
-      { name: "武家屋敷通商店", tag: "雜貨", note: "樺細工（櫻樹皮）" },
-      {
-        name: "銀山溫泉街",
-        mapQuery: "銀山温泉",
-        tag: "散策",
-        note: "欣賞木造旅館與街景，步行時注意防滑",
-      },
-      {
-        name: "木戶五郎兵衛村",
-        mapQuery: "雄物川民家苑 木戸五郎兵衛村 横手市",
-        tag: "體驗",
-        note: "欣賞傳統建築，體驗與餐食依團體安排",
-      },
-    ],
-    specialShops: [
-      {
-        name: "角館和菓子",
-        tag: "甜點",
-        note: "挑選地方點心，留意保存期限與集合時間",
-      },
-      {
-        name: "銀山足湯／茶屋",
-        mapQuery: "銀山温泉 足湯 茶屋",
-        tag: "體驗",
-        note: "依現場開放情況與停留時間安排休息",
-      },
-    ],
-    nearbyChains: [
-      { name: "角館站周邊商店", location: "角館駅周邊" },
-      {
-        name: "自動販賣機",
-        mapQuery: "銀山温泉 自動販売機",
-        location: "銀山溫泉周邊",
-      },
-    ],
-  },
-];
+export { tohokuShopGuide as shopGuideData } from "./tohokuShopGuide.js";
 
 // ============================================================================
 // 4. 行程核心資料 (Itinerary)
@@ -515,6 +378,9 @@ export const itineraryData = [
     intro: "從仙台落地，讓第一晚的溫泉與熱食替旅程暖身。",
     caption: "抵達東北，走進溫泉的暖意",
     stay: "天童／上山溫泉區",
+    stayPending: true,
+    timingNote:
+      "時間為規劃參考；航班、集合與入住飯店待旅行社出發通知確認。日本境內採當地時間。",
     routeInfo: {
       summary: "桃園機場 → JX862 → 仙台空港 → 天童／上山溫泉區",
       mapUrl:
@@ -536,7 +402,7 @@ export const itineraryData = [
         ],
       },
       {
-        time: "11:50",
+        time: "暫定 11:50",
         title: "班機：星宇 JX862",
         mapQuery: "桃園國際機場",
         // Wikipedia 臺灣桃園國際機場：25.077758, 121.232822
@@ -571,6 +437,7 @@ export const itineraryData = [
       {
         time: "約 17:30",
         title: "前往天童／上山溫泉",
+        locationPending: true,
         mapQuery: "山形 天童温泉 上山温泉",
         icon: <Hotel />,
         desc: "搭乘遊覽車前往山形的溫泉區。窗外逐漸轉為雪國風景，抵達飯店後先安頓行李，再享用晚餐。",
@@ -588,6 +455,7 @@ export const itineraryData = [
       {
         time: "約 19:00",
         title: "晚餐與入住",
+        locationPending: true,
         mapQuery: "山形 天童温泉 上山温泉",
         icon: <Utensils />,
         desc: "以一頓熱食與溫泉為旅程的第一天收尾。餐食依飯店安排，晚間留些時間休息，迎接翌日的雪中散策。",
@@ -610,6 +478,9 @@ export const itineraryData = [
     intro: "走過雪中的銀山街屋、古民家與角館，讀一段東北的生活風景。",
     caption: "雪中街屋與古民家的冬日散策",
     stay: "田澤湖／雫石溫泉區",
+    stayPending: true,
+    timingNote:
+      "各節點為規劃時間，非已預約入場時段；銀山冬季接駁與實際入住飯店待領隊確認。",
     routeInfo: {
       summary: "飯店 → 銀山溫泉街 → 木戶五郎兵衛村（搗麻糬）→ 角館 → 飯店",
       mapUrl:
@@ -627,7 +498,7 @@ export const itineraryData = [
         desc: "早餐後前往銀山溫泉。今天將串起溫泉街、古民家與角館老街，在雪景中感受東北不同的生活風貌。",
         tips: [
           "穿著防滑鞋，手套與圍巾放在隨身包。",
-          "確認停車處與返回遊覽車的集合時間。",
+          "銀山冬季有入場與交通管制；團體接駁及入場方式先由旅行社確認，不自行走接駁車道。",
         ],
       },
       {
@@ -637,10 +508,24 @@ export const itineraryData = [
         lat: 38.5697,
         lon: 140.5311,
         icon: <Camera />,
-        desc: "沿著銀山川漫步，欣賞木造旅館、橋梁與街道細節。冬日積雪襯出溫泉街的輪廓，適合放慢腳步觀察。",
+        desc: "沿銀山川看木造旅館、橋梁與立面細節。這次排在白天，重點是雪覆街屋與河道，不預設會看到傍晚點燈景色。",
+        highlights: [
+          "以溫泉街河道、橋邊與旅館外觀為主，不進入住宿旅客專用空間。",
+          "有空檔再選野川とうふや的小點或八木橋商店；店家詳細資訊見商店頁。",
+        ],
+        sources: [
+          {
+            text: "銀山溫泉｜冬季交通公告（依新季更新）",
+            url: "https://www.ginzanonsen.jp/blog/archives/620",
+          },
+          {
+            text: "銀山溫泉｜官方店家介紹",
+            url: "https://www.ginzanonsen.jp/store/",
+          },
+        ],
         tips: [
           "從橋邊拍攝河川與兩側旅館，注意避讓行人。",
-          "步行與足湯體驗依現場開放情況安排。",
+          "足湯與步道依現場開放；不把白銀瀑布後方山路當成冬季必走路線。",
         ],
       },
       {
@@ -652,6 +537,15 @@ export const itineraryData = [
         lon: 140.4327054,
         icon: <Star />,
         desc: "走進橫手的古民家園區，近看茅草屋頂與傳統木構造。依團體安排參與搗麻糬體驗，並享用當日午餐。",
+        highlights: [
+          "先看茅草屋頂、木構造與古民家空間；搗麻糬是團體安排項目，非隨到隨玩的固定場次。",
+        ],
+        sources: [
+          {
+            text: "橫手市｜木戶五郎兵衛村",
+            url: "https://www.city.yokote.lg.jp/shisetsu/1001528/1008619.html",
+          },
+        ],
         transport: {
           mode: "遊覽車",
           duration: "",
@@ -667,19 +561,26 @@ export const itineraryData = [
         time: "約 15:00",
         title: "角館武家屋敷",
         mapQuery: "角館 武家屋敷",
-        // Wikipedia 角館駅（JR）：北緯 39.591722、東経 140.571000
-        lat: 39.591722,
-        lon: 140.571,
         icon: <MapPin />,
-        desc: "漫步角館武家屋敷街，欣賞黑色板牆、庭院與歷史住宅。雪中的街道格外安靜，也可留意當地樺細工的細緻工藝。",
+        desc: "先沿武家屋敷通看黑板牆、枝垂櫻樹形與歷史街景。以街道散策為主，選購點心可找青柳家對面的唐土庵；不預設每座邸宅都能入內。",
+        highlights: [
+          "樺細工是角館的櫻樹皮工藝；藤木伝四郎本店在下新町，有餘裕再另走一段，不把它當作武家屋敷通上的順路店。",
+        ],
+        sources: [
+          {
+            text: "觀光協會｜石黑家停止一般公開公告",
+            url: "https://tazawako-kakunodate.com/news/19439/",
+          },
+        ],
         tips: [
-          "邸宅開放與入館費用各有不同，依現場安排參觀。",
+          "石黑家已公告於 2026/11/30 後停止一般公開，2027 年本趟不安排入內；其他邸宅另查冬季開館資訊。",
           "路面可能結冰，拍照時先停穩腳步。",
         ],
       },
       {
         time: "約 18:00",
         title: "入住溫泉飯店",
+        locationPending: true,
         mapQuery: "田沢湖 雫石 温泉",
         icon: <Utensils />,
         desc: "傍晚前往溫泉飯店，享用晚餐並放鬆休息。明天將前往森吉山，今晚先整理好雪地裝備。",
@@ -702,6 +603,9 @@ export const itineraryData = [
     intro: "把目光交給山上的樹冰與車窗外的雪原，感受秋田冬天的尺度。",
     caption: "雪山纜車與內陸鐵道的風景",
     stay: "溫泉飯店",
+    stayPending: true,
+    timingNote:
+      "纜車、鐵道時間皆為規劃參考；乘車方向、班次與飯店待出發通知，不依此自行購票。",
     routeInfo: {
       summary: "飯店 → 阿仁纜車／樹冰 → 秋田內陸線（阿仁マタギ ⇄ 松葉）→ 飯店",
       mapUrl:
@@ -735,7 +639,13 @@ export const itineraryData = [
         lat: 39.955,
         lon: 140.49194,
         icon: <Snowflake />,
-        desc: "搭乘阿仁纜車向雪山高處前進，單程約二十分鐘。天候合適時，可依現場指示步行欣賞樹冰；雪上活動依當日安排進行。",
+        desc: "搭阿仁纜車約二十分鐘到山頂站，再依開放情況步行前往樹冰區。重點是近看樹冰與雪林，不是登頂森吉山，也不是藏王樹冰。",
+        highlights: [
+          "先確認回程纜車時間，再決定雪地步行範圍；山頂站旁欣賞與較長散步路線可依體力擇一。",
+        ],
+        sources: [
+          { text: "阿仁滑雪場｜當日營運", url: "https://www.aniski.jp/" },
+        ],
         transport: {
           mode: "阿仁ゴンドラ",
           duration: "片道約 20 分鐘",
@@ -751,10 +661,9 @@ export const itineraryData = [
         time: "約 12:30",
         title: "雪場午餐",
         mapQuery: "森吉山阿仁スキー場",
-        lat: 39.955,
-        lon: 140.49194,
         icon: <Utensils />,
         desc: "午間稍作休息，享用雪場餐食並補充熱量。餐點形式依團體安排，將手套與衣物整理乾爽後再繼續下午行程。",
+        locationPending: true,
         tips: ["休息時補充水分，留意濕襪與手套的保暖狀況。"],
       },
       {
@@ -766,6 +675,15 @@ export const itineraryData = [
         lon: 140.5157,
         icon: <Train />,
         desc: "搭乘秋田內陸線，從車窗欣賞雪原、森林與沿線聚落。預定乘車區間為阿仁マタギ站至松葉站，實際方向及班次依團體安排。",
+        highlights: [
+          "這段是阿仁マタギ與松葉之間的列車體驗，阿仁マタギ不等於阿仁合；集合站名與下車站要分別核對。",
+        ],
+        sources: [
+          {
+            text: "秋田內陸線｜官方路線與車站",
+            url: "https://www.akita-nairiku.com/routemap/",
+          },
+        ],
         transport: {
           mode: "秋田內陸縱貫鐵道",
           duration: "",
@@ -780,6 +698,7 @@ export const itineraryData = [
       {
         time: "約 18:00",
         title: "返回飯店",
+        locationPending: true,
         mapQuery: "田沢湖 雫石 温泉",
         icon: <Hotel />,
         desc: "結束雪山與鐵道行程，返回飯店享用晚餐。讓身體暖起來，整理照片，也為隔天的採果與溪谷旅程留足精神。",
@@ -799,6 +718,9 @@ export const itineraryData = [
     intro: "從溫室裡的草莓香氣，到木舟上的溪谷風景，再回到仙台的街燈。",
     caption: "草莓、溪谷與仙台夜色",
     stay: "仙台市區",
+    stayPending: true,
+    timingNote:
+      "採果園、午餐餐廳與住宿尚未確認；時間為順序規劃，不能據此推算已訂班次或精確車程。",
     routeInfo: {
       summary: "飯店 → 草莓園 → 猊鼻溪 → 仙台市區",
       mapUrl:
@@ -808,6 +730,7 @@ export const itineraryData = [
       {
         time: "約 08:30",
         title: "出發往草莓園",
+        locationPending: true,
         mapQuery: "一関 いちご狩り",
         icon: <Star />,
         desc: "早餐後出發前往草莓園，從雪景轉入溫室裡的暖意。園區與採果方式依團體預約和當日收成安排。",
@@ -825,9 +748,10 @@ export const itineraryData = [
       {
         time: "約 10:30",
         title: "現採草莓吃到飽",
+        locationPending: true,
         mapQuery: "一関 いちご狩り",
         icon: <Star />,
-        desc: "在溫室裡挑選成熟草莓，品嚐冬季果實的香氣與甜味。採果時間與供應品種依園區當日安排。",
+        desc: "草莓園名稱尚待旅行社通知，先保留團體採果安排，不指定為任何一間一關果園。入園後確認可採區、開始與結束時間；可否攜出另依園區規則。",
         tips: [
           "挑選成熟果實，按照園區示範輕柔採摘。",
           "留意集合時間，採摘後維持園區整潔。",
@@ -852,9 +776,8 @@ export const itineraryData = [
       {
         time: "約 12:30",
         title: "午餐",
+        locationPending: true,
         mapQuery: "猊鼻渓",
-        lat: 38.9887792,
-        lon: 141.2532381,
         icon: <Utensils />,
         desc: "在溪谷行程間享用午餐，補充熱量並稍作休息。餐廳與菜色依團體當日安排。",
         tips: ["用餐後確認登船與集合時間。"],
@@ -866,7 +789,16 @@ export const itineraryData = [
         lat: 38.9865477,
         lon: 141.2650788,
         icon: <Camera />,
-        desc: "乘坐木舟緩緩穿過猊鼻溪，從水面仰望陡峭岩壁，聆聽船夫的引導。冬季船型與保暖設備依現場營運安排。",
+        desc: "猊鼻溪舟下是往返式遊船，通常約九十分鐘，不是拍完岩壁就立即下船。沿砂鐵川看峭壁，回程可聽船夫的「げいび追分」；冬季船型依當日安排。",
+        highlights: [
+          "有條件開放時可看折返區的大猊鼻岩與運玉投擲；是否上岸、購買運玉均依現場，不當作團費固定包含。",
+        ],
+        sources: [
+          {
+            text: "猊鼻溪｜官方導覽 PDF",
+            url: "https://www.geibikei.co.jp/wp-content/uploads/2023/06/pamphlet_jp.pdf",
+          },
+        ],
         tips: [
           "上下船依序進行，拍照時保持坐姿並聽從船夫指示。",
           "即使船上有保暖設備，仍請備妥帽子與手套。",
@@ -875,9 +807,10 @@ export const itineraryData = [
       {
         time: "約 17:30",
         title: "入住仙台市區＋晚餐／逛街",
+        locationPending: true,
         mapQuery: "仙台 ホテル",
         icon: <Hotel />,
-        desc: "傍晚返回仙台市區，入住後享用晚餐。若有自由活動時間，可在車站周邊散步，感受東北城市的夜間節奏。",
+        desc: "先入住並確認團體晚餐安排，有自由時間再以仙台站為中心：S-PAL B1F 菓匠三全買伴手禮，或喜助エスパル店用餐。若已含晚餐，不另排一頓牛舌定食。",
         tips: [
           "餐食及自由活動時間依領隊通知。",
           "外出前保存飯店地址，留意返回時間。",
@@ -897,6 +830,8 @@ export const itineraryData = [
     intro: "沿海灣慢慢散步，帶回宮城的小滋味，為旅程收好最後一頁。",
     caption: "松島海灣與回程前的小採買",
     stay: "溫暖的家",
+    timingNote:
+      "松島、購物與機場抵達時間為規劃參考；魚板體驗店家及回程航班時刻待出發通知。",
     routeInfo: {
       summary: "飯店 → 松島 → 笹蒲鉾體驗 → AEON 名取 → 仙台空港 → JX863",
       mapUrl:
@@ -906,6 +841,7 @@ export const itineraryData = [
       {
         time: "約 08:30",
         title: "退房出發",
+        locationPending: true,
         mapQuery: "仙台 ホテル",
         icon: <Hotel />,
         desc: "早餐後退房，整理行李並前往松島。今天將安排海灣散策與購物，下午返回仙台空港。",
@@ -922,7 +858,10 @@ export const itineraryData = [
         lat: 38.368142,
         lon: 141.058789,
         icon: <Camera />,
-        desc: "沿松島海灣散步，欣賞島嶼、松林與海岸景色。天氣清朗時，遠近島影層層相疊，呈現日本三景之一的冬日風貌。",
+        desc: "沿海灣朝五大堂方向散策，看松島灣的島影與松林。此次是岸邊步行，不把松島遊船或瑞巖寺入館自行加進已安排的行程。",
+        highlights: [
+          "以五大堂周邊與海岸街景為主；點心可選五大堂前的雪竹屋，避免因逛店拉長回程。",
+        ],
         tips: [
           "近看五大堂與周邊橋梁時，注意腳下與結冰路面。",
           "依當日停留時間安排步行範圍，準時返回集合處。",
@@ -931,12 +870,9 @@ export const itineraryData = [
       {
         time: "約 10:30",
         title: "烤笹蒲鉾／魚板體驗",
-        mapQuery: "阿部蒲鉾店 松島寺町店",
-        // MapFan／松島観光ナビ：阿部蒲鉾店松島寺町店 38.3702743, 141.0605585
-        lat: 38.3702743,
-        lon: 141.0605585,
+        locationPending: true,
         icon: <Utensils />,
-        desc: "體驗烤笹蒲鉾，品嚐宮城特色魚板。觀察魚板慢慢烤出香氣，為海灣散策添上一段溫暖的味覺記憶。",
+        desc: "體驗烤宮城特色笹蒲鉾，實際承辦店待旅行社確認。商店頁的阿部蒲鉾店僅為可查證選項，不代表本團已預約該店。",
         tips: [
           "操作烤架時留意熱源，依店員指示翻面。",
           "活動與用餐安排以團體當日通知為準。",
@@ -950,7 +886,16 @@ export const itineraryData = [
         lat: 38.163917,
         lon: 140.895972,
         icon: <ShoppingBag />,
-        desc: "在 AEON Mall 名取挑選食品、藥妝與生活雜貨，替旅程帶回一些日常小物。也可安排短暫的扭蛋或文具購物。",
+        desc: "先在イオンスタイル名取 1F 買食品與日用品，再到 2F 的名取 LOFT 或 NISHIKIYA KITCHEN；要用餐可選 2F 丸龜製麵。有餘裕才上 3F ドリームカプセル，不為扭蛋壓縮機場手續。",
+        highlights: [
+          "商場名是イオンモール名取，與 AEON Town 名取不同。店家樓層、營業時間與官方連結已整理在商店頁。",
+        ],
+        sources: [
+          {
+            text: "AEON Mall 名取｜官方樓層圖",
+            url: "https://natori.aeonmall.jp/floormap",
+          },
+        ],
         tips: [
           "先確認集合位置與可用時間，再規劃購物動線。",
           "購買食品時留意保存期限及返國攜帶規定。",
@@ -988,7 +933,7 @@ export const itineraryData = [
         ],
       },
       {
-        time: "17:25",
+        time: "暫定 17:25",
         title: "班機：星宇 JX863",
         mapQuery: "仙台空港",
         lat: 38.13694,
@@ -1050,11 +995,11 @@ export const tripConfig = {
   flights: {
     outbound: {
       code: "星宇 JX862",
-      time: "11:50 TPE ➝ 16:00 SDJ · 時刻依出發通知",
+      time: "11:50 TPE ➝ 16:00 SDJ · 暫定時刻，待出發通知確認",
     },
     inbound: {
       code: "星宇 JX863",
-      time: "17:25 SDJ ➝ 20:35 TPE · 時刻依出發通知",
+      time: "17:25 SDJ ➝ 20:35 TPE · 暫定時刻，待出發通知確認",
     },
   },
 

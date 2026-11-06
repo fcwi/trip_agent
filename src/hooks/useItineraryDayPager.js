@@ -27,7 +27,9 @@ export const useItineraryDayPager = ({
 
     if (currentTab) {
       currentTab.scrollIntoView({
-        behavior: "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
         block: "nearest",
         inline: "center",
       });
@@ -38,7 +40,9 @@ export const useItineraryDayPager = ({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: 0,
-        behavior: "smooth",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "instant"
+          : "smooth",
       });
     }
   }, [activeDay, scrollContainerRef]);
@@ -70,7 +74,7 @@ export const useItineraryDayPager = ({
     try {
       const refresh = depsRef.current?.onPullRefresh;
       await Promise.all([refresh ? refresh() : Promise.resolve()]);
-      toast("資訊已更新 ✨");
+      toast("資訊已更新");
       if (navigator.vibrate) navigator.vibrate(50);
     } catch (err) {
       console.error("更新失敗:", err);
@@ -90,8 +94,8 @@ export const useItineraryDayPager = ({
   const [[, direction], setPage] = useState([activeDay, 0]);
 
   const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? "100%" : "-100%",
+    enter: {
+      x: 0,
       opacity: 0,
       position: "absolute",
       width: "100%",
@@ -99,7 +103,7 @@ export const useItineraryDayPager = ({
       willChange: "transform, opacity",
       backfaceVisibility: "hidden",
       WebkitFontSmoothing: "antialiased",
-    }),
+    },
     center: {
       x: 0,
       opacity: 1,
@@ -108,24 +112,24 @@ export const useItineraryDayPager = ({
       zIndex: 1,
       willChange: "auto",
       transition: {
-        duration: 0.3,
+        duration: 0.22,
         ease: [0.23, 1, 0.32, 1],
-        opacity: { duration: 0.3, ease: [0.23, 1, 0.32, 1] },
+        opacity: { duration: 0.22, ease: [0.23, 1, 0.32, 1] },
       },
     },
-    exit: (direction) => ({
-      x: direction < 0 ? "100%" : "-100%",
+    exit: {
+      x: 0,
       opacity: 0,
       position: "absolute",
       width: "100%",
       willChange: "transform, opacity",
       backfaceVisibility: "hidden",
       transition: {
-        duration: 0.2,
+        duration: 0.15,
         ease: "easeIn",
         opacity: { duration: 0.15 },
       },
-    }),
+    },
   };
 
   const changeDay = (newDay) => {

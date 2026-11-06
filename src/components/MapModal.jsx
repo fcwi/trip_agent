@@ -106,14 +106,18 @@ export default function MapModal({ isOpen, onClose, ...props }) {
                     </div>
                     <MapPin aria-hidden="true" className="h-4 w-4" />
                   </button>
-                  <a
-                    href={eventMapUrl(event)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    在 Google Maps 查看
-                    <span className="sr-only">{event.title}</span>
-                  </a>
+                  {event.locationPending ? (
+                    <p className="travel-muted">地點待出發通知</p>
+                  ) : (
+                    <a
+                      href={eventMapUrl(event)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      在 Google Maps 查看
+                      <span className="sr-only">{event.title}</span>
+                    </a>
+                  )}
                 </li>
               ))}
             </ol>

@@ -8,9 +8,41 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Expose the bundled engine URL so failed downloads can be retried with a fresh
+// module URL. A rejected native import is otherwise cached until page reload.
+const retryableMapEngine = () => {
+  const id = "virtual:journal-map-engine-url";
+  const resolvedId = `\0${id}`;
+  let command;
+  return {
+    name: "retryable-journal-map-engine",
+    configResolved(config) {
+      command = config.command;
+    },
+    resolveId(source) {
+      if (source === id) return resolvedId;
+    },
+    async load(source) {
+      if (source !== resolvedId) return;
+      if (command === "serve")
+        return 'export default "/node_modules/maplibre-gl/dist/maplibre-gl.mjs"';
+      const entry = await this.resolve("maplibre-gl");
+      if (!entry)
+        throw new Error("MapLibre engine entry could not be resolved");
+      const reference = this.emitFile({
+        type: "chunk",
+        id: entry.id,
+        name: "maplibre-gl",
+        preserveSignature: "strict",
+      });
+      return `export default import.meta.ROLLUP_FILE_URL_${reference};`;
+    },
+  };
+};
+
 const DEFAULT_TRIP_ID = "2026_busan";
 
-const normalizeBasePath = (value = "/trip_agent/") => {
+const normalizeBasePath = (value = "/") => {
   const withLeadingSlash = value.startsWith("/") ? value : `/${value}`;
   return withLeadingSlash.endsWith("/")
     ? withLeadingSlash
@@ -123,6 +155,7 @@ export default defineConfig(({ mode }) => {
 
     // 🆕 在 plugins 陣列中加入 VitePWA
     plugins: [
+      retryableMapEngine(),
       react(),
       {
         name: "html-transform",

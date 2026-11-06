@@ -1,0 +1,923 @@
+/* A compact travel notebook: information first, illustrations at natural pauses. */
+.travel-shell[data-aesthetic="editorial"] .journal-summary-heading h2 {
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-cover__drawing
+  .journal-illustration {
+  max-height: 160px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-cover-study {
+  width: clamp(64px, 18vw, 76px);
+}
+@media (min-width: 1024px) {
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .journal-overview {
+    align-items: stretch;
+  }
+  .travel-shell[data-aesthetic="editorial"]
+    .journal-overview
+    > .journal-overview-section
+    > .travel-panel {
+    height: 100%;
+  }
+}
+.travel-shell[data-aesthetic="editorial"] .journal-section-sticker {
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(#panel-guides, #panel-shops)
+  .journal-panel
+  h2
+  > span[aria-hidden="true"]:not(.journal-paper-sticker) {
+  display: none;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-panel
+  .journal-section-sticker {
+  transform: rotate(6deg);
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-day-picture {
+  --journal-day-art-size: 96px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"] {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header {
+  padding-block: 16px 10px;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__title {
+  font-size: 28px;
+  line-height: 1.35;
+  margin-top: 4px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.travel-panel, .journal-panel, .travel-cover) {
+  padding: 18px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.journal-overview, .travel-day-main) {
+  gap: 18px;
+}
+.travel-shell[data-aesthetic="editorial"] :is(.travel-panel, .travel-cover) {
+  position: relative;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.travel-section-heading h2, .journal-panel h2, #checklist-heading) {
+  font-family: var(--font-rounded);
+  font-size: 18px;
+  line-height: 1.4;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-section-heading {
+  margin-bottom: 10px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.travel-today h2, #trip-cover-title) {
+  font-size: 24px;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-today
+  :is(.travel-preparation, .travel-today__needs) {
+  margin-top: 10px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-today__needs {
+  padding: 10px 12px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-today__needs ul {
+  margin-top: 4px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-today__location {
+  margin-top: 6px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-today__next {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-today .travel-primary-button {
+  margin-top: 10px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-today__event {
+  font-size: 17px;
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(
+    .travel-header__dates,
+    .travel-cover__dates,
+    .travel-section-heading > span,
+    .travel-today__location
+  ) {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(
+    .travel-timeline-event__heading h3 button,
+    .travel-day-index__content strong
+  ) {
+  font-family: var(--font-rounded);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-timeline-event__time {
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-timeline-event__description {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .travel-timeline-event__description--collapsed {
+  -webkit-line-clamp: 2;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-timeline-event
+  + .travel-timeline-event {
+  margin-top: 0;
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-event-category, .journal-guide-search > p) {
+  font-size: 12px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-day-heading {
+  padding: 14px;
+  gap: 12px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-day-heading
+  h2 {
+  font-size: 22px;
+  line-height: 1.4;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-day-note {
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  margin: 6px 2px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-day-intro {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-cover__body {
+  padding: 12px 4px 0;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-cover__topline {
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-cover-studies {
+  margin-top: 14px;
+  gap: 14px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-cover-study {
+  position: relative;
+  background: var(--travel-surface);
+  padding: 3px;
+  border: 1px solid var(--travel-line);
+  border-radius: 2px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-cover-study::before {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 9px;
+  top: -5px;
+  left: calc(50% - 14px);
+  background: color-mix(in srgb, var(--journal-yellow) 45%, transparent);
+  transform: rotate(-5deg);
+  z-index: 1;
+  pointer-events: none;
+}
+.journal-summary-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  gap: 10px;
+  align-items: start;
+}
+.journal-paper-sticker {
+  display: block;
+  width: 50px;
+  height: 50px;
+  flex: none;
+  transform: rotate(7deg);
+  pointer-events: none;
+}
+.journal-paper-sticker svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(1px 1px 0 var(--travel-surface))
+    drop-shadow(-1px -1px 0 var(--travel-surface));
+}
+.journal-paper-sticker[data-sticker="camera"] {
+  transform: rotate(-8deg);
+}
+.journal-paper-sticker[data-sticker="notebook"] {
+  width: 46px;
+  height: 46px;
+  transform: rotate(-9deg);
+}
+.journal-checklist-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.journal-checklist-actions .journal-paper-sticker {
+  width: 40px;
+  height: 44px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-flight-tickets {
+  gap: 12px;
+  margin-top: 8px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-flight-ticket__heading {
+  padding-block: 4px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-flight-ticket__route {
+  padding-block: 10px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-highlights {
+  gap: 12px 20px;
+}
+
+/* The route is data, the vehicle is the current page marker. */
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector {
+  gap: 0;
+  padding: 6px 0 12px;
+  margin-bottom: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  mask-image: none;
+  scroll-padding-inline: 8px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector
+  > button {
+  position: relative;
+  flex: 1 0 52px;
+  min-width: 52px;
+  height: 100px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--travel-text);
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  justify-content: flex-end;
+  scroll-snap-align: center;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector
+  > .journal-route-overview {
+  flex: 0 0 50px;
+  min-width: 50px;
+  margin-right: 8px;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid var(--travel-line);
+  border-radius: 18px 16px 17px 15px;
+  background: var(--travel-surface);
+  font-size: 14px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector
+  > .journal-route-overview[aria-pressed="true"] {
+  border-color: var(--journal-ink);
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector
+  > .journal-route-day[aria-pressed="true"] {
+  background: transparent;
+}
+.journal-route-track {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 100%;
+  height: 8px;
+  color: var(--journal-ink);
+  overflow: visible;
+  pointer-events: none;
+}
+.journal-route-node {
+  position: absolute;
+  left: calc(50% - 6px);
+  top: 8px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--journal-ink);
+  border-radius: 48% 52% 47% 53%;
+  background: var(--travel-page);
+  z-index: 1;
+}
+.journal-route-vehicle {
+  position: absolute;
+  top: 20px;
+  left: calc(50% - 21px);
+  width: 42px;
+  height: 32px;
+  z-index: 2;
+  pointer-events: none;
+}
+.journal-route-vehicle svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-selector
+  .journal-date-label {
+  position: relative;
+  margin: 0 0 2px;
+  padding: 0 5px;
+  background: transparent;
+  font-family: var(--font-data);
+  font-size: 17px;
+  line-height: 27px;
+  font-weight: 600;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-route-day[aria-pressed="true"]
+  .journal-date-label {
+  background: var(--journal-pink);
+  border-radius: 45% 52% 43% 49%;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-route-day small {
+  font-size: 12px;
+  line-height: 20px;
+  padding-bottom: 2px;
+}
+
+/* AI uses a conversation canvas, not the itinerary's paper-panel padding. */
+.travel-shell[data-aesthetic="editorial"] .journal-record-empty {
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-meta {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-actions button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-toast {
+  background: var(--travel-accent);
+  color: var(--travel-on-accent);
+  border: 0;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  max-width: calc(100vw - 32px);
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-toast[data-toast-type="error"] {
+  background: #8f3434;
+  color: #ffffff;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"] {
+  height: var(--chat-viewport-height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"] #main-content {
+  height: 100%;
+  min-height: 0;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"] .travel-header {
+  padding-block: 8px 4px;
+  margin-bottom: 4px;
+  gap: 0 8px;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"]
+  :is(.journal-header-kicker, .travel-header__dates) {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"]
+  .travel-header__title {
+  font-family: var(--font-rounded);
+  font-size: 18px;
+  letter-spacing: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"]
+  .travel-header__title
+  button {
+  width: 100%;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"]
+  .travel-header__title
+  button
+  span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"]
+  .travel-header__currency {
+  margin: 0;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"] .journal-ai {
+  height: 100%;
+  min-height: 0;
+  padding: 0 12px calc(84px + env(safe-area-inset-bottom));
+  max-width: 960px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-active-tab="ai"]
+  .journal-ai
+  .journal-panel {
+  height: 100%;
+  flex: 1;
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-ai
+  .journal-panel
+  > div:first-child {
+  padding: 6px 10px;
+  flex: none;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai .journal-ai-toolbar-row {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai-identity {
+  gap: 0;
+  min-width: 0;
+  flex: 1;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-ai-identity
+  > .journal-sticker {
+  display: none;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-ai-identity
+  h2 {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai-controls {
+  flex-direction: row;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai-controls > div {
+  padding: 0;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-ai-controls
+  [data-journal-mode] {
+  padding: 4px 6px;
+  font-size: 14px;
+  border: 0;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-ai-controls
+  [data-journal-mode][aria-pressed="true"] {
+  background: var(--travel-subtle);
+  outline: 1px solid var(--travel-line);
+  outline-offset: -2px;
+  color: var(--travel-text);
+  font-weight: 600;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-ai-controls
+  [data-journal-mode]
+  svg {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-log {
+  min-height: 0;
+  flex: 1 1 0;
+  padding: 12px;
+  overscroll-behavior: contain;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-message-content {
+  min-width: 0;
+  max-width: min(85%, 64ch, calc(100% - 48px));
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-chat-bubble[data-message-role] {
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 4px 18px 18px 18px;
+  background: #f0e9d8;
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-chat-bubble[data-message-role="user"] {
+  border-radius: 18px 4px 18px 18px;
+  background: #d9e3d4;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"]
+  .journal-chat-bubble[data-message-role] {
+  background: #302924;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"]
+  .journal-chat-bubble[data-message-role="user"] {
+  background: #354237;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-chat-bubble
+  :is(a, .journal-chat-expand) {
+  color: var(--travel-accent);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-bubble a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  border: 0;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-loading {
+  min-width: 0;
+  max-width: calc(100% - 48px);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-loading :is(svg, span) {
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-shop-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 4px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-shop-areas > * {
+  min-width: 0;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-place-card a {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.journal-shop-links a, .journal-event-sources a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--travel-accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.journal-shop-location, .journal-shop-hours, .journal-shop-reviewed) {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--travel-muted);
+  overflow-wrap: anywhere;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.journal-shop-visit-note, .journal-timing-note) {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-event-sources a {
+  display: flex;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-place-card {
+  align-items: flex-start;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-place-card > svg {
+  margin-top: 5px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai-suggestions {
+  flex: none;
+  min-height: 48px;
+  max-height: 52px;
+  padding: 2px 8px;
+  border: 0;
+  box-shadow: none;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-ai-suggestions button {
+  min-height: 44px;
+  padding: 4px 10px;
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-input {
+  flex: none;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-input > div {
+  padding: 6px 8px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-chat-input textarea {
+  font-size: 16px;
+  min-width: 0;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"][data-chat-keyboard="true"]
+  :is(.travel-dock, .travel-header__currency, .journal-ai-suggestions) {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="ai"][data-chat-keyboard="true"]
+  .journal-ai {
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1280px) {
+  .travel-shell[data-aesthetic="editorial"][data-active-tab="ai"] .journal-ai {
+    padding-bottom: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    :is(.travel-panel, .journal-panel, .travel-cover) {
+    padding: 14px;
+  }
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .travel-header__title {
+    font-size: 24px;
+  }
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    :is(.travel-today h2, #trip-cover-title) {
+    font-size: 22px;
+  }
+  .travel-shell[data-aesthetic="editorial"] .journal-summary-heading {
+    grid-template-columns: minmax(0, 1fr) 46px;
+    gap: 6px;
+  }
+  .journal-summary-heading .journal-paper-sticker {
+    width: 46px;
+    height: 46px;
+  }
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .journal-route-selector
+    > button {
+    min-width: 48px;
+    flex-basis: 48px;
+  }
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .journal-route-selector
+    > .journal-route-overview {
+    min-width: 48px;
+    flex: 0 0 48px;
+  }
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-active-tab="ai"]
+    .travel-header__title {
+    font-size: 18px;
+  }
+}
+@media (max-width: 374px) {
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .travel-header__title {
+    font-size: 22px;
+  }
+  .travel-shell[data-aesthetic="editorial"] .journal-ai-identity {
+    display: none;
+  }
+  .travel-shell[data-aesthetic="editorial"] .journal-ai-toolbar-row {
+    justify-content: space-between;
+  }
+}
+
+/* Final shared header: the same serif title, dates and utility row on every tab. */
+html:has(.travel-shell) {
+  scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header {
+  padding-block: 6px 2px;
+  margin-bottom: 4px;
+  gap: 0 8px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-header-kicker {
+  display: none;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__title {
+  font-family: var(--font-story);
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  margin: 0;
+  line-height: 1.4;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__title
+  button {
+  width: 100%;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__title
+  button
+  > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__dates {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .travel-header__currency {
+  margin: 0;
+}
+
+/* Record and AI workspaces reserve their middle area for actual content. */
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"]:has(
+    .journal-finance-card
+  ) {
+  height: var(--record-viewport-height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"]
+  #main-content:has(.journal-finance-card) {
+  height: 100%;
+  min-height: 0;
+}
+.travel-shell[data-active-tab="finance"] #panel-finance,
+.travel-shell[data-active-tab="finance"] .journal-finance-page {
+  height: 100%;
+  min-height: 0;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"]
+  .journal-finance:has(.journal-finance-card) {
+  height: 100%;
+  min-height: 0;
+  padding: 0 12px calc(84px + env(safe-area-inset-bottom));
+  max-width: 960px;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-active-tab="finance"]
+  .journal-finance-card {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-finance-card
+  > .journal-record-toolbar {
+  padding: 6px 10px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-toolbar-row {
+  gap: 6px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-identity {
+  min-width: 0;
+  gap: 6px;
+  flex: 1;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-toolbar-controls {
+  flex-direction: row;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-toolbar-controls
+  > div {
+  padding: 0;
+  gap: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-toolbar-controls
+  [data-journal-mode] {
+  padding: 4px 6px;
+  font-size: 14px;
+  border: 0;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-toolbar-controls
+  [data-journal-mode]
+  svg {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-toolbar-controls
+  [data-journal-mode][aria-pressed="true"] {
+  background: var(--travel-subtle);
+  outline: 1px solid var(--travel-line);
+  outline-offset: -2px;
+  color: var(--travel-text);
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-finance-card
+  > .journal-record-log {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-log > div:last-child {
+  height: 0;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-finance
+  .journal-chat-input
+  > div {
+  padding: 6px 8px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-controls {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-fields {
+  order: 0;
+  flex: 1 1 0;
+}
+/* Indicate the active field once, without overlapping group and input outlines. */
+.travel-shell[data-aesthetic="editorial"] .journal-record-fields:focus-within {
+  outline: none;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-fields
+  :is(input, textarea):focus {
+  outline: none;
+  box-shadow: inset 0 -2px 0 var(--travel-accent);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-record-amount {
+  flex-basis: 80px;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-finance
+  .journal-field-label {
+  padding: 6px 8px 0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-record-fields
+  :is(input, textarea) {
+  min-height: 44px;
+  padding-inline: 8px;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"][data-record-keyboard="true"]
+  .travel-dock,
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"][data-record-keyboard="true"]
+  .travel-header__currency {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-active-tab="finance"][data-record-keyboard="true"]
+  .journal-finance {
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+@media (min-width: 1280px) {
+  .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+    .travel-header__title {
+    font-size: 24px;
+  }
+  .travel-shell[data-aesthetic="editorial"][data-active-tab="finance"]
+    .journal-finance:has(.journal-finance-card) {
+    padding-bottom: 16px;
+  }
+}
+@media (max-width: 374px) {
+  .travel-shell[data-aesthetic="editorial"] .journal-record-name {
+    display: none;
+  }
+  .travel-shell[data-aesthetic="editorial"] .journal-record-amount {
+    flex-basis: 72px;
+  }
+}

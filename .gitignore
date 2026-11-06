@@ -32,5 +32,10 @@ technical_manual.md
 .shared
 .gas_script
 
+# Local review tools, screenshots and generated source archives.
+.agents/
+.taste-skill/
+deliverables/
+
 .env.*
 !.env.example

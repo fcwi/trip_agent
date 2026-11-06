@@ -12,6 +12,13 @@ and CJK punctuation. Uncommon user-entered characters use the system font fallba
 CSS uses font-display: swap. Only the subset is included in the production build
 and service worker precache, so reading pages stays available offline.
 
+The storybook interface assigns three explicit roles in src/styles/editorial.css:
+`--font-rounded` uses this bundled Trip Journal subset for section headings,
+day labels, and places; `--font-story` uses Georgia and the device's Noto Serif TC,
+Songti TC or PMingLiU serif for trip/story titles; `--font-data` uses the system
+sans for body copy, times, weather and exchange values. Serif rendering therefore
+varies with the device's installed CJK serif. No remote font request is required.
+
 After adding UI/trip text, regenerate using `python scripts/subset-journal-font.py`
 with fonttools and brotli installed. The script verifies that the subset retains
 all supported source characters. Preserve OFL-Huninn.txt with the font.

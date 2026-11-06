@@ -1,4 +1,5 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useRef } from "react";
+import { usePanelViewport } from "../../hooks/usePanelViewport.js";
 import useSwipeGesture from "../../hooks/useSwipeGesture.js";
 import {
   Languages,
@@ -54,6 +55,8 @@ const AIPanel = ({
   clearImage,
   handleSendMessage,
 }) => {
+  const panelRef = useRef(null);
+  usePanelViewport(panelRef, "--chat-viewport-height", "chatKeyboard");
   // 滑動手勢切換模式
   const {
     onTouchStart,
@@ -69,6 +72,7 @@ const AIPanel = ({
 
   return (
     <div
+      ref={panelRef}
       className="journal-ai flex-1 px-4 pb-24 flex flex-col h-[calc(100vh-85px)] animate-fadeIn relative"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -124,7 +128,7 @@ const AIPanel = ({
         <div
           className={`journal-ai-header shrink-0 p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
         >
-          <div className="journal-ai-toolbar flex items-center justify-between gap-2">
+          <div className="journal-ai-toolbar journal-ai-toolbar-row flex items-center justify-between gap-2">
             <div className="journal-ai-identity flex items-center gap-3">
               {/* 模式頭像：隨導遊/口譯模式切換顏色與圖示 */}
               <div
@@ -144,11 +148,11 @@ const AIPanel = ({
               </div>
 
               <div className="journal-ai-title flex flex-col">
-                <div
+                <h2
                   className={`text-base font-bold transition-colors duration-300 ${theme.text}`}
                 >
                   {aiMode === "translate" ? "AI 隨身口譯" : "AI 專屬導遊"}
-                </div>
+                </h2>
                 {isSpeaking && (
                   <p
                     className={`text-[10px] flex items-center gap-1 mt-0.5 ${theme.textSec}`}
@@ -160,7 +164,7 @@ const AIPanel = ({
             </div>
 
             {/* 模式切換與操作按鈕共用單行工具列。 */}
-            <div className="journal-ai-tools flex items-center gap-1">
+            <div className="journal-ai-tools journal-ai-controls flex items-center gap-1">
               {/* 模式切換開關 */}
               <div
                 className={`journal-ai-modes flex p-1 rounded-xl border gap-1 backdrop-blur-md transition-all duration-300 ${
@@ -220,6 +224,7 @@ const AIPanel = ({
                   title="搜尋對話"
                   aria-label="搜尋對話"
                   aria-expanded={showAiSearch}
+                  aria-controls="ai-search-panel"
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
@@ -241,7 +246,7 @@ const AIPanel = ({
 
           {/* 搜尋框 */}
           {showAiSearch && (
-            <div className="mt-3 space-y-2">
+            <div id="ai-search-panel" className="mt-3 space-y-2">
               <div
                 className={`flex items-center gap-2 p-2 rounded-xl border backdrop-blur-lg transition-all duration-300 ${
                   isDarkMode
@@ -255,6 +260,7 @@ const AIPanel = ({
                 <input
                   type="text"
                   id="aiSearchQuery"
+                  aria-label="搜尋對話內容"
                   name="aiSearchQuery"
                   value={aiSearchQuery}
                   onChange={(e) => setAiSearchQuery(e.target.value)}
@@ -267,6 +273,7 @@ const AIPanel = ({
                 />
                 {aiSearchQuery && (
                   <button
+                    aria-label="清除對話搜尋"
                     onClick={() => setAiSearchQuery("")}
                     className={`p-1 rounded-lg hover:bg-black/10 transition-all backdrop-blur-md ${isDarkMode ? "hover:bg-white/10" : "hover:bg-black/10"}`}
                   >
@@ -378,7 +385,7 @@ const AIPanel = ({
 
         {/* 快速建議問題：根據當前模式動態切換 */}
         <div
-          className={`horizontal-scroll-fade scrollbar-hide flex snap-x snap-mandatory gap-2.5 overflow-x-auto border-t px-5 py-3 backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? "bg-black/15 border-white/20 ring-1 ring-white/5" : "bg-[#F9F9F6]/70 border-stone-200/60 ring-1 ring-black/5"}`}
+          className={`journal-ai-suggestions horizontal-scroll-fade scrollbar-hide flex snap-x snap-mandatory gap-2.5 overflow-x-auto border-t px-5 py-3 backdrop-blur-xl transition-colors duration-300 ${isDarkMode ? "bg-black/15 border-white/20 ring-1 ring-white/5" : "bg-[#F9F9F6]/70 border-stone-200/60 ring-1 ring-black/5"}`}
         >
           {(aiMode === "translate"
             ? tripConfig.translationQuestions || [

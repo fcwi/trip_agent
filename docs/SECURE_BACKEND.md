@@ -4,7 +4,7 @@
 
 ## 本機
 
-需要 Node.js 22 以上。
+需要 Node.js 24.22.1 LTS（與 `.nvmrc`、CI 及 Dockerfile 一致）。
 
 1. 將 `server/.env.example` 複製為專案根目錄 `.env.server`（已忽略）。將 API 原始密鑰填在此檔，不要加 VITE_ 前綴。不要把此檔提交 Git 或放在 public/dist。
 2. 產生密碼雜湊：在 bash 執行 `read -rs -p 'Password: ' trip_password; printf '%s' "$trip_password" | node server/hash-password.mjs; unset trip_password`，將輸出填入 APP_PASSWORD_HASH。使用至少 12 字元的獨立密碼。密碼不會出現在指令參數或歷史中。
@@ -13,7 +13,7 @@
 
 ## 正式環境
 
-GitHub Pages 只能提供靜態檔案，不能單獨執行本後端。需要支援 Node.js 的主機或容器，以及 HTTPS 反向代理：同一網域的 /api/* 轉發至後端，其餘路徑提供 dist。可保留 /trip_agent/ 靜態子路徑，但 API 必須由同一 origin 的 /api 提供。現有 GitHub Pages deploy 指令並不會部署後端。
+使用 Render Docker Web Service，由同一網域提供前端與 `/api/*`。GitHub Pages 只能提供靜態檔案，不能執行本後端；已移除原 `deploy`／`predeploy` 與 gh-pages 套件，避免誤發到舊站。預設前端路徑為 `/`。
 
 在平台的 Secret Manager / Secret 設定 APP_PASSWORD_HASH、GEMINI_API_KEY、GOOGLE_MAPS_API_KEY、GAS_URL、GAS_TOKEN，環境變數設定 APP_ORIGIN 為實際 HTTPS 網域，例如 https://travel.example.com。用 `node server/app.mjs` 啟動；容器若需外部連線設定 HOST=0.0.0.0。不可對外提供 .env.server 或專案原始目錄。
 
@@ -31,11 +31,11 @@ MapTiler 為地圖瀏覽器 SDK 所需的公開 key，使用 MAPTILER_PUBLIC_KEY
 
 專案根目錄已附 Dockerfile。建置階段只複製前端必要原始檔，不複製 .env，執行階段只包含 dist 與後端程式，並以非 root 使用者啟動。正式入口為 `server/production.mjs`，由同一服務提供前端與 /api。容器內部預設 3000 port，支援平台注入 PORT；健康檢查為 /healthz。
 
-選擇平台後以 Dockerfile 部署，於平台機密介面設定上述變數；APP_ORIGIN 設為平台分配的 HTTPS 網址（不含路徑），重啟後測試密碼登入、Gemini、GAS 讀寫及登出。不要把正式密鑰提供給 Docker build args。此映像將 VITE_BASE_PATH 設為 /，前端正式網址為網域根目錄。
+以 Render 的 Docker Web Service 部署，於平台機密介面設定上述變數；APP_ORIGIN 設為平台分配的 HTTPS 網址（不含路徑），重啟後測試密碼登入、Gemini、GAS 讀寫及登出。不要把正式密鑰提供給 Docker build args。此映像將 VITE_BASE_PATH 設為 /，前端正式網址為網域根目錄。
 
 若不使用容器，先設定 VITE_BASE_PATH=/ 執行 npm ci 與 npm run build，再注入後端環境變數執行 npm start。不要以靜態站服務類型部署。現有 GitHub Pages 網址不會自動切換到新主機；須在新站驗證成功後另外處理舊站遷移。
 
-## 建議平台：Render
+## 部署平台：Render
 
 已提供 render.yaml Blueprint，使用 Docker Web Service 免費方案與 /healthz 檢查，關閉自動部署以避免未驗證變更直接上線。方案可用性與限制以 Render 建立畫面為準。免費 instance 可能休眠；重啟會清除記憶體 session，需要重新登入。
 

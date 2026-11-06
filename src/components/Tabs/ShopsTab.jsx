@@ -1,4 +1,5 @@
 import { useState } from "react";
+import JournalSticker from "../Itinerary/JournalSticker.jsx";
 import {
   ChevronDown,
   ChevronUp,
@@ -22,10 +23,7 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
   const accent = tone === "rose" ? "text-rose-400" : "text-amber-500";
 
   return (
-    <a
-      href={getMapLink(shop.mapQuery || `${shop.name} ${querySuffix}`)}
-      target="_blank"
-      rel="noopener noreferrer"
+    <article
       data-journal-tone={tone}
       className={`journal-place-card group flex min-h-11 items-center gap-3 rounded-xl border p-3 backdrop-blur-md ${tones[tone]}`}
     >
@@ -33,13 +31,20 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
         aria-hidden="true"
         className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-125 ${accent}`}
       />
-      <span className="min-w-0">
+      <div className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <span
+          <a
+            href={
+              shop.officialUrl ||
+              getMapLink(shop.mapQuery || `${shop.name} ${querySuffix}`)
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${shop.name}｜${shop.officialUrl ? shop.sourceLabel || "官方店鋪資訊" : "Google Maps 搜尋"}`}
             className={`text-base font-bold ${isDarkMode ? "text-neutral-200" : "text-[#37474F]"}`}
           >
             {shop.name}
-          </span>
+          </a>
           <span
             className={`rounded-xl border px-1.5 py-0.5 text-xs shadow-sm ${
               isDarkMode
@@ -50,13 +55,37 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
             {shop.tag}
           </span>
         </span>
+        {shop.location && (
+          <p className="journal-shop-location">{shop.location}</p>
+        )}
+        {shop.hours && (
+          <p className="journal-shop-hours">參考營業時間：{shop.hours}</p>
+        )}
         <span
           className={`mt-1 block text-sm leading-relaxed ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
         >
           {shop.note}
         </span>
-      </span>
-    </a>
+        <nav className="journal-shop-links" aria-label={`${shop.name}相關連結`}>
+          {shop.officialUrl && (
+            <a
+              href={shop.officialUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {shop.sourceLabel || "官方店鋪資訊"}
+            </a>
+          )}
+          <a
+            href={getMapLink(shop.mapQuery || `${shop.name} ${querySuffix}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Google Maps 搜尋
+          </a>
+        </nav>
+      </div>
+    </article>
   );
 };
 
@@ -101,15 +130,22 @@ const ShopsTab = ({
             />
           </span>
           商家與周邊指南
+          <JournalSticker kind="suitcase" className="journal-section-sticker" />
         </h2>
         <p
           className={`mb-4 ml-1 flex items-center gap-1.5 text-xs ${theme.textSec}`}
         >
-          <Info aria-hidden="true" className="h-3 w-3" /> 點擊商家名稱即可開啟
-          Google Maps
+          <Info aria-hidden="true" className="h-3 w-3 shrink-0" />
+          {shopGuideData?.some((area) =>
+            [...(area.mainShops || []), ...(area.specialShops || [])].some(
+              (shop) => shop.officialUrl,
+            ),
+          )
+            ? "店名連至官方／觀光介紹；地圖搜尋另列。自由活動選項不等於團體已預約。"
+            : "點擊店名開啟 Google Maps 搜尋；請核對實際分店與位置。"}
         </p>
 
-        <div className="space-y-3">
+        <div className="journal-shop-areas">
           {shopGuideData?.length ? (
             shopGuideData.map((areaData, index) => {
               const isOpen = Boolean(expandedShops[index]);
@@ -159,6 +195,17 @@ const ShopsTab = ({
                       <p className={`mb-4 text-sm ${theme.textSec}`}>
                         {areaData.desc}
                       </p>
+                      {areaData.visitNote && (
+                        <p className="journal-shop-visit-note">
+                          {areaData.visitNote}
+                        </p>
+                      )}
+                      {areaData.verifiedAt && (
+                        <p className="journal-shop-reviewed">
+                          資料核對 {areaData.verifiedAt}
+                          ・營業時間為目前公告，出發前請重查。
+                        </p>
+                      )}
 
                       <div className="mb-5">
                         <h3
@@ -168,7 +215,7 @@ const ShopsTab = ({
                             aria-hidden="true"
                             className="h-3.5 w-3.5 text-amber-500"
                           />{" "}
-                          行程重點商家
+                          順路店家
                         </h3>
                         <div className="grid grid-cols-1 gap-2.5">
                           {areaData.mainShops?.map((shop, shopIndex) => (

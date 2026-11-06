@@ -23,7 +23,7 @@ const BottomNav = ({
           id={`tab-${id}`}
           type="button"
           aria-current={isActive ? "page" : undefined}
-          aria-controls={`panel-${id}`}
+          aria-controls={isActive ? `panel-${id}` : undefined}
           aria-label={`${label}${isActive ? "（目前分頁）" : ""}`}
           onPointerEnter={() => onTabPreload?.(id)}
           onPointerDown={() => onTabPreload?.(id)}
@@ -37,7 +37,7 @@ const BottomNav = ({
           {React.createElement(icon, {
             "aria-hidden": true,
             className: "h-5 w-5",
-            strokeWidth: isActive ? 2.25 : 1.75,
+            strokeWidth: 1.5,
           })}
           <span>{label}</span>
         </button>

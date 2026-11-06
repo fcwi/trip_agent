@@ -43,6 +43,55 @@ export function JourneyCar({ className }) {
   );
 }
 
+export function JourneyVehicle({ kind = "coach", className }) {
+  if (kind === "coach") return <JourneyCar className={className} />;
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 80 60"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g
+        stroke="var(--journal-art-ink, var(--journal-ink))"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {kind === "cable" ? (
+          <>
+            <path d="M2 6q36 8 76-1M40 10v10m-9 0h18" />
+            <path
+              d="M22 22h37q8 0 8 9v18q-2 7-10 7H22q-9 0-9-9V31q0-9 9-9Z"
+              fill="var(--journal-pink)"
+            />
+            <path
+              d="M21 29h15v13H21Zm23 0h15v13H44Z"
+              fill="var(--journal-window)"
+            />
+            <path d="M19 48h43m-35 7v3m27-3v3" />
+          </>
+        ) : (
+          <>
+            <path
+              d="M7 16h47q14 1 20 21v10H5V24q0-8 2-8Z"
+              fill="var(--journal-blue)"
+            />
+            <path
+              d="M12 23h11v12H12Zm18 0h11v12H30Zm18 0h10l7 12H48Z"
+              fill="var(--journal-window)"
+            />
+            <path d="M6 40h65m-63 12h65m-59-5v5m43-5v5" />
+            <circle cx="19" cy="47" r="4" fill="var(--journal-snow)" />
+            <circle cx="59" cy="47" r="4" fill="var(--journal-snow)" />
+          </>
+        )}
+      </g>
+    </svg>
+  );
+}
+
 export default function JournalIllustration({ tripId = "" }) {
   return <TripArtwork tripId={tripId} />;
 }

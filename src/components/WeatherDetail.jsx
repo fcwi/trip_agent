@@ -169,9 +169,9 @@ const getTempColor = (temp) => {
   return "#ef4444"; // 紅色 (35+)
 };
 
-const getTempGradient = (min, max) => {
-  const c1 = getTempColor(min);
-  const c2 = getTempColor(max);
+const getTempGradient = (high, low) => {
+  const c1 = getTempColor(high);
+  const c2 = getTempColor(low);
   if (c1 === c2) return c1;
   return `linear-gradient(to right, ${c1}, ${c2})`;
 };
@@ -545,6 +545,7 @@ const WeatherDetail = ({
           <div>
             <div className="wc-section-title">
               <Sun size={12} /> 未來 7 天
+              <span className="wc-range-order">高溫／低溫</span>
             </div>
             <div className="wc-daily-list">
               {isInitialLoading
@@ -565,26 +566,36 @@ const WeatherDetail = ({
                         )}
                       </div>
                       <div className="wc-day-temp">
-                        <span className="wc-temp-min">{item.min}°</span>
-                        <div className="wc-temp-bar">
+                        <span
+                          className="wc-temp-high"
+                          aria-label={`高溫 ${item.max} 度`}
+                        >
+                          {item.max}°
+                        </span>
+                        <div className="wc-temp-bar" aria-hidden="true">
                           <div
                             className="wc-temp-bar-inner"
                             style={{
-                              left: `${((item.min - overallMin) / Math.max(1, overallMax - overallMin)) * 100}%`,
+                              left: `${((overallMax - item.max) / Math.max(1, overallMax - overallMin)) * 100}%`,
                               width: `${((item.max - item.min) / Math.max(1, overallMax - overallMin)) * 100}%`,
-                              background: getTempGradient(item.min, item.max),
+                              background: getTempGradient(item.max, item.min),
                             }}
                           />
                           {idx === 0 && current?.temp !== "--" && (
                             <div
                               className="wc-temp-dot"
                               style={{
-                                left: `${((current.temp - overallMin) / Math.max(1, overallMax - overallMin)) * 100}%`,
+                                left: `${Math.max(0, Math.min(100, ((overallMax - current.temp) / Math.max(1, overallMax - overallMin)) * 100))}%`,
                               }}
                             />
                           )}
                         </div>
-                        <span className="wc-temp-high">{item.max}°</span>
+                        <span
+                          className="wc-temp-min"
+                          aria-label={`低溫 ${item.min} 度`}
+                        >
+                          {item.min}°
+                        </span>
                       </div>
                     </div>
                   ))}

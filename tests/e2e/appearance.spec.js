@@ -7,7 +7,7 @@ test("lock screen follows device appearance and manual trip mode controls utilit
   await page.goto("/");
   await expect(page.locator(".journal-auth-card")).toHaveCSS(
     "background-color",
-    "rgb(35, 40, 36)",
+    "rgb(37, 32, 29)",
   );
   await page.getByLabel("通關密碼").fill("trip-e2e-password");
   await page.getByRole("button", { name: "解鎖行程" }).click();

@@ -1,4 +1,5 @@
-import { createElement, useState } from "react";
+import { createElement, useRef, useState } from "react";
+import JournalSticker from "../Itinerary/JournalSticker.jsx";
 import {
   BookOpen,
   ChevronDown,
@@ -6,6 +7,8 @@ import {
   ExternalLink,
   FileText,
   Link as LinkIcon,
+  Search,
+  X,
 } from "lucide-react";
 
 const EmptyState = ({ icon: Icon, label, isDarkMode, theme }) => (
@@ -38,6 +41,39 @@ const GuidesTab = ({
   componentStyles,
 }) => {
   const [expandedGuides, setExpandedGuides] = useState({});
+  const [query, setQuery] = useState("");
+  const searchRef = useRef(null);
+  const normalizedQuery = query.trim().normalize("NFKC").toLocaleLowerCase();
+  const matches = (...values) =>
+    values
+      .filter((value) => typeof value === "string")
+      .join(" ")
+      .normalize("NFKC")
+      .toLocaleLowerCase()
+      .includes(normalizedQuery);
+  const visibleGuides = (guidesData || [])
+    .map((guide, index) => ({ guide, index }))
+    .filter(({ guide }) =>
+      matches(
+        guide.title,
+        guide.summary,
+        ...(guide.steps || []),
+        guide.link?.text,
+        ...(guide.blogs || []).map((blog) => blog.title),
+      ),
+    );
+  const visibleLinks = (usefulLinks || [])
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        matches(section.category, item.title, item.desc),
+      ),
+    }))
+    .filter((section) => section.items.length);
+  const clearSearch = () => {
+    setQuery("");
+    searchRef.current?.focus();
+  };
   const toggleGuide = (index) => {
     setExpandedGuides((current) => ({
       ...current,
@@ -53,6 +89,34 @@ const GuidesTab = ({
       aria-labelledby="tab-guides"
       className="flex-1 animate-fadeIn space-y-5 px-4 pb-24"
     >
+      <div className="journal-guide-search journal-panel">
+        <label htmlFor="guide-search">搜尋指南與連結</label>
+        <div className="journal-guide-search__field">
+          <Search aria-hidden="true" className="h-4 w-4" />
+          <input
+            ref={searchRef}
+            id="guide-search"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="例如：入境、交通、保險"
+          />
+          {query && (
+            <button
+              type="button"
+              aria-label="清除指南搜尋"
+              onClick={clearSearch}
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <p role="status" aria-live="polite">
+          {visibleGuides.length} 篇指南 ·{" "}
+          {visibleLinks.reduce((sum, section) => sum + section.items.length, 0)}{" "}
+          個連結
+        </p>
+      </div>
       <div className={sectionClasses} style={theme.ambientStyle}>
         <h2
           className={`mb-4 flex items-center gap-2 text-lg font-bold ${theme.text}`}
@@ -70,11 +134,12 @@ const GuidesTab = ({
             />
           </span>
           實用參考指南
+          <JournalSticker kind="notebook" className="journal-section-sticker" />
         </h2>
 
         <div className="space-y-3">
-          {guidesData?.length ? (
-            guidesData.map((guide, index) => {
+          {visibleGuides.length ? (
+            visibleGuides.map(({ guide, index }) => {
               const isOpen = Boolean(expandedGuides[index]);
               const contentId = `guide-${index}-content`;
 
@@ -128,14 +193,17 @@ const GuidesTab = ({
                   </button>
 
                   {isOpen && (
-                    <div id={contentId} className="animate-fadeIn px-5 pb-5">
+                    <div
+                      id={contentId}
+                      className="journal-guide-content animate-fadeIn px-5 pb-5"
+                    >
                       <p
                         className={`mb-4 text-sm leading-relaxed ${theme.textSec}`}
                       >
                         {guide.summary}
                       </p>
                       <div
-                        className={`my-3 rounded-xl border p-3.5 backdrop-blur-md ${
+                        className={`journal-guide-steps my-3 rounded-xl border p-3.5 backdrop-blur-md ${
                           isDarkMode
                             ? "border-neutral-700/60 bg-black/15 ring-1 ring-white/5"
                             : "border-stone-200/60 bg-[#F9F9F6]/80 ring-1 ring-black/5"
@@ -215,7 +283,7 @@ const GuidesTab = ({
                                     aria-hidden="true"
                                     className={`h-1.5 w-1.5 rounded-full ${isDarkMode ? "bg-neutral-600" : "bg-stone-300"}`}
                                   />
-                                  <span className="truncate underline decoration-stone-300 decoration-1 underline-offset-4">
+                                  <span className="journal-guide-blog-title underline decoration-stone-300 decoration-1 underline-offset-4">
                                     {blog.title}
                                   </span>
                                 </a>
@@ -229,6 +297,8 @@ const GuidesTab = ({
                 </article>
               );
             })
+          ) : normalizedQuery ? (
+            <p className="travel-muted">沒有符合的指南，試試其他關鍵字。</p>
           ) : (
             <EmptyState
               icon={BookOpen}
@@ -260,8 +330,8 @@ const GuidesTab = ({
         </h2>
 
         <div className="space-y-4">
-          {usefulLinks?.length ? (
-            usefulLinks.map((section, sectionIndex) => (
+          {visibleLinks.length ? (
+            visibleLinks.map((section, sectionIndex) => (
               <section key={section.category || sectionIndex}>
                 <h3
                   className={`mb-2.5 w-fit rounded-xl border px-3 py-1.5 text-xs font-bold backdrop-blur-md ${
@@ -312,6 +382,8 @@ const GuidesTab = ({
                 </div>
               </section>
             ))
+          ) : normalizedQuery ? (
+            <p className="travel-muted">沒有符合的連結，試試其他關鍵字。</p>
           ) : (
             <EmptyState
               icon={LinkIcon}

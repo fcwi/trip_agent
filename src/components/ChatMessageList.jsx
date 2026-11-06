@@ -93,7 +93,7 @@ const ChatMessageList = ({
           {/* 訊息氣泡：包含圖片預覽與文字內容 */}
           <div
             ref={(el) => (messageRefs.current[idx] = el)}
-            className={`max-w-[75%] group relative transition-all duration-300`}
+            className="journal-chat-message-content max-w-[75%] group relative transition-all duration-300"
           >
             <div
               data-message-role={msg.role}
@@ -155,7 +155,7 @@ const ChatMessageList = ({
                     {isLongMessage && (
                       <button
                         onClick={() => toggleMessageExpand(idx)}
-                        className={`mt-2 flex items-center gap-1 text-xs font-medium transition-all hover:opacity-80 ${
+                        className={`journal-chat-expand mt-2 flex items-center gap-1 text-xs font-medium transition-all hover:opacity-80 ${
                           msg.role === "user"
                             ? "text-white/90"
                             : isDarkMode
@@ -199,7 +199,9 @@ const ChatMessageList = ({
             />
           </div>
           <div
-            className={`p-3 rounded-2xl rounded-tl-none border shadow-sm flex items-center gap-2 ${
+            data-message-role="model"
+            role="status"
+            className={`journal-chat-bubble journal-chat-loading p-3 rounded-2xl rounded-tl-none border shadow-sm flex items-center gap-2 ${
               isDarkMode
                 ? "bg-neutral-800/60 border-neutral-700"
                 : "bg-white/80 border-stone-200"

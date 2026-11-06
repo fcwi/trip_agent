@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { JournalTurn } from "./JournalMarks.jsx";
 import { DayStamp } from "./JournalIllustration.jsx";
 
 export default function TripDayIndex({
@@ -12,6 +12,9 @@ export default function TripDayIndex({
     <section
       className="travel-panel travel-day-index"
       aria-labelledby="trip-days-heading"
+      style={{
+        "--trip-day-count": Math.max(1, Math.min(6, itineraryData.length)),
+      }}
     >
       <div className="travel-section-heading">
         <h2 id="trip-days-heading">每日行程</h2>
@@ -46,7 +49,7 @@ export default function TripDayIndex({
               {tripStatus === "during" && currentTripDayIndex === index && (
                 <span className="travel-badge">今天</span>
               )}
-              <ArrowUpRight aria-hidden="true" className="h-4 w-4 flex-none" />
+              <JournalTurn className="h-4 w-4 flex-none" />
             </button>
           </li>
         ))}

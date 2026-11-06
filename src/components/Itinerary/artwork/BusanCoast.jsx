@@ -4,8 +4,10 @@ import { House } from "./DailyScenePrimitives.jsx";
 export default function BusanCoast() {
   return (
     <SceneFrame id="busan-coast">
-      <circle cx="506" cy="46" r="25" fill="var(--journal-yellow)" />
-      <path d="M506 10V3m-35 43h-8m86 0h-8m-60-27-5-5m60 60-5-5" />
+      <g className="journal-day-sun">
+        <circle cx="506" cy="46" r="25" fill="var(--journal-yellow)" />
+        <path d="M506 10V3m-35 43h-8m86 0h-8m-60-27-5-5m60 60-5-5" />
+      </g>
       <path
         className="journal-art-distance"
         d="M0 181q74-99 158-15t170 8v45H0Z"
@@ -23,7 +25,7 @@ export default function BusanCoast() {
       />
       <path
         d="M76 117h12v13H76m44-19h12v13h-12m45 27h12v13h-12"
-        fill="var(--travel-surface)"
+        fill="var(--journal-window)"
       />
       <path d="M0 201q148-15 320 0t320-1v104H0Z" fill="var(--journal-blue)" />
       <g className="journal-art-distance">
@@ -57,7 +59,7 @@ export default function BusanCoast() {
       />
       <path
         d="M206 216h24v17h-24m33-17h24v17h-24m33-17h24v17h-24m33-17h24v17h-24"
-        fill="var(--travel-surface)"
+        fill="var(--journal-window)"
       />
       <circle cx="221" cy="254" r="7" fill="var(--travel-surface)" />
       <circle cx="349" cy="254" r="7" fill="var(--travel-surface)" />

@@ -103,7 +103,7 @@ export default function TripTabPanels({
   {/* --- 分頁內容 --- */}
 
   {/* 1. 行程分頁：首次造訪時載入，之後保留狀態 */}
-  <div style={{ display: activeTab === "itinerary" ? "block" : "none" }}>
+  <div id="panel-itinerary" role="region" aria-labelledby="tab-itinerary" style={{ display: activeTab === "itinerary" ? "block" : "none" }}>
     {(activeTab === "itinerary" || visitedTabs.has("itinerary")) && (
       <Suspense fallback={<LazyPanelFallback label="載入行程內容中…" />}>
         <ItineraryTab
@@ -189,7 +189,7 @@ export default function TripTabPanels({
   </div>
 
   {/* --- 頁籤：AI 導遊，首次造訪時載入 --- */}
-  <div style={{ display: activeTab === "ai" ? "block" : "none" }}>
+  <div id="panel-ai" role="region" aria-labelledby="tab-ai" style={{ display: activeTab === "ai" ? "block" : "none" }}>
     {(activeTab === "ai" || visitedTabs.has("ai")) && (
       <Suspense fallback={<LazyPanelFallback label="載入 AI 導遊中…" />}>
         <AIPanel
@@ -234,7 +234,7 @@ export default function TripTabPanels({
   </div>
 
   {/* --- 頁籤：記帳/記事，首次造訪時載入 --- */}
-  <div style={{ display: activeTab === "finance" ? "block" : "none" }}>
+  <div id="panel-finance" role="region" aria-labelledby="tab-finance" style={{ display: activeTab === "finance" ? "block" : "none" }}>
     {(activeTab === "finance" || visitedTabs.has("finance")) && (
       <Suspense fallback={<LazyPanelFallback label="載入記帳資料中…" />}>
         <FinanceTab

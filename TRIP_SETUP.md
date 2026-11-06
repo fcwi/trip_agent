@@ -2,15 +2,17 @@
 
 ## 切換現有旅程
 
-如果專案已經有 `.env`，請保留原檔與其中的 API／加密設定，只新增或修改以下旅程設定：
+畫面可從旅程選擇器或 `?trip=2026_karuizawa` 切換。未指定旅程時，依 `src/config/tripCatalog.js` 的日期選擇進行中、最近未來或最近結束的旅程。
+
+本機 `.env` 只放公開建置設定，不放服務私密金鑰。Render 使用根目錄：
 
 ```env
 VITE_TRIP_ID=2026_karuizawa
-VITE_BASE_PATH=/trip_agent/
-VITE_PUBLIC_SITE_URL=https://example.com/trip_agent/
+VITE_BASE_PATH=/
+VITE_PUBLIC_SITE_URL=https://example.com/
 ```
 
-不要用 `.env.example` 覆蓋現有 `.env`。只有全新安裝、尚無 `.env` 時，才複製 `.env.example`，再填入自己的服務設定。
+不要用 `.env.example` 覆蓋現有 `.env`。只有全新安裝、尚無 `.env` 時才複製範例。`VITE_TRIP_ID` 用於舊版資料遷移、GAS Property 相容及建置 Meta 預設，不會限制目前畫面只能顯示單一旅程。
 
 修改後重新執行 `npm run dev` 或 `npm run build`。
 
@@ -21,7 +23,7 @@ VITE_PUBLIC_SITE_URL=https://example.com/trip_agent/
 1. 複製最接近的現有旅程資料檔，例如 `src/trip/tripdata_2026_busan.jsx`。
 2. 重新命名為 `src/trip/tripdata_<新旅程 ID>.jsx`。
 3. 修改檔案內的 `tripConfig`、行程、指南、連結、購物指南與檢查清單。
-4. 在 `.env` 設定相同的 `VITE_TRIP_ID`。
+4. 在 `src/config/tripCatalog.js` 加入相同 ID、日期、時區及插畫摘要，讓選擇器與預設旅程規則可找到它。
 
 啟動時會驗證必要資料、地點座標、行程地點對應及主題樣式；格式有誤時會直接列出缺少的欄位。
 
@@ -49,21 +51,13 @@ npm run check
 - `VITE_BASE_PATH`：網站部署路徑，根目錄使用 `/`。
 - `VITE_PUBLIC_SITE_URL`：Open Graph 使用的公開完整網址。
 
-## API 與加密設定
+## 後端登入與 API 設定
 
-以下設定與旅程內容分開管理，切換旅程時通常不需要更改：
+Gemini、Google Places、GAS 金鑰及密碼雜湊放在 Render 的機密設定；本機使用 Git 忽略的 `.env.server`，欄位參考 `server/.env.example`。不要設定舊版 `VITE_ENCODED_*`，也不要使用前端加密工具。完整步驟見 [SECURE_BACKEND.md](docs/SECURE_BACKEND.md)。
 
-- `VITE_ENCODED_KEY`
-- `VITE_ENCODED_MAPS_KEY`
-- `VITE_ENCODED_MAPTILER_KEY`
-- `VITE_ENCODED_GAS_URL`
-- `VITE_ENCODED_GAS_TOKEN`
+登入由後端驗證，HttpOnly Cookie 維持 session，瀏覽器不保存登入密碼。一般 session 為 8 小時，保持登入為 7 天；伺服器重啟會清除 session。離線重新整理、重開 PWA 或切換旅程時，需恢復連線才能驗證登入。
 
-`.env` 已被 Git 忽略，應保存實際值；`.env.example` 只提供空白欄位名稱，不應放入真實密鑰。若 `.env` 曾被提交到 Git，請輪替 Gemini、Maps、MapTiler 與 GAS 憑證，因為歷史紀錄仍可能含有密文。
-
-解鎖密碼預設只保留在目前分頁的 `sessionStorage`。若使用者勾選「在此裝置保持登入」，密碼會保存在該旅程命名空間的 `localStorage`，重開瀏覽器或 PWA 後會自動解鎖；按下「鎖定行程」會清除此資料。此選項僅適合私人裝置，無法防範可讀取瀏覽器儲存空間的本機使用者或前端惡意程式碼。舊版本使用的密碼欄位仍會在首次載入時自動移除。
-
-請注意，所有 `VITE_*` 變數都會進入瀏覽器端建置內容。現有加密可避免直接顯示憑證，但不能取代伺服器端秘密管理；正式公開部署時，應限制 Maps／MapTiler Key 的允許網域與配額，Gemini／GAS 則建議改由受驗證的後端代理呼叫。
+所有 `VITE_*` 都是公開建置資料。MapTiler 公開 key 由後端 `MAPTILER_PUBLIC_KEY` 提供，仍需限制實際 Render／自訂網域及配額；其他私密 API 金鑰不傳至瀏覽器。
 
 不同 `tripConfig.id`／`VITE_TRIP_ID` 的清單、天氣、聊天、記帳與圖片資料會分開儲存，不會互相覆蓋。
 
@@ -103,10 +97,10 @@ npm run check
 
 ## 輪替服務金鑰
 
-Git 歷史曾追蹤過 `.env`，密文可能仍留在舊 commit。輪替後請只把新密文寫進本機 `.env`，不要提交。
+Git 歷史曾追蹤過 `.env`，舊密文仍可能留在歷史。輪替後將新值存入 Render 機密與本機 `.env.server`，不要提交。
 
 1. 在 Google AI Studio／Cloud、Maps、MapTiler、Apps Script 分別建立新金鑰／Token，並停用舊的。
-2. Maps、MapTiler 請限制允許網域為 `https://fcwi.github.io/*`。
-3. 打開本機網站，用加密工具把每一把新金鑰加密後寫入 `.env` 對應的 `VITE_ENCODED_*`。
+2. MapTiler 限制為實際 Render／自訂網域；Places 為後端 key，依 Google Cloud 可用的伺服器限制與配額設定。
+3. 更新 Render 機密及本機 `.env.server`，不要放入 `VITE_*` 或聊天訊息。
 4. 若也換了 GAS Token，同步更新 Script Property `AUTH_TOKEN`。
-5. 執行 `npm run deploy` 發佈新前端。
+5. 執行品質、安全與建置檢查；獲得部署授權後，再於 Render 手動部署並核對 `/healthz`、登入及 API。

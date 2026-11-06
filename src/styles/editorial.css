@@ -1,0 +1,667 @@
+/* Illustrated storybook: latest user brief explicitly opts into three type roles,
+   warm paper, floating glass navigation, and restrained dark surface shadows. */
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"] {
+  --travel-page: #faf6e9;
+  --travel-surface: #fffdf6;
+  --travel-subtle: #f1ead8;
+  --travel-text: #352e29;
+  --travel-muted: #6b6054;
+  --travel-line: #e2d9c7;
+  --travel-accent: #3d574b;
+  --travel-on-accent: #fffdf6;
+  --journal-ink: #433a32;
+  --journal-art-ink: #39302b;
+  --journal-rule: #e2d9c7;
+  --journal-pink: #e5b9ac;
+  --journal-blue: #b5cdd4;
+  --journal-yellow: #e9c875;
+  --journal-green: #bdcbb2;
+  --journal-snow: #fffdf6;
+  --journal-window: #f3d58d;
+  --journal-sky: #dce8e9;
+  --font-story: Georgia, "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-rounded:
+    "Trip Journal", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+  --font-data:
+    "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
+    sans-serif;
+  --travel-shadow: none;
+  font-family: var(--font-data);
+  font-weight: 400;
+  line-height: 1.65;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"] {
+  --travel-page: #1a1614;
+  --travel-surface: #25201d;
+  --travel-subtle: #302924;
+  --travel-text: #f1e8dc;
+  --travel-muted: #c4b7a7;
+  --travel-line: #40362f;
+  --travel-accent: #c8d7bf;
+  --travel-on-accent: #1a1614;
+  --journal-ink: #eadccb;
+  --journal-art-ink: #211d22;
+  --journal-rule: #40362f;
+  --journal-pink: #9f8591;
+  --journal-blue: #798caa;
+  --journal-yellow: #d6b977;
+  --journal-green: #8d9c91;
+  --journal-snow: #b4b9c6;
+  --journal-window: #f1ce7b;
+  --journal-sky: #30364e;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .travel-panel,
+    .journal-panel,
+    .journal-entry,
+    .travel-cover,
+    .travel-timeline-event__body,
+    .travel-day-heading,
+    .travel-day-weather,
+    .travel-day-notice,
+    .journal-flight-ticket,
+    .journal-finance-record,
+    .journal-chat-bubble,
+    .journal-map-preview,
+    .journal-day-picture,
+    .journal-place-card,
+    .journal-cover-study,
+    .journal-index-picture
+  ) {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background-image: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.travel-panel, .journal-panel, .travel-cover) {
+  padding: 24px;
+  background: var(--travel-surface);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(h2, h3, h4, strong, button) {
+  font-weight: 500;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .journal-entry,
+    .travel-timeline-event__body,
+    .journal-flight-ticket,
+    .journal-place-card,
+    .journal-finance-record,
+    .journal-chat-bubble
+  ) {
+  background: transparent;
+  color: var(--travel-text);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.travel-cover__drawing, .travel-cover__image) {
+  border: 0;
+  background: transparent;
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(
+    .journal-illustration,
+    .journal-cover-study,
+    .journal-index-picture,
+    .journal-day-picture
+  ) {
+  filter: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-header {
+  border: 0;
+  padding-block: 28px 24px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-header__title {
+  font-family: var(--font-story);
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-header__title button {
+  font-family: inherit;
+  font-weight: inherit;
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.journal-header-phase, .travel-badge, .travel-event-category) {
+  border: 0;
+  border-radius: 4px;
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-header-kicker
+  > span:first-child {
+  font-weight: 400;
+  font-size: 13px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.travel-icon-button, .travel-tools-trigger) {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-aesthetic="editorial"] button {
+  cursor: pointer;
+}
+.travel-shell[data-aesthetic="editorial"] button:disabled {
+  cursor: not-allowed;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.travel-icon-button, .travel-nav__item):hover {
+  background: var(--travel-subtle);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-primary-button {
+  border: 0;
+  border-radius: 6px;
+  background: var(--travel-accent);
+  color: var(--travel-on-accent);
+  font-weight: 500;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-primary-button:hover {
+  background: var(--travel-accent);
+  opacity: 0.88;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-today__needs {
+  border: 0;
+  border-radius: 0;
+  background: var(--travel-subtle);
+  padding: 16px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .travel-day-heading,
+    .travel-weather-summary,
+    .travel-day-weather,
+    .travel-day-notice
+  ) {
+  --travel-muted: var(--travel-text);
+  background: var(--travel-subtle);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-date-selector {
+  gap: 8px;
+  padding: 8px 0 20px;
+  margin-bottom: 12px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-date-selector
+  > button {
+  min-width: 72px;
+  flex: 1 0 72px;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 6px;
+  margin: 0;
+  background: transparent;
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-date-selector
+  > button[aria-pressed="true"] {
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .travel-date-selector
+  > button::after {
+  display: none;
+}
+.editorial-day-number {
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-date-label {
+  font-size: 13px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-date-selector__today {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-dock {
+  border: 0;
+  border-radius: 8px;
+  background: var(--travel-surface);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-nav__item {
+  position: relative;
+  color: var(--travel-muted);
+  background: transparent;
+  font-weight: 400;
+  padding-bottom: 10px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-nav__item[aria-current="page"] {
+  color: var(--travel-text);
+  background: transparent;
+  font-weight: 500;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .travel-nav__item[aria-current="page"]::after {
+  position: absolute;
+  bottom: 2px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.journal-entry > button[aria-expanded="true"], .travel-section-heading) {
+  border: 0;
+  background: transparent;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.journal-entry, .travel-timeline-event)
+  + :is(.journal-entry, .travel-timeline-event) {
+  border-top: 1px solid var(--travel-line);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .journal-panel
+  :is(span, div)[aria-hidden="true"]:has(> svg) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"]
+  #panel-guides
+  .journal-entry
+  > button
+  > span:first-child {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.travel-shell[data-aesthetic="editorial"]
+  #panel-guides
+  :is(section > h3, .journal-guide-content a) {
+  border: 0;
+  border-radius: 6px;
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-aesthetic="editorial"] #panel-guides li::marker {
+  color: var(--travel-muted);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-panel
+  [aria-hidden="true"]:has(> svg) {
+  transform: none;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-sticker {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.travel-shell[data-aesthetic="editorial"] .lucide {
+  color: inherit;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .journal-finance-card > div:first-child,
+    .journal-ai .journal-panel > div:first-child,
+    .journal-chat-input
+  ) {
+  border-color: var(--travel-line);
+  background: var(--travel-subtle);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .journal-finance-setup button[aria-pressed="true"],
+    [data-journal-mode][aria-pressed="true"]
+  ) {
+  border-color: var(--travel-line);
+  background: var(--travel-subtle);
+  box-shadow: none;
+}
+@media (max-width: 767px) {
+  .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+    .travel-date-selector
+    > button {
+    flex: 0 0 calc((100% - 24px) / 4);
+    min-width: 0;
+  }
+  .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+    .travel-header__title {
+    font-size: 24px;
+  }
+  .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+    :is(.travel-panel, .journal-panel, .travel-cover) {
+    padding: 20px 16px;
+  }
+  .travel-shell[data-aesthetic="editorial"] .travel-dock {
+    border-radius: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .travel-shell[data-aesthetic="editorial"] * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Authentication and real utility dialogs share the same typography and quiet surfaces. */
+.journal-auth {
+  --auth-page: #faf6e9;
+  --auth-paper: #fffdf6;
+  --auth-ink: #352e29;
+  --auth-accent: #3d574b;
+  font-family:
+    "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
+    sans-serif;
+}
+.dark .journal-auth {
+  --auth-page: #1a1614;
+  --auth-paper: #25201d;
+  --auth-ink: #f1e8dc;
+  --auth-accent: #c8d7bf;
+  background: var(--auth-page);
+  color: var(--auth-ink);
+}
+.journal-auth .journal-auth-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.journal-auth h1 {
+  font-family: Georgia, "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+.journal-auth :is(input[type="password"], input[type="text"]) {
+  background: var(--auth-page);
+  color: var(--auth-ink);
+  border-color: color-mix(in srgb, var(--auth-ink) 22%, transparent);
+}
+.journal-auth label:has(input[type="checkbox"]) {
+  background: var(--auth-page);
+  color: var(--auth-ink);
+  border-color: transparent;
+}
+.journal-auth .journal-auth-card > div:first-child > div {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--auth-accent);
+}
+.journal-auth button[type="submit"] {
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.weather-card, .calc-modal, .journal-map-dialog, .journal-trip-chooser) {
+  border: 0;
+  border-radius: 8px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  box-shadow: none;
+  backdrop-filter: none;
+  font-family: inherit;
+}
+
+/* Three deliberate roles: story titles, rounded labels, and precise data. */
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .travel-section-heading h2,
+    .journal-panel h2,
+    .travel-day-heading h2,
+    .travel-timeline-event__heading h3,
+    .travel-timeline-event__heading button,
+    .travel-day-index__content strong,
+    .travel-day-index__number,
+    .travel-date-selector,
+    .travel-date-selector button,
+    .journal-guide-title,
+    .journal-flight-ticket__heading > strong
+  ) {
+  font-family: var(--font-rounded);
+  font-weight: 400;
+  letter-spacing: 0.015em;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(#trip-cover-title, .travel-today h2) {
+  font-family: var(--font-story);
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(
+    .travel-timeline-event__time,
+    .journal-flight-ticket__route,
+    .journal-flight-ticket__heading > span,
+    .travel-weather-summary__reading,
+    .travel-header__meta,
+    .travel-exchange,
+    .travel-cover__dates,
+    input,
+    textarea
+  ) {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-overview {
+  gap: 28px 24px;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-day-main {
+  gap: 28px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  :is(.travel-panel, .journal-panel, .travel-cover) {
+  border-radius: 6px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-illustration,
+.travel-shell[data-aesthetic="editorial"] .journal-day-stamp {
+  /* Art keeps dark pen strokes in both versions. No inversion or grayscale. */
+  --journal-ink: var(--journal-art-ink);
+  --travel-surface: var(--journal-snow);
+  filter: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-theme="dark"] .journal-day-sun {
+  display: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-theme="dark"]
+  :is(
+    .travel-panel,
+    .journal-panel,
+    .travel-cover,
+    .travel-day-heading,
+    .travel-day-weather,
+    .travel-day-route
+  ) {
+  border: 0;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+}
+.travel-shell[data-aesthetic="editorial"] .travel-highlights {
+  display: grid;
+  gap: 16px 28px;
+  font-family: var(--font-rounded);
+  font-size: 16px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-highlights
+  li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--travel-text);
+}
+.journal-footprint-star {
+  align-self: flex-start;
+  flex: 0 0 17px;
+  width: 17px;
+  height: 17px;
+  margin-top: 5px;
+  color: #97702f;
+  transform: rotate(-9deg);
+}
+.travel-highlights li:nth-child(3n + 2) .journal-footprint-star {
+  color: #58765f;
+  transform: rotate(13deg);
+}
+.travel-highlights li:nth-child(3n) .journal-footprint-star {
+  color: #9b6f66;
+  transform: rotate(-18deg);
+}
+[data-theme="dark"] .journal-footprint-star {
+  color: #e5bd77;
+}
+[data-theme="dark"]
+  .travel-highlights
+  li:nth-child(3n + 2)
+  .journal-footprint-star {
+  color: #b2c6a2;
+}
+[data-theme="dark"]
+  .travel-highlights
+  li:nth-child(3n)
+  .journal-footprint-star {
+  color: #d5aaa0;
+}
+
+/* Wavering, round-capped route marks replace the rigid CSS dotted border. */
+.travel-shell[data-aesthetic="editorial"] .travel-timeline {
+  --timeline-axis: 60px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-timeline
+  > ol::before {
+  left: calc(var(--timeline-axis) - 6px);
+  width: 12px;
+  border: 0;
+  background: var(--travel-muted);
+  opacity: 0.55;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='96' viewBox='0 0 12 96'%3E%3Cpath d='M6 0Q2 12 6 24T6 48 6 72 6 96' fill='none' stroke='black' stroke-width='1.7' stroke-dasharray='3 6 5 7' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-repeat: repeat-y;
+  mask-size: 12px 96px;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-timeline-event::before {
+  left: calc(var(--timeline-axis) - 6px);
+  width: 13px;
+  height: 12px;
+  border: 0;
+  border-radius: 43% 57% 46% 54% / 55% 42% 58% 45%;
+  background: var(--journal-yellow);
+  transform: rotate(-12deg);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .travel-timeline-event:nth-child(3n + 2)::before {
+  background: var(--journal-blue);
+  border-radius: 57% 43% 59% 41% / 42% 61% 39% 58%;
+  transform: rotate(19deg);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .travel-timeline-event:nth-child(3n)::before {
+  background: var(--journal-pink);
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .travel-timeline-event
+  + .travel-timeline-event {
+  border: 0;
+  margin-top: 12px;
+}
+
+/* Boarding passes: an actual scalable clip path cuts paired notches. */
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .journal-flight-ticket {
+  position: relative;
+  padding: 14px 12px 4px;
+  background: var(--travel-subtle);
+  border: 0;
+  border-radius: 6px;
+}
+.journal-ticket-clip {
+  position: absolute;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .journal-flight-ticket__heading {
+  border: 0;
+  background: transparent;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .journal-flight-ticket__route {
+  grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+  padding-block: 12px 18px;
+}
+.travel-shell[data-aesthetic="editorial"] .journal-flight-ticket__route strong {
+  font-weight: 400;
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-flight-ticket__airway::after {
+  display: none;
+}
+.journal-flight-thread {
+  width: 56px;
+  height: 16px;
+}
+
+/* Latest brief opts into glass on the fixed navigation only. Opaque fallback
+   preserves contrast when backdrop filtering/transparency is unavailable. */
+.travel-shell[data-aesthetic="editorial"] .travel-dock {
+  background: var(--travel-surface);
+  border: 0;
+  box-shadow: 0 -2px 20px rgb(0 0 0 / 4%);
+}
+@supports (backdrop-filter: blur(16px)) {
+  .travel-shell[data-aesthetic="editorial"] .travel-dock {
+    background: color-mix(in srgb, var(--travel-surface) 92%, transparent);
+    backdrop-filter: blur(16px) saturate(110%);
+    -webkit-backdrop-filter: blur(16px) saturate(110%);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .travel-shell[data-aesthetic="editorial"] .travel-dock {
+    background: var(--travel-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (min-width: 768px) {
+  .travel-shell[data-aesthetic="editorial"] .travel-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .travel-shell[data-aesthetic="editorial"] .travel-timeline {
+    --timeline-axis: 50px;
+  }
+}
+@media (max-width: 374px) {
+  .travel-shell[data-aesthetic="editorial"] .travel-timeline {
+    --timeline-axis: 44px;
+  }
+  .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+    .travel-header__title {
+    font-size: 22px;
+  }
+}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import useSwipeGesture from "../hooks/useSwipeGesture.js";
+import { usePanelViewport } from "../hooks/usePanelViewport.js";
 import { createPortal } from "react-dom";
 import {
   Camera,
@@ -227,6 +228,12 @@ const FinanceScreen = ({
   setFullPreviewImage,
   showToast,
 }) => {
+  const viewportPanelRef = useRef(null);
+  usePanelViewport(
+    viewportPanelRef,
+    "--record-viewport-height",
+    "recordKeyboard",
+  );
   // --- 0. 輔助工具 ---
   const todayStr = React.useMemo(() => {
     const now = new Date();
@@ -1666,6 +1673,7 @@ const FinanceScreen = ({
   if (!user) {
     return (
       <div
+        ref={viewportPanelRef}
         className={`journal-finance flex flex-col items-center justify-center min-h-[60vh] p-6 space-y-6 animate-fadeIn`}
       >
         <div
@@ -1676,36 +1684,9 @@ const FinanceScreen = ({
               歡迎使用旅程記帳
             </h2>
             <p className={`text-sm ${theme.textSec}`}>
-              請設定您的暱稱與頭像以識別紀錄
+              輸入暱稱即可開始，頭像可使用預設值
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2 p-2">
-            {(showAllAvatars
-              ? AVATAR_OPTIONS
-              : AVATAR_OPTIONS.slice(0, INITIAL_AVATAR_COUNT)
-            ).map(({ emoji, label }) => (
-              <button
-                key={emoji}
-                type="button"
-                aria-label={`選擇${label}頭像`}
-                aria-pressed={setupAvatar === emoji}
-                onClick={() => setSetupAvatar(emoji)}
-                className={`flex min-h-11 min-w-11 items-center justify-center rounded-lg border p-2 text-2xl transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${setupAvatar === emoji ? (isDarkMode ? "bg-sky-600/30 border-sky-500 scale-110 shadow-md" : "bg-sky-100 border-sky-400 scale-110 shadow-md") : isDarkMode ? "border-neutral-700 hover:bg-neutral-800/50" : "border-transparent hover:bg-black/5"}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            aria-expanded={showAllAvatars}
-            onClick={() => setShowAllAvatars((current) => !current)}
-            className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${isDarkMode ? "text-sky-300 hover:bg-white/10" : "text-sky-700 hover:bg-sky-50"}`}
-          >
-            {showAllAvatars
-              ? "收合頭像"
-              : `更多頭像（${AVATAR_OPTIONS.length - INITIAL_AVATAR_COUNT}）`}
-          </button>
           <div className="space-y-4">
             <label
               htmlFor="userSetupName"
@@ -1727,13 +1708,46 @@ const FinanceScreen = ({
             />
             <button
               onClick={handleUserSetup}
-              disabled={!setupName}
+              disabled={!setupName.trim()}
               className={`w-full py-3 rounded-lg font-bold text-white shadow-lg transition-[background-color,box-shadow,opacity,transform] active:scale-95
                 ${setupName ? (isDarkMode ? "bg-sky-600 hover:bg-sky-700" : "bg-[#5D737E] hover:bg-[#4A606A]") : "bg-stone-300 cursor-not-allowed"}`}
             >
               開始記錄
             </button>
           </div>
+          <details className="journal-avatar-options">
+            <summary>
+              <span aria-hidden="true">{setupAvatar}</span>
+              <span>變更頭像（選填）</span>
+            </summary>
+            <div className="flex flex-wrap justify-center gap-2 p-2">
+              {(showAllAvatars
+                ? AVATAR_OPTIONS
+                : AVATAR_OPTIONS.slice(0, INITIAL_AVATAR_COUNT)
+              ).map(({ emoji, label }) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  aria-label={`選擇${label}頭像`}
+                  aria-pressed={setupAvatar === emoji}
+                  onClick={() => setSetupAvatar(emoji)}
+                  className={`flex min-h-11 min-w-11 items-center justify-center rounded-lg border p-2 text-2xl transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${setupAvatar === emoji ? (isDarkMode ? "bg-sky-600/30 border-sky-500 scale-110 shadow-md" : "bg-sky-100 border-sky-400 scale-110 shadow-md") : isDarkMode ? "border-neutral-700 hover:bg-neutral-800/50" : "border-transparent hover:bg-black/5"}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-expanded={showAllAvatars}
+              onClick={() => setShowAllAvatars((current) => !current)}
+              className={`min-h-11 rounded-xl px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${isDarkMode ? "text-sky-300 hover:bg-white/10" : "text-sky-700 hover:bg-sky-50"}`}
+            >
+              {showAllAvatars
+                ? "收合頭像"
+                : `更多頭像（${AVATAR_OPTIONS.length - INITIAL_AVATAR_COUNT}）`}
+            </button>
+          </details>
         </div>
       </div>
     );
@@ -1741,6 +1755,7 @@ const FinanceScreen = ({
 
   return (
     <div
+      ref={viewportPanelRef}
       className={`journal-finance px-4 pb-24 animate-fadeIn flex flex-col min-h-[calc(100vh-85px)] relative`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -1795,10 +1810,10 @@ const FinanceScreen = ({
       >
         {/* Header */}
         <div
-          className={`journal-finance-header shrink-0 p-4 border-b backdrop-blur-xl transition-all duration-300 ${isDarkMode ? "border-white/20 bg-neutral-800/50 ring-1 ring-white/5" : "border-stone-200/60 bg-white/70 ring-1 ring-black/5"}`}
+          className={`journal-finance-header journal-record-toolbar shrink-0 p-4 border-b backdrop-blur-xl transition-all duration-300 ${isDarkMode ? "border-white/20 bg-neutral-800/50 ring-1 ring-white/5" : "border-stone-200/60 bg-white/70 ring-1 ring-black/5"}`}
         >
-          <div className="journal-finance-toolbar flex items-center justify-between">
-            <div className="journal-finance-account flex items-center gap-3">
+          <div className="journal-finance-toolbar journal-record-toolbar-row flex items-center justify-between">
+            <div className="journal-finance-account journal-record-identity flex items-center gap-3">
               {/* 🆕 頭像按鈕 - 點擊顯示選單 */}
               {user && (
                 <>
@@ -1909,7 +1924,7 @@ const FinanceScreen = ({
 
               {user && (
                 <div
-                  className={`journal-finance-account-name text-base font-bold ${theme.text} self-center`}
+                  className={`journal-finance-account-name journal-record-name text-base font-bold ${theme.text} self-center`}
                 >
                   {user.name}
                 </div>
@@ -1917,7 +1932,7 @@ const FinanceScreen = ({
             </div>
 
             {/* 模式切換與操作按鈕共用單行工具列。 */}
-            <div className="journal-finance-tools flex items-center gap-1">
+            <div className="journal-finance-tools journal-record-toolbar-controls flex items-center gap-1">
               <div
                 className={`journal-finance-modes flex p-1 rounded-xl border gap-1 ${isDarkMode ? "bg-neutral-900/60 border-white/10" : "bg-stone-100/80 border-white/30"}`}
               >
@@ -1940,7 +1955,7 @@ const FinanceScreen = ({
                   記事
                 </button>
               </div>
-              <div className="journal-finance-actions flex items-center gap-1">
+              <div className="journal-finance-actions journal-record-tool-buttons flex items-center gap-1">
                 <button
                   onClick={() => setShowSearch(!showSearch)}
                   className={`p-1.5 rounded-lg border transition-all active:scale-95 ${
@@ -2083,10 +2098,10 @@ const FinanceScreen = ({
 
         {/* 紀錄區域獨立捲動，輸入區保持在卡片底部。 */}
         <div
-          className={`journal-finance-log flex-1 p-4 space-y-3 flex flex-col backdrop-blur-md ${isDarkMode ? "bg-black/15" : "bg-[#F9F9F6]/70"}`}
+          className={`journal-finance-log journal-record-log flex-1 p-4 space-y-3 flex flex-col backdrop-blur-md ${isDarkMode ? "bg-black/15" : "bg-[#F9F9F6]/70"}`}
         >
           {records.filter((r) => r.type === mode).length === 0 && (
-            <div className="journal-finance-empty">
+            <div className="journal-finance-empty journal-record-empty">
               <span className="journal-finance-empty__eyebrow">旅途手帳</span>
               <div className="journal-finance-empty__icon" aria-hidden="true">
                 {mode === "finance" ? <Wallet /> : <Edit3 />}
@@ -2234,7 +2249,7 @@ const FinanceScreen = ({
                             {record.user?.avatar}
                           </div>
                           <span
-                            className={`text-[10px] opacity-70 leading-tight max-w-[4rem] truncate text-center font-medium ${theme.textSec}`}
+                            className={`journal-record-meta leading-tight max-w-[4rem] truncate text-center font-medium ${theme.textSec}`}
                           >
                             {record.user?.name}
                           </span>
@@ -2242,7 +2257,7 @@ const FinanceScreen = ({
 
                         {/* 2. 內容卡片區域 - 統一使用半透明風格（與 AI 導遊回覆一致） */}
                         <div
-                          className={`flex flex-col max-w-[75%] ${record.user?.name === user.name ? "items-end" : "items-start"}`}
+                          className={`journal-record-content min-w-0 flex flex-col max-w-[75%] ${record.user?.name === user.name ? "items-end" : "items-start"}`}
                         >
                           <div
                             id={`record-${record.timestamp}`}
@@ -2267,7 +2282,7 @@ const FinanceScreen = ({
                                     />
                                     <div className="flex items-center gap-1.5 mt-1.5">
                                       <span
-                                        className={`text-[10px] ${theme.textSec}`}
+                                        className={`journal-record-meta ${theme.textSec}`}
                                       >
                                         {formatTime(record.timestamp)}
                                       </span>
@@ -2289,7 +2304,7 @@ const FinanceScreen = ({
                                       )}
                                     </div>
                                     <div
-                                      className={`text-[10px] mt-0.5 ${theme.textSec}`}
+                                      className={`journal-record-meta mt-0.5 ${theme.textSec}`}
                                     >
                                       {hasRecordedConversion(record)
                                         ? `≈ ${formatCurrency(record.targetAmount ?? record.twdAmount, targetCurrency)}`
@@ -2349,7 +2364,7 @@ const FinanceScreen = ({
                                 )}
                                 <div className="flex items-center justify-end gap-1 mt-1.5">
                                   <span
-                                    className={`text-[9px] ${theme.textSec}`}
+                                    className={`journal-record-meta ${theme.textSec}`}
                                   >
                                     {formatTime(record.timestamp)}
                                   </span>
@@ -2366,7 +2381,7 @@ const FinanceScreen = ({
 
                         {/* 3. 操作按鈕區域 */}
                         {record.user?.name === user.name && (
-                          <div className="journal-record-actions flex flex-col justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="journal-record-actions flex shrink-0 flex-col justify-center gap-2 opacity-100 transition-opacity duration-200">
                             <button
                               type="button"
                               onClick={() => startEditing(record)}

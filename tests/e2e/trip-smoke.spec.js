@@ -369,7 +369,7 @@ test("keeps flight summaries visible while accommodation details are collapsed",
   if (EXPECTED_TRIP_ID === "2027_tohoku") {
     await expect(
       flights.locator(".journal-flight-ticket__note").first(),
-    ).toContainText("時刻依出發通知");
+    ).toContainText("暫定時刻，待出發通知確認");
   }
   await expand.click();
   await expect(
@@ -565,6 +565,9 @@ test("offers common avatars first and exposes an accessible selected state", asy
   );
   await expect(avatarButtons).toHaveCount(8);
   await expect(avatarButtons.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(avatarButtons.first()).not.toBeVisible();
+  await page.locator(".journal-avatar-options summary").click();
+  await expect(avatarButtons.first()).toBeVisible();
 
   await page.getByRole("button", { name: /更多頭像/ }).click();
   await expect(avatarButtons).toHaveCount(42);
@@ -651,8 +654,24 @@ test("honors reduced motion and keeps the closed tools clear of navigation", asy
         .boundingBox();
       expect(toolBox).not.toBeNull();
       expect(navBox).not.toBeNull();
-      expect(toolBox.x).toBeGreaterThanOrEqual(navBox.x + navBox.width - 8);
-      expect(Math.abs(toolBox.y - navBox.y)).toBeLessThan(24);
+      expect(toolBox.x).toBeGreaterThanOrEqual(0);
+      expect(toolBox.y).toBeGreaterThanOrEqual(0);
+      expect(toolBox.x + toolBox.width).toBeLessThanOrEqual(viewport.width);
+      expect(toolBox.y + toolBox.height).toBeLessThanOrEqual(viewport.height);
+      for (const tab of await page.locator(".travel-nav__item").all()) {
+        const box = await tab.boundingBox();
+        const overlapWidth = Math.max(
+          0,
+          Math.min(toolBox.x + toolBox.width, box.x + box.width) -
+            Math.max(toolBox.x, box.x),
+        );
+        const overlapHeight = Math.max(
+          0,
+          Math.min(toolBox.y + toolBox.height, box.y + box.height) -
+            Math.max(toolBox.y, box.y),
+        );
+        expect(overlapWidth * overlapHeight).toBe(0);
+      }
     }
   };
 
@@ -803,7 +822,7 @@ test("keeps shop expansion and valid map links across tab changes", async ({
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(
-    firstShop.locator(".journal-place-card").first(),
+    firstShop.locator('.journal-shop-links a[href*="google.com/maps"]').first(),
   ).toHaveAttribute("href", /google\.com\/maps/);
   await page.getByRole("button", { name: "指南", exact: true }).click();
   await page.getByRole("button", { name: "商店", exact: true }).click();
@@ -818,11 +837,12 @@ test("keeps shop expansion and valid map links across tab changes", async ({
     /可刪|整段刪|互搶|當日無樹冰|紀念品少/,
   );
   if (EXPECTED_TRIP_ID === "2027_tohoku") {
-    const ginzanLink = page.getByRole("link", { name: /^銀山溫泉街/ });
-    const query = new URL(
-      await ginzanLink.getAttribute("href"),
-    ).searchParams.get("query");
-    expect(query).toBe("銀山温泉");
+    const shop = page
+      .locator(".journal-place-card")
+      .filter({ hasText: "名取ロフト（LOFT）" });
+    await expect(
+      shop.getByRole("link", { name: "官方店鋪資訊", exact: true }),
+    ).toHaveAttribute("href", /^https:\/\/natori\.aeonmall\.jp\/shop\//);
     await expect(page.locator("#panel-shops")).not.toContainText("1km內");
   }
 });

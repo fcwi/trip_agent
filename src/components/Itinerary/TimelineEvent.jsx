@@ -68,17 +68,21 @@ export default function TimelineEvent({
               {event.transport.duration}
             </span>
           )}
-          <a
-            className="travel-icon-button journal-event-map-link"
-            href={getMapLink(event.mapQuery || event.title)}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="在 Google Maps 查看"
-            aria-label={`在地圖查看${event.title}`}
-          >
-            <MapPin aria-hidden="true" className="h-4 w-4" />
-            <span aria-hidden="true">地圖</span>
-          </a>
+          {event.locationPending ? (
+            <span className="travel-muted">地點待出發通知</span>
+          ) : (
+            <a
+              className="travel-icon-button journal-event-map-link"
+              href={getMapLink(event.mapQuery || event.title)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="在 Google Maps 查看"
+              aria-label={`在地圖查看${event.title}`}
+            >
+              <MapPin aria-hidden="true" className="h-4 w-4" />
+              <span aria-hidden="true">地圖</span>
+            </a>
+          )}
         </div>
         {!isTransport && event.desc && (
           <p
@@ -123,6 +127,21 @@ export default function TimelineEvent({
                   <li key={index}>{item}</li>
                 ))}
               </ul>
+            </section>
+          )}
+          {event.sources?.length > 0 && (
+            <section className="journal-event-sources">
+              <h4>查閱來源</h4>
+              {event.sources.map((source) => (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {source.text}
+                </a>
+              ))}
             </section>
           )}
         </div>

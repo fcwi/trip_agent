@@ -4,7 +4,9 @@
 
 需 Playwright Chromium；Windows 已安裝 Chrome 時可設定 `$env:PRODUCTION_TEST_BROWSER='chrome'`。使用系統 Chromium 的 Linux 環境可設定 `PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium`。
 
-每套旅程檢查 320px 淺色、390px 深色：
+預設使用本機 5189 埠；若該埠被 Windows 保留，可設定 `$env:PRODUCTION_TEST_PORT='4189'` 後重新建置並執行。
+
+每套旅程驗證 320px 亮色與 390px 深色的以下兩種情境：
 
 - 安裝 Service Worker 並清除 HTTP 快取，斷網重新啟動後必須停在密碼頁；不可用本機登入旗標繞過伺服器驗證。恢復網路並登入後，再確認已開啟的六個分頁、地圖替代連結、字體快取可離線使用。
 - 恢復網路後重試地圖引擎，以受控背景圖層確認恢復；再次斷網確認 AI 失敗提示與本機記帳。立即重新整理後應停在密碼頁，重新連線登入後紀錄仍須完整。

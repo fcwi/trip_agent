@@ -1,11 +1,15 @@
 import { useId } from "react";
+import { useArtworkNight } from "./artworkTheme.js";
+import NightSky from "./NightSky.jsx";
 
 export function SceneFrame({ id, children }) {
   const washId = useId();
+  const night = useArtworkNight();
   return (
     <svg
       className="journal-illustration"
       data-artwork={id}
+      data-artwork-theme={night ? "dark" : "light"}
       viewBox="32 -8 576 312"
       fill="none"
       aria-hidden="true"
@@ -22,15 +26,19 @@ export function SceneFrame({ id, children }) {
           <stop offset="1" stopColor="var(--travel-surface)" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d="M32-8h576v312H32Z" fill={`url(#${washId})`} />
+      <path
+        d="M32-8h576v312H32Z"
+        fill={night ? "var(--journal-sky)" : `url(#${washId})`}
+      />
       <g
-        stroke="var(--journal-ink)"
+        stroke="var(--journal-art-ink, var(--journal-ink))"
         strokeWidth="1.45"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
         {children}
       </g>
+      {night && <NightSky />}
     </svg>
   );
 }

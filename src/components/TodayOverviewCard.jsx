@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { getLandingOverview } from "../utils/landingOverview.js";
+import JournalSticker from "./Itinerary/JournalSticker.jsx";
 
 export default function TodayOverviewCard({
   itineraryData,
@@ -32,10 +33,17 @@ export default function TodayOverviewCard({
       aria-labelledby="today-overview-heading"
       className="travel-panel travel-today"
     >
-      <p className="travel-eyebrow">{overview.eyebrow}</p>
-      <h2 id="today-overview-heading">
-        {overview.day?.title || tripConfig.title}
-      </h2>
+      <div className="journal-summary-heading">
+        <div>
+          <p className="travel-eyebrow">{overview.eyebrow}</p>
+          <h2 id="today-overview-heading">
+            {overview.day?.title || tripConfig.title}
+          </h2>
+        </div>
+        <JournalSticker
+          kind={overview.status === "after" ? "camera" : "suitcase"}
+        />
+      </div>
       <p className="travel-today__location">
         <MapPin aria-hidden="true" className="h-4 w-4" />
         {overview.locationName}
@@ -77,6 +85,16 @@ export default function TodayOverviewCard({
           )}
         </div>
       </div>
+      <button
+        type="button"
+        className="travel-primary-button"
+        onClick={() =>
+          changeDay(overview.status === "after" ? 0 : overview.nextDayIndex)
+        }
+      >
+        {overview.actionLabel}
+        <ArrowRight aria-hidden="true" className="h-4 w-4" />
+      </button>
       <div className="travel-today__needs">
         <h3>
           {overview.neededNow.length ? (
@@ -96,16 +114,6 @@ export default function TodayOverviewCard({
           <p className="travel-muted">目前沒有需要立即處理的項目。</p>
         )}
       </div>
-      <button
-        type="button"
-        className="travel-primary-button"
-        onClick={() =>
-          changeDay(overview.status === "after" ? 0 : overview.nextDayIndex)
-        }
-      >
-        {overview.actionLabel}
-        <ArrowRight aria-hidden="true" className="h-4 w-4" />
-      </button>
     </section>
   );
 }

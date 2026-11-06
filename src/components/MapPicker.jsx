@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { supplyEmptyRoadShield } from "../utils/mapStyleRepair.js";
 import { isPlaceNameLayer } from "../utils/journalMap.js";
+
+maplibregl.setWorkerUrl(workerUrl);
 
 /**
  * MapPicker Component with MapLibre GL JS

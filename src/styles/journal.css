@@ -398,7 +398,7 @@
   --travel-surface: #fffefd;
   --travel-subtle: #f4eedc;
   --travel-text: #343330;
-  --travel-muted: #6b6861;
+  --travel-muted: #58564f;
   --travel-line: #d5cec0;
   --travel-accent: #3c6472;
   --travel-on-accent: #fffefd;
@@ -750,11 +750,7 @@
 .travel-cover__drawing {
   overflow: hidden;
   border-bottom: 1px solid var(--journal-rule);
-  background: linear-gradient(
-    165deg,
-    var(--travel-page),
-    var(--travel-surface)
-  );
+  background: var(--travel-page);
 }
 
 /* Softer distant ink leaves the foreground and main subject in focus. */
@@ -1379,9 +1375,6 @@
   .journal-overview .travel-cover {
     grid-column: 1 / -1;
   }
-  .journal-overview-section:last-child:nth-child(even) {
-    grid-column: 1 / -1;
-  }
 }
 
 /* Fine ink hierarchy: a quiet frame for secondary information. */
@@ -1875,6 +1868,350 @@
   height: 44px;
   border: 1px solid var(--journal-rule);
   border-radius: 14px;
+}
+
+/* Task-first home: the next stop leads; the destination artwork stays as a short cover. */
+.travel-app-shell {
+  width: 100%;
+  max-width: 448px;
+}
+
+/* A solid phone dock and an out-of-canvas desktop rail keep navigation distinct. */
+.travel-dock {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--travel-line);
+  background: var(--travel-surface);
+}
+.travel-dock__items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.travel-shell[data-editorial="true"] .travel-dock .travel-nav {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.travel-shell[data-editorial="true"] .journal-guide-search {
+  grid-column: 1 / -1;
+  padding: 16px;
+}
+.journal-guide-search label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.journal-guide-search__field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 12px;
+  border: 1px solid var(--travel-line);
+  border-radius: 12px;
+  background: var(--travel-page);
+}
+.journal-guide-search__field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px 8px 0;
+  background: transparent;
+  color: var(--travel-text);
+  font-size: 16px;
+}
+.journal-guide-search__field button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.journal-guide-search > p {
+  margin-top: 8px;
+  color: var(--travel-muted);
+  font-size: 13px;
+}
+.journal-avatar-options {
+  text-align: left;
+  color: var(--travel-muted);
+  font-size: 14px;
+}
+.journal-avatar-options summary {
+  min-height: 44px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.journal-avatar-options summary > span:first-child {
+  margin-inline: 8px;
+}
+.travel-shell[data-editorial="true"]
+  .journal-finance-setup
+  > div:first-child
+  p {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+@media (min-width: 1280px) {
+  .travel-shell .travel-app-shell {
+    max-width: min(1120px, calc(100% - 200px));
+  }
+  .travel-dock {
+    inset: 50% auto auto max(16px, calc((100vw - 1120px) / 2 - 112px));
+    transform: translateY(-50%);
+    width: 80px;
+    padding: 8px;
+    border: 1px solid var(--travel-line);
+    border-radius: 20px;
+  }
+  .travel-dock__items,
+  .travel-dock .travel-nav {
+    flex-direction: column;
+    height: auto;
+  }
+  .travel-dock .travel-nav__item {
+    width: 60px;
+    min-height: 60px;
+  }
+  .travel-dock .travel-tools-panel {
+    left: calc(100% + 12px);
+    right: auto;
+    bottom: 0;
+  }
+}
+.journal-shop-areas {
+  display: grid;
+  gap: 12px;
+}
+.travel-shell[data-editorial="true"]
+  :is(.travel-eyebrow, .journal-header-kicker) {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.travel-shell[data-editorial="true"]
+  :is(.travel-panel, .journal-panel, .travel-header) {
+  font-variant-numeric: tabular-nums;
+}
+.travel-shell[data-editorial="true"] .travel-checklist__text {
+  color: var(--travel-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.travel-shell[data-editorial="true"] .travel-checklist__checked {
+  color: var(--travel-muted);
+}
+.travel-shell[data-editorial="true"] .travel-today__needs {
+  --travel-muted: var(--travel-text);
+  padding: 12px;
+  margin-top: 16px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-subtle);
+}
+.travel-shell[data-editorial="true"] .travel-today h2 {
+  margin-top: 6px;
+  font-size: 22px;
+}
+.travel-shell[data-editorial="true"] .travel-today__location {
+  margin-top: 8px;
+}
+.travel-shell[data-editorial="true"] .travel-today__next {
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-date-selector[data-overview="true"] {
+  padding-block: 4px 8px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-date-selector[data-overview="true"]
+  .journal-date-node {
+  width: 12px;
+  height: 12px;
+  margin-bottom: 6px;
+  border-width: 2px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-date-selector[data-overview="true"]
+  > button::after {
+  top: 15px;
+  height: 2px;
+}
+.travel-shell[data-editorial="true"]
+  .travel-cover__drawing
+  .journal-illustration {
+  max-height: 180px;
+}
+.travel-shell[data-editorial="true"] .travel-cover__body {
+  padding: 16px;
+}
+.travel-shell[data-editorial="true"] .travel-cover__topline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.travel-shell[data-editorial="true"] .travel-cover h2 {
+  font-size: 24px;
+  line-height: 1.4;
+}
+.travel-shell[data-editorial="true"] .travel-cover__places {
+  font-size: 14px;
+}
+.travel-shell[data-editorial="true"] .journal-guide-summary {
+  color: var(--travel-muted);
+}
+
+.travel-shell[data-editorial="true"] .journal-guide-content {
+  color: var(--travel-text);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.travel-shell[data-editorial="true"] .journal-guide-content :is(p, ol) {
+  max-width: 65ch;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+.travel-shell[data-editorial="true"] .journal-guide-steps {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.travel-shell[data-editorial="true"] .journal-guide-steps h3 {
+  color: var(--travel-text);
+  font-size: 14px;
+}
+.travel-shell[data-editorial="true"] .journal-guide-steps ol {
+  padding-left: 1.5em;
+  list-style-position: outside;
+}
+.travel-shell[data-editorial="true"] .journal-guide-steps li + li {
+  margin-top: 12px;
+}
+.journal-guide-blog-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .travel-app-shell {
+    max-width: calc(100% - 48px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .travel-app-shell {
+    max-width: 1120px;
+  }
+  /* 12 shared columns: next stop 7 + cover 5; subsequent peer panels 6 + 6. */
+  .travel-shell[data-editorial="true"] .journal-overview {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .journal-overview > .journal-overview-section {
+    grid-column: span 6;
+  }
+  .journal-overview > .journal-overview-section--today {
+    grid-column: span 7;
+  }
+  .journal-overview > .travel-cover {
+    grid-column: span 5;
+  }
+  .journal-overview > .journal-overview-section:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  /* A day is a peer object: one shared row replaces a tall list beside short weather. */
+  .journal-overview
+    > :is(.journal-overview-section--days, .journal-overview-section--weather) {
+    grid-column: 1 / -1;
+  }
+  .travel-day-index ol {
+    display: grid;
+    grid-template-columns: repeat(var(--trip-day-count), minmax(0, 1fr));
+    gap: 16px;
+  }
+  .travel-day-index ol > li + li {
+    border-top: 0;
+  }
+  .travel-day-index button {
+    position: relative;
+    height: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 4px;
+  }
+  .travel-shell[data-editorial="true"] .travel-day-index__number {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 0 8px;
+    width: 100%;
+  }
+  .travel-day-index__number .journal-index-picture {
+    grid-row: span 2;
+    margin: 0;
+  }
+  .travel-day-index__number small {
+    grid-column: 2;
+  }
+  .travel-shell[data-editorial="true"] .travel-day-index__content strong {
+    font-size: 14px;
+  }
+  .travel-day-index button > svg {
+    margin-top: 4px;
+  }
+  .travel-weather-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 24px;
+  }
+  .travel-weather-summary .travel-section-heading {
+    grid-column: 1 / -1;
+  }
+  .travel-weather-summary__reading {
+    margin-top: 0;
+  }
+  .travel-weather-summary__destination {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .travel-shell[data-editorial="true"] #panel-guides {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+  .travel-shell[data-editorial="true"] #panel-guides > * {
+    min-width: 0;
+    margin-top: 0;
+  }
+  .journal-shop-areas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+  .journal-shop-areas > * {
+    min-width: 0;
+    margin-top: 0;
+  }
+  .travel-shell[data-active-tab="ai"] .journal-ai {
+    width: 100%;
+    max-width: 880px;
+    margin-inline: auto;
+  }
+  .travel-shell[data-active-tab="finance"] .journal-finance {
+    width: 100%;
+    max-width: 960px;
+    margin-inline: auto;
+  }
 }
 
 /* Keep the full empty-state illustration visible in shorter phone viewports. */

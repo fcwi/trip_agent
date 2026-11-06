@@ -1,9 +1,9 @@
-import Pbf from "pbf";
+import { PbfWriter } from "pbf";
 import { Buffer } from "node:buffer";
 
 // One actual vector-tile point, deliberately missing the numeric rank attribute.
 export function seaLabelTile() {
-  const pbf = new Pbf();
+  const pbf = new PbfWriter();
   pbf.writeMessage(3, (_unused, layer) => {
     layer.writeStringField(1, "water_label");
     layer.writeMessage(2, (_unused, feature) => {

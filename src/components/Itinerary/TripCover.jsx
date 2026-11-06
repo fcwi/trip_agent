@@ -1,6 +1,8 @@
 import { MapPin } from "lucide-react";
 import JournalIllustration from "./JournalIllustration.jsx";
 import { TripStudies } from "./artwork/DailyArtwork.jsx";
+import { useState } from "react";
+import { useArtworkNight } from "./artwork/artworkTheme.js";
 
 export default function TripCover({
   tripConfig,
@@ -10,6 +12,9 @@ export default function TripCover({
   currentTripDayIndex,
 }) {
   const cover = tripConfig.presentation?.cover;
+  const night = useArtworkNight();
+  const [failedSource, setFailedSource] = useState(null);
+  const coverSource = night ? cover?.darkSrc : cover?.src;
   const status =
     tripStatus === "before"
       ? `距離出發 ${daysUntilTrip} 天`
@@ -19,15 +24,14 @@ export default function TripCover({
 
   return (
     <section className="travel-cover" aria-labelledby="trip-cover-title">
-      {cover?.src ? (
+      {coverSource && failedSource !== coverSource ? (
         <div className="travel-cover__image">
           <img
-            src={cover.src}
+            src={coverSource}
+            data-artwork-theme={night ? "dark" : "light"}
             alt={cover.alt || ""}
             style={{ objectPosition: cover.position || "center" }}
-            onError={(event) => {
-              event.currentTarget.hidden = true;
-            }}
+            onError={() => setFailedSource(coverSource)}
           />
         </div>
       ) : (

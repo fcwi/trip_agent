@@ -12,6 +12,64 @@ const style = {
     },
   ],
 };
+
+test("third-party map attribution removes consecutive event attributes", async ({
+  page,
+}) => {
+  await page.route("https://api.maptiler.com/**", (route) =>
+    route.fulfill({
+      json: {
+        ...style,
+        sources: {
+          attributionProbe: {
+            type: "geojson",
+            attribution:
+              '<a href="https://example.invalid/" onclick="window.__attributionExecuted=true" onmouseover="window.__attributionExecuted=true">測試地圖來源</a>',
+            data: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  properties: {},
+                  geometry: { type: "Point", coordinates: [140.917, 38.139] },
+                },
+              ],
+            },
+          },
+        },
+        layers: [
+          ...style.layers,
+          {
+            id: "attribution-probe",
+            type: "circle",
+            source: "attributionProbe",
+            paint: { "circle-radius": 4 },
+          },
+        ],
+      },
+    }),
+  );
+  await mount(page);
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
+  const attribution = page.locator(".maplibregl-ctrl-attrib-inner a", {
+    hasText: "測試地圖來源",
+  });
+  await expect(attribution).toHaveCount(1);
+  expect(
+    await attribution.evaluate((el) =>
+      el.getAttributeNames().filter((name) => /^on/i.test(name)),
+    ),
+  ).toEqual([]);
+  await attribution.evaluate((el) =>
+    el.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })),
+  );
+  expect(
+    await page.evaluate(() => window.__attributionExecuted),
+  ).toBeUndefined();
+});
 async function mount(page, options = {}) {
   await page.goto(options.mapDebug ? "/?mapDebug=1" : "/");
   await page.evaluate(async (options) => {
@@ -239,6 +297,28 @@ test("dark sea labels are repaired before vector-tile evaluation and remain safe
     .toBe(true);
   expect(reports.flatMap((report) => report.issues)).toEqual([]);
   expect(warnings).toEqual([]);
+});
+
+test("a failed engine download can retry without reloading the trip", async ({
+  page,
+}) => {
+  const enginePattern = "**/node_modules/maplibre-gl/dist/maplibre-gl.mjs*";
+  await page.route(enginePattern, (route) => route.abort());
+  // One point avoids a later route response automatically remounting the map
+  // while this test is deliberately exercising the manual retry control.
+  await mount(page, {
+    events: [{ title: "仙台空港", time: "09:00", lon: 140.917, lat: 38.139 }],
+  });
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "error",
+  );
+  await page.unroute(enginePattern);
+  await page.getByRole("button", { name: "重新載入地圖" }).click();
+  await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
+    "data-map-status",
+    "ready",
+  );
 });
 
 test("map failure can retry and offline reconnect recovers", async ({

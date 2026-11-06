@@ -14,7 +14,9 @@ const trips = requestedTrips.length
   ? requestedTrips
   : ["2026_busan", "2026_karuizawa", "2027_tohoku"];
 const password = "trip-e2e-password";
-const root = "http://127.0.0.1:5189";
+const previewPort = Number(process.env.PRODUCTION_TEST_PORT || 5189);
+assert(Number.isInteger(previewPort) && previewPort > 0 && previewPort < 65536);
+const root = `http://127.0.0.1:${previewPort}`;
 const reportDirectory = path.resolve("test-run.local/production-audit");
 await fs.mkdir(reportDirectory, { recursive: true });
 const results = [];
@@ -247,7 +249,7 @@ try {
       ],
       logLevel: "warn",
       build: { outDir: output },
-      preview: { host: "127.0.0.1", port: 5189, strictPort: true },
+      preview: { host: "127.0.0.1", port: previewPort, strictPort: true },
     });
     try {
       if (process.argv.includes("--map-diagnostics")) {

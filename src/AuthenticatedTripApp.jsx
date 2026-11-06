@@ -147,6 +147,7 @@ import { useCurrency } from "./hooks/useCurrency.js";
 import { useNetworkStatus } from "./hooks/useNetworkStatus.js";
 import { useDeviceChrome } from "./hooks/useDeviceChrome.js";
 import { useTripShellTheme } from "./hooks/useTripShellTheme.js";
+import { ArtworkThemeContext } from "./components/Itinerary/artwork/artworkTheme.js";
 import { useItineraryDayPager } from "./hooks/useItineraryDayPager.js";
 import { useModalAccessibility } from "./hooks/useModalAccessibility.js";
 import { useTripNavigation } from "./hooks/useTripNavigation.js";
@@ -2378,7 +2379,7 @@ const ItineraryApp = ({ authentication }) => {
 
       return {
         icon: info.icon,
-        temp: `${minTemp}°C / ${maxTemp}°C`,
+        temp: `${maxTemp}°C / ${minTemp}°C`,
         desc: info.text,
         advice: info.advice,
         code: weatherCode,
@@ -2565,62 +2566,64 @@ const ItineraryApp = ({ authentication }) => {
 
   // Keep all reading pages on the same travel journal surface.
   return (
-    <div
-      style={{
-        ...containerStyle,
-      }}
-      data-theme={isDarkMode ? "dark" : "light"}
-      data-editorial="true"
-      data-season={tripConfig.artwork.season}
-      data-artwork={tripConfig.artwork.id}
-      data-active-tab={activeTab}
-      className={`travel-shell min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
-      onTouchStart={handleMainTouchStart}
-      onTouchMove={handleMainTouchMove}
-      onTouchEnd={handleMainTouchEnd}
-    >
-      {connectionNotice ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed left-1/2 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[200] flex min-h-11 -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold shadow-xl backdrop-blur-lg ${
-            connectionNotice === "offline"
-              ? "border-amber-300/40 bg-amber-950/90 text-amber-100"
-              : "border-emerald-300/40 bg-emerald-800/90 text-white"
-          }`}
-        >
-          {connectionNotice === "offline" ? (
-            <WifiOff aria-hidden="true" className="h-4 w-4" />
-          ) : (
-            <Wifi aria-hidden="true" className="h-4 w-4" />
-          )}
-          <span>
-            {connectionNotice === "offline"
-              ? "目前離線，顯示已快取資料"
-              : "已恢復網路連線"}
-          </span>
-        </div>
-      ) : null}
-
-      {/* 下拉重新整理指示器 */}
+    <ArtworkThemeContext value={isDarkMode}>
       <div
-        className="fixed top-0 left-0 w-full flex justify-center pointer-events-none z-[100] transition-opacity duration-300"
         style={{
-          transform: `translateY(${pullDistance - 40}px)`,
-          opacity: pullDistance > 20 ? 1 : 0,
+          ...containerStyle,
         }}
+        data-theme={isDarkMode ? "dark" : "light"}
+        data-editorial="true"
+        data-aesthetic="editorial"
+        data-season={tripConfig.artwork.season}
+        data-artwork={tripConfig.artwork.id}
+        data-active-tab={activeTab}
+        className={`travel-shell min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} relative overflow-hidden font-sans touch-pan-y`}
+        onTouchStart={handleMainTouchStart}
+        onTouchMove={handleMainTouchMove}
+        onTouchEnd={handleMainTouchEnd}
       >
-        <div
-          className={`p-2 rounded-full shadow-lg backdrop-blur-md border ${componentStyles.itineraryCard}`}
-        >
-          <RotateCcw
-            className={`w-5 h-5 ${theme.accent} ${isRefreshing ? "animate-spin" : ""}`}
-            style={{ transform: `rotate(${pullDistance * 3}deg)` }}
-          />
-        </div>
-      </div>
+        {connectionNotice ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`fixed left-1/2 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[200] flex min-h-11 -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold shadow-xl backdrop-blur-lg ${
+              connectionNotice === "offline"
+                ? "border-amber-300/40 bg-amber-950/90 text-amber-100"
+                : "border-emerald-300/40 bg-emerald-800/90 text-white"
+            }`}
+          >
+            {connectionNotice === "offline" ? (
+              <WifiOff aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Wifi aria-hidden="true" className="h-4 w-4" />
+            )}
+            <span>
+              {connectionNotice === "offline"
+                ? "目前離線，顯示已快取資料"
+                : "已恢復網路連線"}
+            </span>
+          </div>
+        ) : null}
 
-      <style>{`
+        {/* 下拉重新整理指示器 */}
+        <div
+          className="fixed top-0 left-0 w-full flex justify-center pointer-events-none z-[100] transition-opacity duration-300"
+          style={{
+            transform: `translateY(${pullDistance - 40}px)`,
+            opacity: pullDistance > 20 ? 1 : 0,
+          }}
+        >
+          <div
+            className={`p-2 rounded-full shadow-lg backdrop-blur-md border ${componentStyles.itineraryCard}`}
+          >
+            <RotateCcw
+              className={`w-5 h-5 ${theme.accent} ${isRefreshing ? "animate-spin" : ""}`}
+              style={{ transform: `rotate(${pullDistance * 3}deg)` }}
+            />
+          </div>
+        </div>
+
+        <style>{`
       @keyframes cloudFloat {
           from { transform: translateX(-100%); }
           to { transform: translateX(100vw); }
@@ -2653,209 +2656,210 @@ const ItineraryApp = ({ authentication }) => {
       .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
       `}</style>
 
-      <main
-        id="main-content"
-        className={`max-w-md mx-auto relative min-h-screen flex flex-col z-10 ${activeTab === "itinerary" ? "travel-itinerary-shell" : ""}`}
-      >
-        <TripHeader
-          tripConfig={tripConfig}
-          isDarkMode={isDarkMode}
-          theme={theme}
-          componentStyles={componentStyles}
-          testModeClickCount={testModeClickCount}
-          onTitleClick={handleTitleClick}
-          onLock={handleLockButtonClick}
-          onToggleTheme={() => {
-            handleInterruptClick();
-            toggleTheme();
-          }}
-          rateData={rateData}
-          isOnline={isOnline}
-        />
+        <main
+          id="main-content"
+          className={`travel-app-shell mx-auto relative min-h-screen flex flex-col z-10 ${activeTab === "itinerary" ? "travel-itinerary-shell" : ""}`}
+        >
+          <TripHeader
+            tripConfig={tripConfig}
+            isDarkMode={isDarkMode}
+            theme={theme}
+            componentStyles={componentStyles}
+            testModeClickCount={testModeClickCount}
+            onTitleClick={handleTitleClick}
+            onLock={handleLockButtonClick}
+            onToggleTheme={() => {
+              handleInterruptClick();
+              toggleTheme();
+            }}
+            rateData={rateData}
+            isOnline={isOnline}
+          />
 
-        {/* --- 分頁內容 --- */}
-        <TripTabPanels
-          activeTab={activeTab}
-          visitedTabs={visitedTabs}
-          activeDay={activeDay}
-          changeDay={changeDay}
-          direction={direction}
-          slideVariants={slideVariants}
-          navContainerRef={navContainerRef}
-          navItemsRef={navItemsRef}
-          itineraryData={itineraryData}
-          isDarkMode={isDarkMode}
-          theme={theme}
-          componentStyles={componentStyles}
-          tripConfig={tripConfig}
-          tripStatus={tripStatus}
-          daysUntilTrip={daysUntilTrip}
-          checklistData={checklistData}
-          currentTripDayIndex={currentTripDayIndex}
-          temporalContext={temporalContext}
-          weatherForecast={weatherForecast}
-          userWeather={userWeather}
-          displayWeather={displayWeather}
-          isFlightInfoExpanded={isFlightInfoExpanded}
-          setIsFlightInfoExpanded={setIsFlightInfoExpanded}
-          handleCopy={handleCopy}
-          expandedItems={expandedItems}
-          toggleExpand={toggleExpand}
-          getMapLink={getMapLink}
-          colors={colors}
-          currentTheme={currentTheme}
-          handleWeatherDetailOpen={handleWeatherDetailOpen}
-          isUpdatingLocation={isUpdatingLocation}
-          isTestMode={isTestMode}
-          testDateTime={testDateTime}
-          getWeatherInfo={getWeatherInfo}
-          getUserLocationWeather={getUserLocationWeather}
-          handleMapModalToggle={handleMapModalToggle}
-          scrollContainerRef={scrollContainerRef}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          pullDistance={pullDistance}
-          isRefreshing={isRefreshing}
-          current={current}
-          currentLocation={currentLocation}
-          dayMapEvents={dayMapEvents}
-          otherUsersLocations={otherUsersLocations}
-          currentUser={currentUser}
-          maptilerKey={maptilerKey}
-          guidesData={guidesData}
-          usefulLinks={usefulLinks}
-          shopGuideData={shopGuideData}
-          aiMode={aiMode}
-          handleSwitchMode={handleSwitchMode}
-          isSpeaking={isSpeaking}
-          setIsSpeaking={setIsSpeaking}
-          showAiSearch={showAiSearch}
-          setShowAiSearch={setShowAiSearch}
-          aiSearchQuery={aiSearchQuery}
-          setAiSearchQuery={setAiSearchQuery}
-          getSearchResults={getSearchResults}
-          scrollToMessage={scrollToMessage}
-          handleClearChat={handleClearChat}
-          messages={messages}
-          renderMessage={renderMessage}
-          handleSpeak={handleSpeak}
-          isLoading={isLoading}
-          loadingText={loadingText}
-          chatEndRef={chatEndRef}
-          setFullPreviewImage={setFullPreviewImage}
-          expandedMessages={expandedMessages}
-          toggleMessageExpand={toggleMessageExpand}
-          messageRefs={messageRefs}
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          listeningLang={listeningLang}
-          toggleListening={toggleListening}
-          fileInputRef={fileInputRef}
-          handleImageSelect={handleImageSelect}
-          selectedImage={selectedImage}
-          clearImage={clearImage}
-          handleSendMessage={handleSendMessage}
-          rateData={rateData}
-          gasUrl={gasUrl}
-          gasToken={gasToken}
-          apiKey={apiKey}
-          showToast={showToast}
-        />
+          {/* --- 分頁內容 --- */}
+          <TripTabPanels
+            activeTab={activeTab}
+            visitedTabs={visitedTabs}
+            activeDay={activeDay}
+            changeDay={changeDay}
+            direction={direction}
+            slideVariants={slideVariants}
+            navContainerRef={navContainerRef}
+            navItemsRef={navItemsRef}
+            itineraryData={itineraryData}
+            isDarkMode={isDarkMode}
+            theme={theme}
+            componentStyles={componentStyles}
+            tripConfig={tripConfig}
+            tripStatus={tripStatus}
+            daysUntilTrip={daysUntilTrip}
+            checklistData={checklistData}
+            currentTripDayIndex={currentTripDayIndex}
+            temporalContext={temporalContext}
+            weatherForecast={weatherForecast}
+            userWeather={userWeather}
+            displayWeather={displayWeather}
+            isFlightInfoExpanded={isFlightInfoExpanded}
+            setIsFlightInfoExpanded={setIsFlightInfoExpanded}
+            handleCopy={handleCopy}
+            expandedItems={expandedItems}
+            toggleExpand={toggleExpand}
+            getMapLink={getMapLink}
+            colors={colors}
+            currentTheme={currentTheme}
+            handleWeatherDetailOpen={handleWeatherDetailOpen}
+            isUpdatingLocation={isUpdatingLocation}
+            isTestMode={isTestMode}
+            testDateTime={testDateTime}
+            getWeatherInfo={getWeatherInfo}
+            getUserLocationWeather={getUserLocationWeather}
+            handleMapModalToggle={handleMapModalToggle}
+            scrollContainerRef={scrollContainerRef}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            pullDistance={pullDistance}
+            isRefreshing={isRefreshing}
+            current={current}
+            currentLocation={currentLocation}
+            dayMapEvents={dayMapEvents}
+            otherUsersLocations={otherUsersLocations}
+            currentUser={currentUser}
+            maptilerKey={maptilerKey}
+            guidesData={guidesData}
+            usefulLinks={usefulLinks}
+            shopGuideData={shopGuideData}
+            aiMode={aiMode}
+            handleSwitchMode={handleSwitchMode}
+            isSpeaking={isSpeaking}
+            setIsSpeaking={setIsSpeaking}
+            showAiSearch={showAiSearch}
+            setShowAiSearch={setShowAiSearch}
+            aiSearchQuery={aiSearchQuery}
+            setAiSearchQuery={setAiSearchQuery}
+            getSearchResults={getSearchResults}
+            scrollToMessage={scrollToMessage}
+            handleClearChat={handleClearChat}
+            messages={messages}
+            renderMessage={renderMessage}
+            handleSpeak={handleSpeak}
+            isLoading={isLoading}
+            loadingText={loadingText}
+            chatEndRef={chatEndRef}
+            setFullPreviewImage={setFullPreviewImage}
+            expandedMessages={expandedMessages}
+            toggleMessageExpand={toggleMessageExpand}
+            messageRefs={messageRefs}
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            listeningLang={listeningLang}
+            toggleListening={toggleListening}
+            fileInputRef={fileInputRef}
+            handleImageSelect={handleImageSelect}
+            selectedImage={selectedImage}
+            clearImage={clearImage}
+            handleSendMessage={handleSendMessage}
+            rateData={rateData}
+            gasUrl={gasUrl}
+            gasToken={gasToken}
+            apiKey={apiKey}
+            showToast={showToast}
+          />
 
-        <div className="fixed inset-x-0 bottom-3 z-50 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]">
-          <div className="flex items-end gap-2">
-            <BottomNav
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              onTabPreload={preloadTab}
-              handleInterruptClick={() => {}}
-              isDarkMode={isDarkMode}
-              theme={currentTheme}
-            />
-            <TripToolsMenu
-              isDarkMode={isDarkMode}
-              isSharing={isSharing}
-              locationSource={locationSource}
-              hasLocationPermission={hasLocationPermission}
-              onShareLocation={handleShareLocation}
-              onOpenCalculator={handleCalculatorOpen}
-            />
+          <div className="travel-dock">
+            <div className="travel-dock__items">
+              <BottomNav
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                onTabPreload={preloadTab}
+                handleInterruptClick={() => {}}
+                isDarkMode={isDarkMode}
+                theme={currentTheme}
+              />
+              <TripToolsMenu
+                isDarkMode={isDarkMode}
+                isSharing={isSharing}
+                locationSource={locationSource}
+                hasLocationPermission={hasLocationPermission}
+                onShareLocation={handleShareLocation}
+                onOpenCalculator={handleCalculatorOpen}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* 匯率計算機彈窗 */}
-        {isCalculatorOpen && (
-          <Suspense
-            fallback={<LazyPanelFallback label="載入匯率計算機中…" overlay />}
-          >
-            <CalculatorModal
-              isOpen
-              onClose={handleCalculatorClose}
-              isDarkMode={isDarkMode}
-              rateData={rateData}
-              currencyCode={tripConfig.currency.code}
-              currencyTarget={tripConfig.currency.target}
-            />
-          </Suspense>
-        )}
+          {/* 匯率計算機彈窗 */}
+          {isCalculatorOpen && (
+            <Suspense
+              fallback={<LazyPanelFallback label="載入匯率計算機中…" overlay />}
+            >
+              <CalculatorModal
+                isOpen
+                onClose={handleCalculatorClose}
+                isDarkMode={isDarkMode}
+                rateData={rateData}
+                currencyCode={tripConfig.currency.code}
+                currencyTarget={tripConfig.currency.target}
+              />
+            </Suspense>
+          )}
 
-        {/* 測試模式面板 (開發與測試用) */}
-        {isTestMode && (
-          <Suspense
-            fallback={<LazyPanelFallback label="載入測試工具中…" overlay />}
-          >
-            <TestModePanel
-              isOpen
-              onClose={handleTestModeClose}
-              testDateTime={testDateTime}
-              onDateTimeChange={(newDateTime) => {
-                debugLog(
-                  `🧪 更新時間: ${testDateTime.toLocaleString("zh-TW")} -> ${newDateTime.toLocaleString("zh-TW")}`,
-                );
-                setTestDateTime(newDateTime);
-              }}
-              testLatitude={testLatitude}
-              testLongitude={testLongitude}
-              onLocationChange={(coords) => {
-                debugLog(
-                  `🧪 更新位置: (${testLatitude}, ${testLongitude}) -> (${coords.lat}, ${coords.lon})`,
-                );
-                setTestLatitude(coords.lat);
-                setTestLongitude(coords.lon);
-                // 測試模式下主動抓取新座標的天氣
-                getUserLocationWeather({
-                  isSilent: false,
-                  coords: { latitude: coords.lat, longitude: coords.lon },
-                });
-              }}
-              testWeatherOverride={testWeatherOverride}
-              onWeatherChange={(newOverride) => {
-                debugLog(
-                  `🧪 更新天氣覆蓋: `,
-                  testWeatherOverride,
-                  ` -> `,
-                  newOverride,
-                );
-                setTestWeatherOverride(newOverride);
-              }}
-              theme={theme}
-              isDarkMode={isDarkMode}
-              itineraryData={itineraryData}
-              currentUserWeather={userWeather}
-              isFrozen={!!frozenTestDateTime || !!frozenTestWeatherOverride}
-              onFreeze={freezeTestSettings}
-              onUnfreeze={unfreezeTestSettings}
-              maptilerKey={maptilerKey}
-            />
-          </Suspense>
-        )}
+          {/* 測試模式面板 (開發與測試用) */}
+          {isTestMode && (
+            <Suspense
+              fallback={<LazyPanelFallback label="載入測試工具中…" overlay />}
+            >
+              <TestModePanel
+                isOpen
+                onClose={handleTestModeClose}
+                testDateTime={testDateTime}
+                onDateTimeChange={(newDateTime) => {
+                  debugLog(
+                    `🧪 更新時間: ${testDateTime.toLocaleString("zh-TW")} -> ${newDateTime.toLocaleString("zh-TW")}`,
+                  );
+                  setTestDateTime(newDateTime);
+                }}
+                testLatitude={testLatitude}
+                testLongitude={testLongitude}
+                onLocationChange={(coords) => {
+                  debugLog(
+                    `🧪 更新位置: (${testLatitude}, ${testLongitude}) -> (${coords.lat}, ${coords.lon})`,
+                  );
+                  setTestLatitude(coords.lat);
+                  setTestLongitude(coords.lon);
+                  // 測試模式下主動抓取新座標的天氣
+                  getUserLocationWeather({
+                    isSilent: false,
+                    coords: { latitude: coords.lat, longitude: coords.lon },
+                  });
+                }}
+                testWeatherOverride={testWeatherOverride}
+                onWeatherChange={(newOverride) => {
+                  debugLog(
+                    `🧪 更新天氣覆蓋: `,
+                    testWeatherOverride,
+                    ` -> `,
+                    newOverride,
+                  );
+                  setTestWeatherOverride(newOverride);
+                }}
+                theme={theme}
+                isDarkMode={isDarkMode}
+                itineraryData={itineraryData}
+                currentUserWeather={userWeather}
+                isFrozen={!!frozenTestDateTime || !!frozenTestWeatherOverride}
+                onFreeze={freezeTestSettings}
+                onUnfreeze={unfreezeTestSettings}
+                maptilerKey={maptilerKey}
+              />
+            </Suspense>
+          )}
 
-        {/* Toast 通知提示 */}
-        {toast.show && (
-          <div
-            role={toast.type === "error" ? "alert" : "status"}
-            aria-live={toast.type === "error" ? "assertive" : "polite"}
-            className={`fixed top-24 left-1/2 transform -translate-x-1/2 px-5 py-2.5 rounded-full shadow-xl z-[60] flex items-center gap-2 animate-bounce backdrop-blur-lg border 
+          {/* Toast 通知提示 */}
+          {toast.show && (
+            <div
+              role={toast.type === "error" ? "alert" : "status"}
+              aria-live={toast.type === "error" ? "assertive" : "polite"}
+              data-toast-type={toast.type}
+              className={`journal-toast fixed top-24 left-1/2 transform -translate-x-1/2 px-5 py-2.5 rounded-full shadow-xl z-[60] flex items-center gap-2 backdrop-blur-lg border
             ${
               toast.type === "error"
                 ? isDarkMode
@@ -2865,363 +2869,373 @@ const ItineraryApp = ({ authentication }) => {
                   ? "bg-green-800/85 text-white border-green-700/60 ring-1 ring-green-600/30"
                   : "bg-emerald-600/85 text-white border-white/40 ring-1 ring-white/20"
             }`}
-          >
-            {toast.type === "error" ? (
-              <X className="w-4 h-4" />
-            ) : (
-              <Check className="w-4 h-4" />
-            )}
-            <span className="text-sm font-bold tracking-wide">
-              {toast.message}
-            </span>
-          </div>
-        )}
-
-        {/* 圖片放大預覽遮罩 */}
-        <AnimatePresence>
-          {fullPreviewImage && (
-            <motion.div
-              ref={previewDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="圖片預覽"
-              tabIndex={-1}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setFullPreviewImage(null)}
-              className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/90 p-4 backdrop-blur-md cursor-zoom-out"
             >
+              {toast.type === "error" ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              <span className="text-sm font-bold tracking-wide">
+                {toast.message}
+              </span>
+            </div>
+          )}
+
+          {/* 圖片放大預覽遮罩 */}
+          <AnimatePresence>
+            {fullPreviewImage && (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(event) => event.stopPropagation()}
-                className="relative max-w-full max-h-full flex items-center justify-center"
+                ref={previewDialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="圖片預覽"
+                tabIndex={-1}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setFullPreviewImage(null)}
+                className="fixed inset-0 z-[100] flex items-center justify-center overscroll-contain bg-black/90 p-4 backdrop-blur-md cursor-zoom-out"
               >
-                <img
-                  src={fullPreviewImage}
-                  alt="圖片完整預覽"
-                  width="1200"
-                  height="1200"
-                  className="allow-touch-callout max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
-                />
-                {isIOSSafari && (
-                  <div className="absolute bottom-4 left-4 text-[11px] md:text-xs text-white/90 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
-                    iOS 提示：長按圖片即可儲存
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  onClick={(event) => event.stopPropagation()}
+                  className="relative max-w-full max-h-full flex items-center justify-center"
+                >
+                  <img
+                    src={fullPreviewImage}
+                    alt="圖片完整預覽"
+                    width="1200"
+                    height="1200"
+                    className="allow-touch-callout max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+                  />
+                  {isIOSSafari && (
+                    <div className="absolute bottom-4 left-4 text-[11px] md:text-xs text-white/90 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
+                      iOS 提示：長按圖片即可儲存
+                    </div>
+                  )}
+                  <div className="absolute bottom-4 right-4 flex gap-2 px-2 py-2 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
+                    <button
+                      onClick={handleDownloadPreview}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
+                      aria-label="下載圖片"
+                      title="下載"
+                    >
+                      <Download className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFullPreviewImage(null);
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
+                      aria-label="關閉預覽"
+                      title="關閉"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
                   </div>
-                )}
-                <div className="absolute bottom-4 right-4 flex gap-2 px-2 py-2 rounded-full bg-black/50 backdrop-blur-lg border border-white/10 ring-1 ring-white/5 shadow-xl">
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 圖片上傳確認視窗 */}
+          <AnimatePresence>
+            {tempImage && (
+              <motion.div
+                ref={imageConfirmDialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="確認上傳圖片"
+                tabIndex={-1}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[110] flex flex-col items-center justify-center overscroll-contain bg-black/95 p-4 backdrop-blur-xl"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative max-w-full max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+                >
+                  <img
+                    src={tempImage}
+                    alt="待確認的上傳圖片"
+                    width="1200"
+                    height="1200"
+                    className="max-w-full max-h-[70vh] object-contain"
+                  />
+                </motion.div>
+
+                <p className="text-white/70 text-sm mt-6 mb-8 font-medium tracking-wide">
+                  照片清楚嗎？請確認是否使用此圖片
+                </p>
+
+                <div className="flex gap-6 w-full max-w-xs">
                   <button
-                    onClick={handleDownloadPreview}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
-                    aria-label="下載圖片"
-                    title="下載"
+                    onClick={handleCancelImage}
+                    className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-neutral-800/80 backdrop-blur-lg text-neutral-300 border border-neutral-700/60 ring-1 ring-neutral-600/30 hover:bg-neutral-700/90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <Download className="w-6 h-6" />
+                    <X className="w-5 h-5" /> 取消
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFullPreviewImage(null);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md text-white transition-all duration-300 hover:scale-105 active:scale-95 ring-1 ring-white/10"
-                    aria-label="關閉預覽"
-                    title="關閉"
+                    onClick={handleConfirmImage}
+                    className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-sky-600/90 backdrop-blur-lg text-white border border-sky-500/40 ring-1 ring-sky-400/30 shadow-lg shadow-sky-900/30 hover:bg-sky-500/95 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
                   >
-                    <X className="w-6 h-6" />
+                    <Check className="w-5 h-5" /> 確認使用
                   </button>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        {/* 圖片上傳確認視窗 */}
-        <AnimatePresence>
-          {tempImage && (
-            <motion.div
-              ref={imageConfirmDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label="確認上傳圖片"
-              tabIndex={-1}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] flex flex-col items-center justify-center overscroll-contain bg-black/95 p-4 backdrop-blur-xl"
-            >
+          {/* iOS PWA 安裝提示橫幅 */}
+          <AnimatePresence>
+            {showIOSInstallPrompt && (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative max-w-full max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+                initial={{ y: -100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -100, opacity: 0 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                className="fixed top-0 left-0 right-0 z-[9999] mx-auto max-w-md"
+                style={{
+                  paddingTop: "max(1rem, env(safe-area-inset-top))",
+                  paddingLeft: "max(1rem, env(safe-area-inset-left))",
+                  paddingRight: "max(1rem, env(safe-area-inset-right))",
+                }}
               >
-                <img
-                  src={tempImage}
-                  alt="待確認的上傳圖片"
-                  width="1200"
-                  height="1200"
-                  className="max-w-full max-h-[70vh] object-contain"
-                />
-              </motion.div>
+                <div className="mx-4 bg-gradient-to-br from-blue-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 overflow-hidden">
+                  <div className="p-4 relative">
+                    {/* 關閉按鈕 */}
+                    <button
+                      onClick={() => {
+                        setShowIOSInstallPrompt(false);
+                        tripStorage.setItem(
+                          "ios-install-prompt-closed",
+                          "true",
+                        );
+                      }}
+                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+                      aria-label="關閉提示"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
 
-              <p className="text-white/70 text-sm mt-6 mb-8 font-medium tracking-wide">
-                照片清楚嗎？請確認是否使用此圖片
-              </p>
+                    {/* 內容 */}
+                    <div className="flex items-start gap-3 pr-6">
+                      <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                        <Download className="w-7 h-7 text-blue-600" />
+                      </div>
+                      <div className="flex-1 text-white">
+                        <h3 className="font-bold text-base mb-1">
+                          安裝到主畫面
+                        </h3>
+                        <p className="text-sm text-blue-100 leading-relaxed mb-3">
+                          將此 App 加入主畫面，享受完整螢幕體驗
+                        </p>
 
-              <div className="flex gap-6 w-full max-w-xs">
-                <button
-                  onClick={handleCancelImage}
-                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-neutral-800/80 backdrop-blur-lg text-neutral-300 border border-neutral-700/60 ring-1 ring-neutral-600/30 hover:bg-neutral-700/90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <X className="w-5 h-5" /> 取消
-                </button>
-                <button
-                  onClick={handleConfirmImage}
-                  className="flex-1 py-3.5 rounded-xl font-bold text-sm bg-sky-600/90 backdrop-blur-lg text-white border border-sky-500/40 ring-1 ring-sky-400/30 shadow-lg shadow-sky-900/30 hover:bg-sky-500/95 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  <Check className="w-5 h-5" /> 確認使用
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* iOS PWA 安裝提示橫幅 */}
-        <AnimatePresence>
-          {showIOSInstallPrompt && (
-            <motion.div
-              initial={{ y: -100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -100, opacity: 0 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className="fixed top-0 left-0 right-0 z-[9999] mx-auto max-w-md"
-              style={{
-                paddingTop: "max(1rem, env(safe-area-inset-top))",
-                paddingLeft: "max(1rem, env(safe-area-inset-left))",
-                paddingRight: "max(1rem, env(safe-area-inset-right))",
-              }}
-            >
-              <div className="mx-4 bg-gradient-to-br from-blue-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 overflow-hidden">
-                <div className="p-4 relative">
-                  {/* 關閉按鈕 */}
-                  <button
-                    onClick={() => {
-                      setShowIOSInstallPrompt(false);
-                      tripStorage.setItem("ios-install-prompt-closed", "true");
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-                    aria-label="關閉提示"
-                  >
-                    <X className="w-5 h-5 text-white" />
-                  </button>
-
-                  {/* 內容 */}
-                  <div className="flex items-start gap-3 pr-6">
-                    <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                      <Download className="w-7 h-7 text-blue-600" />
-                    </div>
-                    <div className="flex-1 text-white">
-                      <h3 className="font-bold text-base mb-1">安裝到主畫面</h3>
-                      <p className="text-sm text-blue-100 leading-relaxed mb-3">
-                        將此 App 加入主畫面，享受完整螢幕體驗
-                      </p>
-
-                      {/* 步驟說明 */}
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-xs text-blue-50 space-y-2 border border-white/20">
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            1
-                          </span>
-                          <span>
-                            點擊底部的{" "}
-                            <Share2 className="inline w-4 h-4 mx-0.5" />{" "}
-                            分享按鈕
-                          </span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            2
-                          </span>
-                          <span>選擇「加入主畫面」</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                            3
-                          </span>
-                          <span>點擊右上角「新增」完成</span>
+                        {/* 步驟說明 */}
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-xs text-blue-50 space-y-2 border border-white/20">
+                          <div className="flex items-start gap-2">
+                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                              1
+                            </span>
+                            <span>
+                              點擊底部的{" "}
+                              <Share2 className="inline w-4 h-4 mx-0.5" />{" "}
+                              分享按鈕
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                              2
+                            </span>
+                            <span>選擇「加入主畫面」</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                              3
+                            </span>
+                            <span>點擊右上角「新增」完成</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 螢幕方向鎖定警告 */}
-        <AnimatePresence>
-          {showOrientationWarning && (
-            <motion.div
-              ref={orientationDialogRef}
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="orientation-warning-title"
-              aria-describedby="orientation-warning-description"
-              tabIndex={-1}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed inset-0 z-[10000] flex items-center justify-center overscroll-contain p-4 bg-black/80 backdrop-blur-md"
-              onClick={() => setShowOrientationWarning(false)}
-            >
-              <motion.div
-                initial={{ rotate: 90 }}
-                animate={{ rotate: 0 }}
-                className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-2xl p-8 max-w-sm text-center border-2 border-orange-300/50"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <Phone className="w-12 h-12 text-white transform rotate-90" />
-                </div>
-
-                <h3
-                  id="orientation-warning-title"
-                  className="text-2xl font-bold text-white mb-3"
-                >
-                  請旋轉螢幕
-                </h3>
-                <p
-                  id="orientation-warning-description"
-                  className="text-white/90 text-base leading-relaxed mb-6"
-                >
-                  為了獲得最佳體驗
-                  <br />
-                  請將裝置轉回直向模式
-                </p>
-
-                <button
-                  onClick={() => setShowOrientationWarning(false)}
-                  className="px-6 py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 active:bg-orange-100 transition-colors shadow-lg"
-                >
-                  我知道了
-                </button>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
 
-        {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
-        <div
-          aria-hidden={!showWeatherDetail || !detailWeatherData}
-          inert={!showWeatherDetail || !detailWeatherData}
-          className={`fixed inset-0 z-[999] flex flex-col items-center justify-center overscroll-contain bg-black/60 backdrop-blur-sm p-4 transition-[opacity] duration-300 ${
-            showWeatherDetail && detailWeatherData
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none delay-100"
-          }`}
-        >
-          {detailWeatherData && (
-            <>
-              {/* Backdrop Click */}
-              <button
-                type="button"
-                aria-label="關閉天氣詳情"
-                className="absolute inset-0"
-                onClick={handleWeatherDetailClose}
-              />
-
-              {/* Modal Content */}
-              <div
-                ref={weatherDialogRef}
-                role="dialog"
+          {/* 螢幕方向鎖定警告 */}
+          <AnimatePresence>
+            {showOrientationWarning && (
+              <motion.div
+                ref={orientationDialogRef}
+                role="alertdialog"
                 aria-modal="true"
-                aria-label="天氣詳情"
+                aria-labelledby="orientation-warning-title"
+                aria-describedby="orientation-warning-description"
                 tabIndex={-1}
-                className={`relative z-10 w-full max-w-[400px] transition-[opacity,transform] duration-300 ${
-                  showWeatherDetail && detailWeatherData
-                    ? "opacity-100 scale-100 translate-y-0"
-                    : "opacity-0 scale-95 translate-y-4"
-                }`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", damping: 25, stiffness: 400 }}
+                className="fixed inset-0 z-[10000] flex items-center justify-center overscroll-contain p-4 bg-black/80 backdrop-blur-md"
+                onClick={() => setShowOrientationWarning(false)}
               >
-                <Suspense
-                  fallback={<LazyPanelFallback label="載入天氣詳情中…" />}
+                <motion.div
+                  initial={{ rotate: 90 }}
+                  animate={{ rotate: 0 }}
+                  className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl shadow-2xl p-8 max-w-sm text-center border-2 border-orange-300/50"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <WeatherDetail
-                    weather={detailWeatherData}
-                    activeDay={activeDay}
-                    simulatedDate={
-                      frozenTestDateTime ||
-                      (isTestMode ? testDateTime : new Date())
-                    }
-                    loading={weatherDetailLoading}
-                    isDarkMode={isDarkMode}
-                    theme={currentTheme}
-                    onClose={handleWeatherDetailClose}
-                    onRefresh={async () => {
-                      if (activeDay === -1) {
-                        await getUserLocationWeather({ isSilent: false });
-                      } else {
-                        const refreshed = await fetchWeatherForecast({
-                          showLoading: true,
-                        });
-                        showToast(
-                          refreshed
-                            ? "天氣預報已更新"
-                            : "無法更新天氣預報，已保留原有資料",
-                          refreshed ? "success" : "error",
-                        );
+                  <div className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Phone className="w-12 h-12 text-white transform rotate-90" />
+                  </div>
+
+                  <h3
+                    id="orientation-warning-title"
+                    className="text-2xl font-bold text-white mb-3"
+                  >
+                    請旋轉螢幕
+                  </h3>
+                  <p
+                    id="orientation-warning-description"
+                    className="text-white/90 text-base leading-relaxed mb-6"
+                  >
+                    為了獲得最佳體驗
+                    <br />
+                    請將裝置轉回直向模式
+                  </p>
+
+                  <button
+                    onClick={() => setShowOrientationWarning(false)}
+                    className="px-6 py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-orange-50 active:bg-orange-100 transition-colors shadow-lg"
+                  >
+                    我知道了
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 天氣詳情彈窗 (Weather Detail Modal) - 🚀 優化：Keep Alive */}
+          <div
+            aria-hidden={!showWeatherDetail || !detailWeatherData}
+            inert={!showWeatherDetail || !detailWeatherData}
+            style={{
+              visibility:
+                showWeatherDetail && detailWeatherData ? "visible" : "hidden",
+            }}
+            className={`fixed inset-0 z-[999] flex flex-col items-center justify-center overscroll-contain bg-black/60 backdrop-blur-sm p-4 transition-[opacity] duration-300 ${
+              showWeatherDetail && detailWeatherData
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none delay-100"
+            }`}
+          >
+            {detailWeatherData && (
+              <>
+                {/* Backdrop Click */}
+                <button
+                  type="button"
+                  aria-label="關閉天氣詳情"
+                  className="absolute inset-0"
+                  onClick={handleWeatherDetailClose}
+                />
+
+                {/* Modal Content */}
+                <div
+                  ref={weatherDialogRef}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="天氣詳情"
+                  tabIndex={-1}
+                  className={`relative z-10 w-full max-w-[400px] transition-[opacity,transform] duration-300 ${
+                    showWeatherDetail && detailWeatherData
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-95 translate-y-4"
+                  }`}
+                >
+                  <Suspense
+                    fallback={<LazyPanelFallback label="載入天氣詳情中…" />}
+                  >
+                    <WeatherDetail
+                      weather={detailWeatherData}
+                      activeDay={activeDay}
+                      simulatedDate={
+                        frozenTestDateTime ||
+                        (isTestMode ? testDateTime : new Date())
                       }
-                    }}
-                    advice={(() => {
-                      if (
-                        userWeather?.temp == null ||
-                        detailWeatherData.temp == null
-                      )
-                        return null;
-                      const targetTemp =
-                        detailWeatherData.daily?.temperature_2m_max?.[0] ||
-                        detailWeatherData.temp;
-                      const diff = targetTemp - userWeather.temp;
-                      const absDiff = Math.abs(diff).toFixed(0);
-                      const isColder = diff < 0;
-                      const code = detailWeatherData.weatherCode;
+                      loading={weatherDetailLoading}
+                      isDarkMode={isDarkMode}
+                      theme={currentTheme}
+                      onClose={handleWeatherDetailClose}
+                      onRefresh={async () => {
+                        if (activeDay === -1) {
+                          await getUserLocationWeather({ isSilent: false });
+                        } else {
+                          const refreshed = await fetchWeatherForecast({
+                            showLoading: true,
+                          });
+                          showToast(
+                            refreshed
+                              ? "天氣預報已更新"
+                              : "無法更新天氣預報，已保留原有資料",
+                            refreshed ? "success" : "error",
+                          );
+                        }
+                      }}
+                      advice={(() => {
+                        if (
+                          userWeather?.temp == null ||
+                          detailWeatherData.temp == null
+                        )
+                          return null;
+                        const targetTemp =
+                          detailWeatherData.daily?.temperature_2m_max?.[0] ||
+                          detailWeatherData.temp;
+                        const diff = targetTemp - userWeather.temp;
+                        const absDiff = Math.abs(diff).toFixed(0);
+                        const isColder = diff < 0;
+                        const code = detailWeatherData.weatherCode;
 
-                      const isRainy = [
-                        51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99,
-                      ].includes(code);
-                      const isSnowy = [71, 73, 75, 77, 85, 86].includes(code);
+                        const isRainy = [
+                          51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99,
+                        ].includes(code);
+                        const isSnowy = [71, 73, 75, 77, 85, 86].includes(code);
 
-                      let extraAdvice = "建議穿著輕便";
-                      if (isColder && absDiff > 3) extraAdvice = "請加強保暖";
-                      if (isRainy) extraAdvice += "並攜帶雨具";
-                      if (isSnowy) extraAdvice += "並穿著防滑鞋";
+                        let extraAdvice = "建議穿著輕便";
+                        if (isColder && absDiff > 3) extraAdvice = "請加強保暖";
+                        if (isRainy) extraAdvice += "並攜帶雨具";
+                        if (isSnowy) extraAdvice += "並穿著防滑鞋";
 
-                      return (
-                        <>
-                          天氣為 <b>{detailWeatherData.desc}</b>， 氣溫比目前
-                          {isColder ? "低" : "高"}{" "}
-                          <b
-                            style={{
-                              color: isColder ? "#007aff" : "#ff9500",
-                            }}
-                          >
-                            {absDiff}°C
-                          </b>
-                          ，{extraAdvice}。
-                        </>
-                      );
-                    })()}
-                  />
-                </Suspense>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
-    </div>
+                        return (
+                          <>
+                            天氣為 <b>{detailWeatherData.desc}</b>， 氣溫比目前
+                            {isColder ? "低" : "高"}{" "}
+                            <b
+                              style={{
+                                color: isColder ? "#007aff" : "#ff9500",
+                              }}
+                            >
+                              {absDiff}°C
+                            </b>
+                            ，{extraAdvice}。
+                          </>
+                        );
+                      })()}
+                    />
+                  </Suspense>
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+    </ArtworkThemeContext>
   );
 };
 

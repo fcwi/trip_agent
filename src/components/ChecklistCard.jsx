@@ -1,5 +1,6 @@
 import React, { useState, memo } from "react";
 import { ListTodo, RotateCcw, Plus, Check, Trash2 } from "lucide-react";
+import JournalSticker from "./Itinerary/JournalSticker.jsx";
 const ChecklistCard = memo(
   ({ isDarkMode, theme, colors, checklist, setChecklist, resetChecklist }) => {
     const [newItemText, setNewItemText] = useState("");
@@ -69,13 +70,16 @@ const ChecklistCard = memo(
               已完成 {completedCount}／{checklist.length} 項
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleResetChecklist}
-            className={`flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-medium opacity-70 transition-[background-color,color,opacity] hover:opacity-100 ${isDarkMode ? "text-neutral-400 hover:bg-neutral-700 hover:text-white" : "text-stone-500 hover:bg-stone-200 hover:text-stone-700"}`}
-          >
-            <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /> 重置
-          </button>
+          <div className="journal-checklist-actions">
+            <JournalSticker kind="passport" />
+            <button
+              type="button"
+              onClick={handleResetChecklist}
+              className={`flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-medium opacity-70 transition-[background-color,color,opacity] hover:opacity-100 ${isDarkMode ? "text-neutral-400 hover:bg-neutral-700 hover:text-white" : "text-stone-500 hover:bg-stone-200 hover:text-stone-700"}`}
+            >
+              <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" /> 重置
+            </button>
+          </div>
         </div>
 
         <form className="mb-4 flex gap-2" onSubmit={handleAddItem}>
@@ -123,7 +127,7 @@ const ChecklistCard = memo(
                     {item.checked && <Check className="h-3 w-3" />}
                   </span>
                   <span
-                    className={`min-w-0 break-words text-left text-sm font-medium leading-normal tracking-wide transition-colors ${item.checked ? "travel-checklist__checked" : theme.textSec}`}
+                    className={`travel-checklist__text min-w-0 break-words text-left text-sm font-medium leading-normal transition-colors ${item.checked ? "travel-checklist__checked" : ""}`}
                   >
                     {item.text}
                   </span>

@@ -124,17 +124,23 @@ export default function DayMap(props) {
         地圖標示已有座標的地點，編號對應行程順序；道路連線不代表所有交通方式。
       </p>
       <div className="journal-map-place-links">
-        {props.events.map((event, index) => (
-          <a
-            key={index}
-            href={eventMapUrl(event)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {index + 1}. {event.title}
-            <span className="sr-only">，在 Google Maps 查看</span>
-          </a>
-        ))}
+        {props.events.map((event, index) =>
+          event.locationPending ? (
+            <span key={index} className="travel-muted">
+              {index + 1}. {event.title}（地點待確認）
+            </span>
+          ) : (
+            <a
+              key={index}
+              href={eventMapUrl(event)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {index + 1}. {event.title}
+              <span className="sr-only">，在 Google Maps 查看</span>
+            </a>
+          ),
+        )}
       </div>
       {isModalOpen &&
         createPortal(

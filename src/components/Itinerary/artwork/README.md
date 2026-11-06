@@ -22,3 +22,9 @@
 - `DailyScenePrimitives.jsx` 與 `artPalette.js`：細筆窗格、木屋、樹木、列車、水紋與共用明暗色票。
 
 16 張圖稿各自安排前景、主體與遠景；共享筆觸與色票，不以同一張圖搭配不同裝飾充當每日插畫。以簡化風景表達當日氣氛，並非精確地圖、建築測繪或景點外觀保證。保持圖稿靜態、無外部圖片請求、無 SVG 濾鏡，確保手機與離線使用。
+
+## 日夜雙版本
+
+`ArtworkThemeContext` 直接接收全站 `isDarkMode`，所以手動切換優先於作業系統外觀。`SceneFrame` 與 `Study` 在夜間實際繪製 `NightSky`，改用午夜藍天空、黃色月亮與星空；釜山日間太陽同時隱藏。原有黑色筆觸維持，山景、房屋、車廂改用夜間色票，窗格與列車窗使用 `--journal-window` 暖黃。沒有 invert、grayscale 或將日間圖自動反色。
+
+未來可使用 `artworkTheme.js` 的 `artworkImageSlots` 指定已存在的日夜 PNG；預留檔名位於 `artworkReservedPaths`，放置方法見 `public/artwork/README.md`。未設定路徑時完整 SVG 版本即可運作；外部替代圖片載入失敗會回退至對應日夜 SVG。`presentation.cover` 也支援 `src`／`darkSrc`。
