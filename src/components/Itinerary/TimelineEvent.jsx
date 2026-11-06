@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, ChevronUp, MapPin, Clock3 } from "lucide-react";
+import { ChevronDown, MapPin, Clock3 } from "lucide-react";
 import { SceneArtwork } from "./artwork/DailyArtwork.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 
@@ -33,6 +33,7 @@ export default function TimelineEvent({
   return (
     <li
       className={`travel-timeline-event ${isTransport ? "travel-timeline-event--transport" : ""}`}
+      data-expanded={Boolean(isOpen)}
     >
       <div className="travel-timeline-event__time">{event.time}</div>
       <article className="travel-timeline-event__body">
@@ -42,6 +43,7 @@ export default function TimelineEvent({
               type="button"
               aria-expanded={Boolean(isOpen)}
               aria-controls={detailsId}
+              aria-label={event.title}
               onClick={() => toggleExpand(dayIndex, eventIndex)}
             >
               {React.isValidElement(event.icon) &&
@@ -49,12 +51,13 @@ export default function TimelineEvent({
                   "aria-hidden": true,
                   className: "h-5 w-5 flex-none",
                 })}
-              <span>{event.title}</span>
-              {isOpen ? (
-                <ChevronUp aria-hidden="true" className="h-4 w-4 flex-none" />
-              ) : (
-                <ChevronDown aria-hidden="true" className="h-4 w-4 flex-none" />
-              )}
+              <span className="journal-event-heading-copy">
+                <span>{event.title}</span>
+                <span className="journal-event-disclosure" aria-hidden="true">
+                  {isOpen ? "收合詳情" : "查看詳情"}
+                  <ChevronDown className="journal-event-chevron" />
+                </span>
+              </span>
             </button>
           </h3>
           {(event.artworkScene || event.artworkSticker) && (
@@ -80,7 +83,10 @@ export default function TimelineEvent({
             </span>
           )}
           {event.locationPending ? (
-            <span className="travel-muted">地點待出發通知</span>
+            <span className="journal-event-pending">
+              <Clock3 aria-hidden="true" />
+              地點待出發通知
+            </span>
           ) : (
             <a
               className="travel-icon-button journal-event-map-link"

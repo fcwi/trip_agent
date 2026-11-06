@@ -1,4 +1,5 @@
-import { AlertCircle, Hotel, Navigation } from "lucide-react";
+import { useRef } from "react";
+import { AlertCircle, Hotel, ListOrdered, Navigation } from "lucide-react";
 import { JournalTurn } from "./JournalMarks.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 import TimelineEvent from "./TimelineEvent.jsx";
@@ -16,6 +17,19 @@ export default function DayItinerary({
   getMapLink,
   map,
 }) {
+  const timelineHeadingRef = useRef(null);
+  const routeHeadingRef = useRef(null);
+  const jumpTo = (headingRef) => {
+    const heading = headingRef.current;
+    if (!heading) return;
+    heading.focus({ preventScroll: true });
+    heading.scrollIntoView({
+      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+  };
   if (!day) return null;
   const locationName =
     tripConfig.locations.find((location) => location.key === currentLocation)
@@ -61,6 +75,20 @@ export default function DayItinerary({
               ))}
           </div>
         </header>
+        <nav className="journal-day-shortcuts" aria-label="當日快速導覽">
+          <button type="button" onClick={() => jumpTo(timelineHeadingRef)}>
+            <ListOrdered aria-hidden="true" />
+            當日安排
+            <JournalTurn aria-hidden="true" />
+          </button>
+          {day.routeInfo && (
+            <button type="button" onClick={() => jumpTo(routeHeadingRef)}>
+              <Navigation aria-hidden="true" />
+              當日路線
+              <JournalTurn aria-hidden="true" />
+            </button>
+          )}
+        </nav>
         {day.intro && (
           <div className="journal-day-note">
             <JournalSticker kind="notebook" />
@@ -103,7 +131,13 @@ export default function DayItinerary({
           aria-labelledby="daily-timeline-heading"
         >
           <div className="travel-section-heading">
-            <h2 id="daily-timeline-heading">當日安排</h2>
+            <h2
+              id="daily-timeline-heading"
+              ref={timelineHeadingRef}
+              tabIndex={-1}
+            >
+              當日安排
+            </h2>
             <span>{day.events.length} 個行程節點</span>
           </div>
           <ol>
@@ -127,7 +161,9 @@ export default function DayItinerary({
           aria-labelledby="day-route-heading"
         >
           <div className="travel-section-heading">
-            <h2 id="day-route-heading">當日路線</h2>
+            <h2 id="day-route-heading" ref={routeHeadingRef} tabIndex={-1}>
+              當日路線
+            </h2>
           </div>
           <p className="travel-muted">{day.routeInfo.summary}</p>
           <div

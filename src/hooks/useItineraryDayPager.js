@@ -112,9 +112,9 @@ export const useItineraryDayPager = ({
       zIndex: 1,
       willChange: "auto",
       transition: {
-        duration: 0.22,
+        duration: 0.18,
         ease: [0.23, 1, 0.32, 1],
-        opacity: { duration: 0.22, ease: [0.23, 1, 0.32, 1] },
+        opacity: { duration: 0.18, ease: [0.23, 1, 0.32, 1] },
       },
     },
     exit: {
@@ -125,14 +125,15 @@ export const useItineraryDayPager = ({
       willChange: "transform, opacity",
       backfaceVisibility: "hidden",
       transition: {
-        duration: 0.15,
+        duration: 0.08,
         ease: "easeIn",
-        opacity: { duration: 0.15 },
+        opacity: { duration: 0.08 },
       },
     },
   };
 
   const changeDay = (newDay) => {
+    if (newDay === activeDay) return;
     const newDirection = newDay > activeDay ? 1 : -1;
     setPage([newDay, newDirection]);
     setActiveDay(newDay);

@@ -944,3 +944,134 @@ html:has(.travel-shell) {
     flex-basis: 72px;
   }
 }
+
+/* A pasted travel sketch, using the notebook's own paper and tape colours. */
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-day-picture {
+  position: relative;
+  overflow: visible;
+  padding: 5px 5px 9px;
+  background: var(--travel-surface);
+  border: 1px solid var(--travel-line);
+}
+.travel-shell[data-aesthetic="editorial"] .journal-day-picture::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  width: 38px;
+  height: 11px;
+  top: -6px;
+  left: calc(50% - 19px);
+  background: var(--journal-yellow);
+  opacity: 0.72;
+  transform: rotate(-5deg);
+  pointer-events: none;
+}
+
+/* Daily-page polish: direct reading paths and quiet, explicit disclosure states. */
+.journal-day-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-block: -12px 0;
+}
+.journal-day-shortcuts button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--travel-line);
+  border-radius: 6px;
+  color: var(--travel-accent);
+  background: var(--travel-surface);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+.journal-day-shortcuts button:hover {
+  background: var(--travel-subtle);
+  border-color: var(--travel-accent);
+}
+.journal-day-shortcuts button:active {
+  background: var(--travel-subtle);
+}
+.journal-day-shortcuts svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+:is(#daily-timeline-heading, #day-route-heading) {
+  scroll-margin-block: 20px 100px;
+}
+.journal-day-shortcuts button:focus-visible,
+:is(#daily-timeline-heading, #day-route-heading):focus-visible {
+  outline: 2px solid var(--travel-accent);
+  outline-offset: 4px;
+}
+.travel-timeline-event__heading .journal-event-heading-copy {
+  display: block;
+  min-width: 0;
+}
+.travel-timeline-event__heading .journal-event-disclosure {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: var(--travel-muted);
+  font-family: var(--font-data);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.travel-timeline-event__heading .journal-event-chevron {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  transition: transform 160ms ease-out;
+}
+.travel-timeline-event[data-expanded="true"] .journal-event-chevron {
+  transform: rotate(180deg);
+}
+.travel-timeline-event[data-expanded="true"] .journal-event-disclosure {
+  color: var(--travel-accent);
+}
+.travel-timeline-event__heading button:focus-visible {
+  outline: 2px solid var(--travel-accent);
+  outline-offset: 4px;
+}
+.journal-event-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--travel-muted);
+  font-size: 12px;
+}
+.journal-event-pending svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.travel-event-details:not([hidden]) {
+  animation: journal-details-reveal 160ms ease-out;
+}
+@keyframes journal-details-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal-day-shortcuts button,
+  .travel-timeline-event__heading .journal-event-chevron {
+    transition: none;
+  }
+  .travel-event-details:not([hidden]) {
+    animation: none;
+  }
+}
