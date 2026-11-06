@@ -1,6 +1,30 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getItineraryChipLabel } from "../src/utils/itineraryHelpers.js";
+import {
+  getItineraryChipLabel,
+  flattenItinerary,
+} from "../src/utils/itineraryHelpers.js";
+
+test("AI itinerary context distinguishes provisional hotels from confirmed bookings", () => {
+  const text = flattenItinerary([
+    {
+      day: "Day 1",
+      locationKey: "tendo",
+      events: [
+        {
+          time: "19:00",
+          title: "暫定住宿",
+          desc: "規劃參考",
+          locationProvisional: true,
+          sources: [{ text: "飯店官網", url: "https://www.takinoyu.com/" }],
+        },
+      ],
+    },
+  ]);
+  assert.match(text, /暫定飯店/);
+  assert.match(text, /不可推定已確認入住或已預約/);
+  assert.match(text, /https:\/\/www.takinoyu.com\//);
+});
 
 test("uses Day 1-5 labels on itinerary chips", () => {
   assert.equal(

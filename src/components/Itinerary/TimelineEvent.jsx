@@ -101,6 +101,9 @@ export default function TimelineEvent({
             </a>
           )}
         </div>
+        {event.locationProvisional && (
+          <p className="travel-muted">暫定飯店，依出發通知調整</p>
+        )}
         {!isTransport && event.desc && (
           <p
             className={`travel-timeline-event__description ${isOpen ? "" : "travel-timeline-event__description--collapsed"}`}

@@ -28,7 +28,7 @@ const LANDING_SCENARIOS = {
   "2027_tohoku": {
     date: "2027-01-22",
     time: "12:00",
-    plan: "仙台空港 → 天童／上山溫泉",
+    plan: "仙台空港 → 天童溫泉",
     next: "抵達仙台空港",
     location: "仙台空港",
   },

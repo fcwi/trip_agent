@@ -106,6 +106,9 @@ export default function MapModal({ isOpen, onClose, ...props }) {
                     </div>
                     <MapPin aria-hidden="true" className="h-4 w-4" />
                   </button>
+                  {event.locationProvisional && (
+                    <p className="travel-muted">暫定飯店，依出發通知調整</p>
+                  )}
                   {event.locationPending ? (
                     <p className="travel-muted">地點待出發通知</p>
                   ) : (

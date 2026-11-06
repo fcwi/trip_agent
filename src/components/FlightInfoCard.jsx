@@ -130,6 +130,17 @@ const FlightInfoCard = memo(
                           {hotel.note}
                         </p>
                       )}
+                      {hotel.officialUrl && (
+                        <a
+                          className="travel-text-button"
+                          href={hotel.officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          飯店官網
+                          <span className="sr-only">：{hotel.name}</span>
+                        </a>
+                      )}
                     </div>
                     {index < tripConfig.hotels.length - 1 && (
                       <div

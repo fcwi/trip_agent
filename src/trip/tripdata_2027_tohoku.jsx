@@ -32,6 +32,11 @@
 
 import React from "react";
 import {
+  tohokuTourUrl,
+  tohokuProvisionalHotels,
+  provisionalHotelLocation,
+} from "./tohokuProvisionalHotels.js";
+import {
   Bus,
   Train,
   Plane,
@@ -80,7 +85,7 @@ export const guidesData = [
     ],
     link: {
       text: "旅行社行程參考",
-      url: "https://tour.colatour.com.tw/itinerary?PatternNo=243740",
+      url: tohokuTourUrl,
     },
     blogs: [],
   },
@@ -192,7 +197,7 @@ export const guidesData = [
     summary: "將容易遺漏的旅行資訊集中確認，出發當天就能少些匆忙。",
     steps: [
       "護照效期、航班時刻、行李額度與集合地點。",
-      "領隊聯絡方式、四晚實際飯店與地址；目前網站僅列住宿區域／候選。",
+      "領隊聯絡方式及四晚實際飯店；目前依旅行社每天首列飯店暫排，收到出發通知後更新。",
       "草莓園名稱、魚板體驗承辦店與團體預約內容。",
       "銀山冬季入場／接駁安排，以及秋田內陸線乘車方向與班次。",
       "雪地裝備、行動網路與充電用品。",
@@ -374,17 +379,17 @@ export const itineraryData = [
     day: "Day 1",
     locationKey: "tendo",
     date: "1/22 (五)",
-    title: "仙台空港 → 天童／上山溫泉",
+    title: "仙台空港 → 天童溫泉",
     intro: "從仙台落地，讓第一晚的溫泉與熱食替旅程暖身。",
     caption: "抵達東北，走進溫泉的暖意",
-    stay: "天童／上山溫泉區",
-    stayPending: true,
+    stay: `${tohokuProvisionalHotels[0].name}（暫定）`,
+    stayMapQuery: tohokuProvisionalHotels[0].mapQuery,
     timingNote:
       "時間為規劃參考；航班、集合與入住飯店待旅行社出發通知確認。日本境內採當地時間。",
     routeInfo: {
-      summary: "桃園機場 → JX862 → 仙台空港 → 天童／上山溫泉區",
+      summary: "桃園機場 → JX862 → 仙台空港 → 天童溫泉 滝之湯（暫定）",
       mapUrl:
-        "https://www.google.com/maps/dir/?api=1&origin=Sendai+Airport&destination=Tendo+Onsen",
+        "https://www.google.com/maps/dir/?api=1&origin=Sendai+Airport&destination=38.358993,140.380691",
     },
     events: [
       {
@@ -438,16 +443,15 @@ export const itineraryData = [
       },
       {
         time: "約 17:30",
-        title: "前往天童／上山溫泉",
+        title: "前往天童溫泉 滝之湯（暫定）",
         artworkScene: "tendo-evening",
-        locationPending: true,
-        mapQuery: "山形 天童温泉 上山温泉",
+        ...provisionalHotelLocation(0),
         icon: <Hotel />,
         desc: "搭乘遊覽車前往山形的溫泉區。窗外逐漸轉為雪國風景，抵達飯店後先安頓行李，再享用晚餐。",
         transport: {
           mode: "遊覽車",
           duration: "",
-          route: "仙台空港 → 天童／上山溫泉",
+          route: "仙台空港 → 天童溫泉 滝之湯（暫定）",
           note: "抵達時間依交通與領隊安排，請在上車前備妥隨身物品。",
         },
         tips: [
@@ -457,10 +461,9 @@ export const itineraryData = [
       },
       {
         time: "約 19:00",
-        title: "晚餐與入住",
+        title: "晚餐與入住：滝之湯（暫定）",
         artworkSticker: "onsen",
-        locationPending: true,
-        mapQuery: "山形 天童温泉 上山温泉",
+        ...provisionalHotelLocation(0),
         icon: <Utensils />,
         desc: "以一頓熱食與溫泉為旅程的第一天收尾。餐食依飯店安排，晚間留些時間休息，迎接翌日的雪中散策。",
         tips: [
@@ -481,8 +484,8 @@ export const itineraryData = [
     title: "銀山溫泉 → 木戶五郎兵衛村 → 角館",
     intro: "走過雪中的銀山街屋、古民家與角館，讀一段東北的生活風景。",
     caption: "雪中街屋與古民家的冬日散策",
-    stay: "田澤湖／雫石溫泉區",
-    stayPending: true,
+    stay: `${tohokuProvisionalHotels[1].name}（暫定）`,
+    stayMapQuery: tohokuProvisionalHotels[1].mapQuery,
     timingNote:
       "各節點為規劃時間，非已預約入場時段；銀山冬季接駁與實際入住飯店待領隊確認。",
     routeInfo: {
@@ -567,12 +570,20 @@ export const itineraryData = [
         title: "角館武家屋敷",
         artworkSticker: "camera",
         mapQuery: "角館 武家屋敷",
+        // 觀光協會「武家屋敷通り」官方地圖代表點，非團體集合點。
+        // https://tazawako-kakunodate.com/spots/5996/
+        lat: 39.598088,
+        lon: 140.562147,
         icon: <MapPin />,
         desc: "先沿武家屋敷通看黑板牆、枝垂櫻樹形與歷史街景。以街道散策為主，選購點心可找青柳家對面的唐土庵；不預設每座邸宅都能入內。",
         highlights: [
           "樺細工是角館的櫻樹皮工藝；藤木伝四郎本店在下新町，有餘裕再另走一段，不把它當作武家屋敷通上的順路店。",
         ],
         sources: [
+          {
+            text: "觀光協會｜武家屋敷通與位置",
+            url: "https://tazawako-kakunodate.com/spots/5996/",
+          },
           {
             text: "觀光協會｜石黑家停止一般公開公告",
             url: "https://tazawako-kakunodate.com/news/19439/",
@@ -585,9 +596,8 @@ export const itineraryData = [
       },
       {
         time: "約 18:00",
-        title: "入住溫泉飯店",
-        locationPending: true,
-        mapQuery: "田沢湖 雫石 温泉",
+        title: "入住田澤湖 Lake Resort（暫定）",
+        ...provisionalHotelLocation(1),
         icon: <Utensils />,
         desc: "傍晚前往溫泉飯店，享用晚餐並放鬆休息。明天將前往森吉山，今晚先整理好雪地裝備。",
         tips: [
@@ -608,8 +618,8 @@ export const itineraryData = [
     title: "阿仁／森吉樹冰＋秋田內陸線",
     intro: "把目光交給山上的樹冰與車窗外的雪原，感受秋田冬天的尺度。",
     caption: "雪山纜車與內陸鐵道的風景",
-    stay: "溫泉飯店",
-    stayPending: true,
+    stay: `${tohokuProvisionalHotels[2].name}（暫定）`,
+    stayMapQuery: tohokuProvisionalHotels[2].mapQuery,
     timingNote:
       "纜車、鐵道時間皆為規劃參考；乘車方向、班次與飯店待出發通知，不依此自行購票。",
     routeInfo: {
@@ -705,11 +715,10 @@ export const itineraryData = [
       },
       {
         time: "約 18:00",
-        title: "返回飯店",
-        locationPending: true,
-        mapQuery: "田沢湖 雫石 温泉",
+        title: "入住繫溫泉紫苑（暫定）",
+        ...provisionalHotelLocation(2),
         icon: <Hotel />,
-        desc: "結束雪山與鐵道行程，返回飯店享用晚餐。讓身體暖起來，整理照片，也為隔天的採果與溪谷旅程留足精神。",
+        desc: "結束雪山與鐵道行程，先以繫溫泉紫苑安排住宿與地圖定位，入住後享用晚餐並整理雪地用品。實際入住以出發通知為準。",
         tips: ["妥善晾乾雪地用品，備好隔日隨身衣物。"],
       },
     ],
@@ -725,8 +734,8 @@ export const itineraryData = [
     title: "草莓採果 → 猊鼻溪 → 仙台市區",
     intro: "從溫室裡的草莓香氣，到木舟上的溪谷風景，再回到仙台的街燈。",
     caption: "草莓、溪谷與仙台夜色",
-    stay: "仙台市區",
-    stayPending: true,
+    stay: `${tohokuProvisionalHotels[3].name}（暫定）`,
+    stayMapQuery: tohokuProvisionalHotels[3].mapQuery,
     timingNote:
       "採果園、午餐餐廳與住宿尚未確認；時間為順序規劃，不能據此推算已訂班次或精確車程。",
     routeInfo: {
@@ -815,9 +824,8 @@ export const itineraryData = [
       },
       {
         time: "約 17:30",
-        title: "入住仙台市區＋晚餐／逛街",
-        locationPending: true,
-        mapQuery: "仙台 ホテル",
+        title: "入住京阪仙台飯店（暫定）＋晚餐／逛街",
+        ...provisionalHotelLocation(3),
         icon: <Hotel />,
         desc: "先入住並確認團體晚餐安排，有自由時間再以仙台站為中心：S-PAL B1F 菓匠三全買伴手禮，或喜助エスパル店用餐。若已含晚餐，不另排一頓牛舌定食。",
         tips: [
@@ -1015,33 +1023,12 @@ export const tripConfig = {
   },
 
   // ========== 住宿資訊 ==========
-  // 皆為團體常見候選，未保證落點
-  hotels: [
-    {
-      name: "仙台大都會飯店",
-      phone: "+81-22-268-2525",
-      address: "宮城県仙台市青葉区中央1-1-1",
-      note: "仙台市區住宿參考，實際入住飯店依出發通知。",
-    },
-    {
-      name: "仙溪園月岡",
-      phone: "+81-23-672-1212",
-      address: "山形県上山市新湯1-33",
-      note: "上山溫泉住宿參考，實際入住飯店依出發通知。",
-    },
-    {
-      name: "天童溫泉飯店（滝の湯／天童ホテル等同級）",
-      phone: "請向領隊確認",
-      address: "山形県天童市",
-      note: "天童溫泉住宿參考，實際入住飯店依出發通知。",
-    },
-    {
-      name: "雫石王子大飯店",
-      phone: "+81-19-693-1111",
-      address: "岩手県岩手郡雫石町高倉温泉",
-      note: "雫石地區住宿參考，實際入住飯店依出發通知。",
-    },
-  ],
+  // 使用者指定：依每晚旅行社首列飯店暫排，日序與每日地圖共用。
+  hotels: tohokuProvisionalHotels.map((hotel, index) => ({
+    ...hotel,
+    name: `${hotel.name}（暫定）`,
+    note: `第 ${index + 1} 晚暫定；依旅行社當日首列飯店規劃，實際入住以出發通知為準。`,
+  })),
 
   // ========== 緊急聯絡 ==========
   emergency: {

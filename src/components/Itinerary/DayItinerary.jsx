@@ -61,7 +61,7 @@ export default function DayItinerary({
               ) : (
                 <a
                   className="travel-text-button"
-                  href={getMapLink(day.stay.split("(")[0])}
+                  href={getMapLink(day.stayMapQuery || day.stay.split("(")[0])}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

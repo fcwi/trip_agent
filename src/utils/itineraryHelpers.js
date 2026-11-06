@@ -17,6 +17,9 @@ export const flattenItinerary = (data) =>
           [
             `  - ${e.time} ${e.title}: ${e.desc}`,
             e.locationPending ? "    地點尚未確認，不可推定已預約店家。" : "",
+            e.locationProvisional
+              ? "    暫定飯店，依使用者指定以旅行社首列候選規劃；不可推定已確認入住或已預約。"
+              : "",
             ...(e.highlights || []).map((item) => `    重點：${item}`),
             ...(e.tips || []).map((item) => `    提醒：${item}`),
             ...(e.sources || []).map(
