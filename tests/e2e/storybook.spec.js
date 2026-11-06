@@ -119,3 +119,55 @@ test("boarding passes and the daily trail keep content and controls intact", asy
     page.getByRole("button", { name: "開啟匯率計算機" }),
   ).toBeInViewport();
 });
+
+test("daily drawings remain prominent and illustrated stops keep usable controls", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  for (const trip of ["2027_tohoku", "2026_karuizawa", "2026_busan"]) {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/?trip=${trip}`);
+    await expect(page.locator(".travel-cover")).toBeVisible();
+    const days = (await page.locator(".travel-date-selector > button").count()) - 1;
+    for (let day = 1; day <= days; day++) {
+      await page.locator(".travel-date-selector > button").nth(day).click();
+      await expect(page.locator(".travel-day-heading .travel-eyebrow")).toContainText(`Day ${day}`);
+      const mainArt = page.locator(".journal-day-picture");
+      await expect(mainArt.locator("svg")).toBeVisible();
+      expect((await mainArt.boundingBox()).width).toBeGreaterThanOrEqual(128);
+      const stopArt = page.locator(".journal-event-art .journal-day-stamp");
+      await expect(stopArt).toHaveCount(1);
+      await expect(stopArt).toHaveAttribute(
+        "data-scene",
+        await mainArt.locator("svg").getAttribute("data-scene"),
+      );
+    }
+    await page.locator(".travel-date-selector > button").nth(2).click();
+    await expect(page.locator(".travel-day-heading .travel-eyebrow")).toContainText("Day 2");
+    for (const [width, height] of [[320, 740], [390, 844], [768, 1024], [1440, 900]]) {
+      await page.setViewportSize({ width, height });
+      const card = page.locator(".travel-timeline-event__body").filter({
+        has: page.locator(".journal-event-art .journal-day-stamp"),
+      });
+      const toggle = card.locator("h3 button");
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+      await expect(card.locator(".travel-event-details")).toBeVisible();
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "false");
+      const titleBox = await toggle.boundingBox();
+      const artBox = await card.locator(".journal-event-art").boundingBox();
+      expect(titleBox.x + titleBox.width).toBeLessThanOrEqual(artBox.x + 1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      await expect(card.locator(".journal-event-art")).toHaveAttribute("aria-hidden", "true");
+    }
+    const currentTheme = await page.locator(".travel-shell").getAttribute("data-theme");
+    await page.getByRole("button", {
+      name: currentTheme === "light" ? "切換到深色模式" : "切換到亮色模式",
+    }).click();
+    await expect(page.locator(".journal-event-art .journal-day-stamp")).toHaveAttribute(
+      "data-artwork-theme",
+      await page.locator(".travel-shell").getAttribute("data-theme"),
+    );
+  }
+});

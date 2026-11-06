@@ -43,7 +43,27 @@
 }
 .travel-shell[data-editorial="true"][data-aesthetic="editorial"]
   .journal-day-picture {
-  --journal-day-art-size: 96px;
+  --journal-day-art-size: clamp(128px, 18vw, 176px);
+}
+
+/* Keep destination drawings beside their own stops as the day is read. */
+.journal-event-art {
+  display: block;
+  flex: 0 0 80px;
+  width: 80px;
+  align-self: center;
+  pointer-events: none;
+}
+.journal-event-art .journal-paper-sticker {
+  width: 56px;
+  height: 56px;
+  margin-inline: auto;
+}
+@media (max-width: 374px) {
+  .journal-event-art {
+    flex-basis: 64px;
+    width: 64px;
+  }
 }
 .travel-shell[data-editorial="true"][data-aesthetic="editorial"] {
   font-size: 14px;
@@ -164,6 +184,8 @@
   h2 {
   font-size: 22px;
   line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .travel-shell[data-aesthetic="editorial"] .journal-day-note {
   grid-template-columns: 48px minmax(0, 1fr);
@@ -361,6 +383,7 @@
   .journal-route-day[aria-pressed="true"]
   .journal-date-label {
   background: var(--journal-pink);
+  color: var(--journal-art-ink);
   border-radius: 45% 52% 43% 49%;
 }
 .travel-shell[data-aesthetic="editorial"] .journal-route-day small {

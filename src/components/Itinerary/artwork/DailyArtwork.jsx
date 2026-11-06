@@ -41,9 +41,13 @@ const scenes = {
   "yeongdo-walk": YeongdoWalk,
 };
 
-export default function DailyArtwork({ tripId, dayIndex = 0 }) {
-  const Scene = scenes[getDailySceneId(tripId, dayIndex)];
+export function SceneArtwork({ sceneId }) {
+  const Scene = scenes[sceneId];
   return Scene ? <Scene /> : null;
+}
+
+export default function DailyArtwork({ tripId, dayIndex = 0 }) {
+  return <SceneArtwork sceneId={getDailySceneId(tripId, dayIndex)} />;
 }
 
 export function TripStudies({ tripId }) {

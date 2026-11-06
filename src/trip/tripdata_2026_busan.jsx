@@ -372,6 +372,7 @@ export const itineraryData = [
       {
         time: "14:30",
         title: "午餐：松亭3代豬肉湯飯",
+        artworkScene: "seomyeon-kitchen",
         mapQuery: "西面豬肉湯飯一條街",
         lat: 35.1548,
         lon: 129.0592,
@@ -431,6 +432,7 @@ export const itineraryData = [
       {
         time: "10:30",
         title: "天空膠囊列車 (Sky Capsule)",
+        artworkScene: "cheongsapo-capsule",
         mapQuery: "Blue Line Park 尾浦站",
         lat: 35.1633,
         lon: 129.1837,
@@ -461,6 +463,7 @@ export const itineraryData = [
       {
         time: "12:00",
         title: "午餐與購物：東釜山 Outlet",
+        artworkSticker: "suitcase",
         mapQuery: "樂天 Premium Outlet 東釜山店",
         lat: 35.193,
         lon: 129.213,
@@ -516,6 +519,7 @@ export const itineraryData = [
       {
         time: "10:00",
         title: "親子首選：SEA LIFE 釜山水族館",
+        artworkSticker: "camera",
         mapQuery: "SEA LIFE 釜山水族館",
         lat: 35.159,
         lon: 129.16,
@@ -553,6 +557,7 @@ export const itineraryData = [
       {
         time: "19:30",
         title: "廣安里 M 無人機秀 (週六限定)",
+        artworkScene: "gwangalli-night",
         mapQuery: "廣安里海水浴場",
         lat: 35.1532,
         lon: 129.1186,
@@ -581,6 +586,7 @@ export const itineraryData = [
       {
         time: "09:30",
         title: "甘川洞文化村",
+        artworkScene: "gamcheon-hillside",
         mapQuery: "甘川洞文化村",
         lat: 35.0975,
         lon: 129.0106,
@@ -599,6 +605,7 @@ export const itineraryData = [
       {
         time: "13:00",
         title: "松島海上纜車",
+        artworkSticker: "camera",
         mapQuery: "松島海上纜車",
         lat: 35.0768,
         lon: 129.0205,
@@ -692,6 +699,7 @@ export const itineraryData = [
       {
         time: "14:30",
         title: "影島白淺灘文化村：海景小歇",
+        artworkScene: "yeongdo-walk",
         mapQuery: "白淺灘文化村",
         lat: 35.0788,
         lon: 129.0435,

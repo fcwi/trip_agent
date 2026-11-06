@@ -473,6 +473,7 @@ export const itineraryData = [
       {
         time: "14:30",
         title: "抵達東京成田機場",
+        artworkSticker: "suitcase",
         mapQuery: "成田機場",
         lat: 35.771986,
         lon: 140.39285,
@@ -534,6 +535,7 @@ export const itineraryData = [
       {
         time: "18:50",
         title: "入住王子飯店",
+        artworkScene: "asama-arrival",
         mapQuery: "輕井澤王子大飯店西館",
         lat: 36.3353,
         lon: 138.6288,
@@ -591,6 +593,7 @@ export const itineraryData = [
       {
         time: "09:30",
         title: "王子滑雪場 Snowman Park",
+        artworkScene: "karuizawa-snow-play",
         mapQuery: "輕井澤王子大飯店滑雪場",
         lat: 36.335,
         lon: 138.634,
@@ -628,6 +631,7 @@ export const itineraryData = [
       {
         time: "14:00",
         title: "Outlet 深度購物",
+        artworkSticker: "suitcase",
         mapQuery: "輕井澤王子購物廣場",
         lat: 36.34,
         lon: 138.633,
@@ -733,6 +737,7 @@ export const itineraryData = [
       {
         time: "17:30",
         title: "阿美橫丁",
+        artworkScene: "ueno-market",
         mapQuery: "阿美橫丁",
         lat: 35.7105,
         lon: 139.7745,
@@ -783,6 +788,7 @@ export const itineraryData = [
       {
         time: "09:00",
         title: "teamLab Borderless",
+        artworkSticker: "camera",
         mapQuery: "teamLab Borderless 麻布台",
         lat: 35.661,
         lon: 139.741,
@@ -836,6 +842,7 @@ export const itineraryData = [
       {
         time: "17:00",
         title: "六本木櫸木坂夜間散策",
+        artworkScene: "roppongi-lights",
         mapQuery: "六本木櫸木坂",
         lat: 35.6595,
         lon: 139.729,
@@ -888,6 +895,7 @@ export const itineraryData = [
       {
         time: "10:30",
         title: "哆啦A夢未來百貨",
+        artworkScene: "odaiba-waterfront",
         mapQuery: "哆啦A夢未來百貨公司",
         lat: 35.625167,
         lon: 139.775361,
@@ -1002,6 +1010,7 @@ export const itineraryData = [
       {
         time: "13:30",
         title: "機場最後衝刺",
+        artworkScene: "narita-departure",
         mapQuery: "成田機場第2航廈",
         lat: 35.771986,
         lon: 140.39285,

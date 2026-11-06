@@ -1,5 +1,7 @@
 import React from "react";
 import { ChevronDown, ChevronUp, MapPin, Clock3 } from "lucide-react";
+import { SceneArtwork } from "./artwork/DailyArtwork.jsx";
+import JournalSticker from "./JournalSticker.jsx";
 
 const CATEGORY_LABELS = {
   transport: "交通",
@@ -55,6 +57,15 @@ export default function TimelineEvent({
               )}
             </button>
           </h3>
+          {(event.artworkScene || event.artworkSticker) && (
+            <span className="journal-event-art" aria-hidden="true">
+              {event.artworkScene ? (
+                <SceneArtwork sceneId={event.artworkScene} />
+              ) : (
+                <JournalSticker kind={event.artworkSticker} />
+              )}
+            </span>
+          )}
         </div>
         <div className="travel-timeline-event__meta">
           <span className="travel-event-category">

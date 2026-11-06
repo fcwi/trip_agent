@@ -424,6 +424,7 @@ export const itineraryData = [
       {
         time: "約 16:00",
         title: "抵達仙台空港",
+        artworkSticker: "suitcase",
         mapQuery: "仙台空港",
         lat: 38.13694,
         lon: 140.9225,
@@ -437,6 +438,7 @@ export const itineraryData = [
       {
         time: "約 17:30",
         title: "前往天童／上山溫泉",
+        artworkScene: "tendo-evening",
         locationPending: true,
         mapQuery: "山形 天童温泉 上山温泉",
         icon: <Hotel />,
@@ -504,6 +506,7 @@ export const itineraryData = [
       {
         time: "約 10:00",
         title: "銀山溫泉街散策",
+        artworkScene: "ginzan-street",
         mapQuery: "銀山温泉",
         lat: 38.5697,
         lon: 140.5311,
@@ -560,6 +563,7 @@ export const itineraryData = [
       {
         time: "約 15:00",
         title: "角館武家屋敷",
+        artworkSticker: "camera",
         mapQuery: "角館 武家屋敷",
         icon: <MapPin />,
         desc: "先沿武家屋敷通看黑板牆、枝垂櫻樹形與歷史街景。以街道散策為主，選購點心可找青柳家對面的唐土庵；不預設每座邸宅都能入內。",
@@ -635,6 +639,7 @@ export const itineraryData = [
       {
         time: "約 10:00",
         title: "阿仁纜車・森吉山樹冰",
+        artworkScene: "moriyoshi-rime",
         mapQuery: "阿仁ゴンドラ",
         lat: 39.955,
         lon: 140.49194,
@@ -669,6 +674,7 @@ export const itineraryData = [
       {
         time: "約 14:00",
         title: "秋田內陸線（阿仁マタギ ⇄ 松葉）",
+        artworkSticker: "camera",
         mapQuery: "阿仁マタギ駅",
         // Wikipedia 阿仁マタギ駅（阿仁和站）：北緯 39.9195694、東経 140.5157000
         lat: 39.9195694,
@@ -785,6 +791,7 @@ export const itineraryData = [
       {
         time: "約 13:30",
         title: "猊鼻溪輕舟",
+        artworkScene: "geibikei-boat",
         mapQuery: "猊鼻渓",
         lat: 38.9865477,
         lon: 141.2650788,
@@ -853,6 +860,7 @@ export const itineraryData = [
       {
         time: "約 09:30",
         title: "松島散策",
+        artworkScene: "matsushima-bay",
         mapQuery: "松島海岸駅",
         // Wikipedia 松島海岸駅：北緯 38.368142、東経 141.058789
         lat: 38.368142,
@@ -881,6 +889,7 @@ export const itineraryData = [
       {
         time: "約 12:00",
         title: "AEON Mall 名取",
+        artworkSticker: "suitcase",
         mapQuery: "イオンモール名取",
         // Wikipedia イオンモール名取：北緯 38.163917、東経 140.895972
         lat: 38.163917,
