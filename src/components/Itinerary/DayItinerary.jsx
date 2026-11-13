@@ -3,6 +3,10 @@ import { AlertCircle, Hotel, ListOrdered, Navigation } from "lucide-react";
 import { JournalTurn } from "./JournalMarks.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 import TimelineEvent from "./TimelineEvent.jsx";
+import {
+  EVENT_CATEGORY_LABELS,
+  resolveEventCategory,
+} from "../../utils/itineraryHelpers.js";
 import { DayStamp } from "./JournalIllustration.jsx";
 import { eventMapUrl } from "../../utils/journalMap.js";
 import { isValidLngLat } from "../../utils/mapHelpers.js";
@@ -36,6 +40,9 @@ export default function DayItinerary({
   if (!day) return null;
   const selectedEvent = mapStop === null ? null : day.events[mapStop];
   const showMap = Boolean(day.routeInfo || day.events.length);
+  const legendCategories = Object.keys(EVENT_CATEGORY_LABELS).filter((cat) =>
+    day.events.some((event) => resolveEventCategory(event) === cat),
+  );
   const locationName =
     tripConfig.locations.find((location) => location.key === currentLocation)
       ?.name || "當地";
@@ -151,6 +158,16 @@ export default function DayItinerary({
             </h2>
             <span>{day.events.length} 個行程節點</span>
           </div>
+          {legendCategories.length > 0 && (
+            <ul className="journal-timeline-legend" aria-hidden="true">
+              {legendCategories.map((cat) => (
+                <li key={cat} data-event-category={cat}>
+                  <span className="journal-timeline-legend__dot" />
+                  {EVENT_CATEGORY_LABELS[cat]}
+                </li>
+              ))}
+            </ul>
+          )}
           <ol>
             {day.events.map((event, index) => (
               <TimelineEvent

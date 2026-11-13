@@ -589,18 +589,98 @@
   height: 12px;
   border: 0;
   border-radius: 43% 57% 46% 54% / 55% 42% 58% 45%;
-  background: var(--journal-yellow);
+  background: var(--event-dot, var(--journal-yellow));
   transform: rotate(-12deg);
 }
 .travel-shell[data-aesthetic="editorial"]
   .travel-timeline-event:nth-child(3n + 2)::before {
-  background: var(--journal-blue);
   border-radius: 57% 43% 59% 41% / 42% 61% 39% 58%;
   transform: rotate(19deg);
 }
 .travel-shell[data-aesthetic="editorial"]
-  .travel-timeline-event:nth-child(3n)::before {
-  background: var(--journal-pink);
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="spot"] {
+  --event-dot: var(--journal-yellow);
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="food"] {
+  --event-dot: var(--journal-green);
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="hotel"] {
+  --event-dot: var(--journal-pink);
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="transport"] {
+  --event-dot: var(--journal-blue);
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="shopping"] {
+  --event-dot: var(--journal-window);
+}
+.travel-shell[data-aesthetic="editorial"]
+  :is(.travel-timeline-event, .journal-timeline-legend li)[data-event-category="other"] {
+  --event-dot: var(--travel-muted);
+}
+.journal-timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--travel-line);
+  color: var(--travel-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.journal-timeline-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.journal-timeline-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 46% 54% 48% 52% / 54% 44% 56% 46%;
+  background: var(--event-dot, var(--journal-yellow));
+}
+
+/* Checklist progress bar and low-saturation pastel category headers. */
+.journal-checklist-progress {
+  width: 100%;
+  max-width: 180px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--travel-subtle);
+  overflow: hidden;
+}
+.journal-checklist-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--travel-accent);
+  transition: width 240ms ease;
+}
+.journal-checklist-group[data-checklist-category="documents"] {
+  --cat-color: var(--journal-yellow);
+}
+.journal-checklist-group[data-checklist-category="winter"] {
+  --cat-color: var(--journal-blue);
+}
+.journal-checklist-group[data-checklist-category="carry"] {
+  --cat-color: var(--journal-green);
+}
+.journal-checklist-group[data-checklist-category="other"] {
+  --cat-color: var(--journal-pink);
+}
+.travel-shell[data-aesthetic="editorial"]
+  .journal-checklist-group[data-checklist-category]
+  h4 {
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--cat-color);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--cat-color) 16%, transparent);
 }
 .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
   .travel-timeline-event

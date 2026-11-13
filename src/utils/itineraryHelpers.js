@@ -178,3 +178,21 @@ export const getWeatherForecastIndex = (
   // 預設回傳 0（保險起見）
   return 0;
 };
+
+export const EVENT_CATEGORY_LABELS = {
+  spot: "景點",
+  food: "餐食",
+  hotel: "住宿",
+  transport: "交通",
+  shopping: "購物",
+  other: "行程",
+};
+
+export const resolveEventCategory = (event) => {
+  const isTransport =
+    event.category === "transport" ||
+    Boolean(event.transport) ||
+    event.title.includes("交通");
+  if (isTransport) return "transport";
+  return EVENT_CATEGORY_LABELS[event.category] ? event.category : "other";
+};

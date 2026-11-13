@@ -1,16 +1,33 @@
 import React from "react";
-import { ChevronDown, MapPin, Clock3 } from "lucide-react";
+import {
+  Bus,
+  ChevronDown,
+  Clock3,
+  Footprints,
+  MapPin,
+  Plane,
+  Ship,
+  Train,
+} from "lucide-react";
 import { SceneArtwork } from "./artwork/DailyArtwork.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 import { eventMapUrl } from "../../utils/journalMap.js";
+import {
+  EVENT_CATEGORY_LABELS,
+  resolveEventCategory,
+} from "../../utils/itineraryHelpers.js";
 
-const CATEGORY_LABELS = {
-  transport: "交通",
-  food: "餐食",
-  shopping: "購物",
-  hotel: "住宿",
-  spot: "景點",
-  other: "行程",
+const TRANSPORT_ICON_MATCHERS = [
+  [/飛機|航班|航空|機場/, Plane],
+  [/船|渡輪|遊覽船/, Ship],
+  [/JR|新幹線|電車|地鐵|火車|鐵道|列車/, Train],
+  [/步行|徒步|散步/, Footprints],
+  [/遊覽車|巴士|公車|接駁|計程車|專車/, Bus],
+];
+
+const getTransportIcon = (mode = "") => {
+  const match = TRANSPORT_ICON_MATCHERS.find(([pattern]) => pattern.test(mode));
+  return match ? match[1] : null;
 };
 
 export default function TimelineEvent({
@@ -21,19 +38,16 @@ export default function TimelineEvent({
   toggleExpand,
   onPreviewMap,
 }) {
-  const isTransport =
-    event.category === "transport" ||
-    Boolean(event.transport) ||
-    event.title.includes("交通");
-  const category = isTransport
-    ? "transport"
-    : CATEGORY_LABELS[event.category]
-      ? event.category
-      : "other";
+  const category = resolveEventCategory(event);
+  const isTransport = category === "transport";
+  const TransportIcon = isTransport
+    ? getTransportIcon(event.transport?.mode)
+    : null;
   const detailsId = `event-details-${dayIndex}-${eventIndex}`;
   return (
     <li
       className={`travel-timeline-event ${isTransport ? "travel-timeline-event--transport" : ""}`}
+      data-event-category={category}
       data-expanded={Boolean(isOpen)}
     >
       <div className="travel-timeline-event__time">{event.time}</div>
@@ -73,9 +87,14 @@ export default function TimelineEvent({
         </div>
         <div className="travel-timeline-event__meta">
           <span className="travel-event-category">
+            {TransportIcon &&
+              React.createElement(TransportIcon, {
+                "aria-hidden": true,
+                className: "h-3.5 w-3.5",
+              })}
             {isTransport && event.transport?.mode
               ? event.transport.mode
-              : CATEGORY_LABELS[category]}
+              : EVENT_CATEGORY_LABELS[category]}
           </span>
           {isTransport && event.transport?.duration && (
             <span className="journal-transport-duration">

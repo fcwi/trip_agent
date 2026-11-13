@@ -130,17 +130,19 @@ const ChecklistCard = memo(
     };
 
     const toggleCheckItem = (id) => {
+      const target = checklist.find((item) => item.id === id);
+      if (target && !target.checked) {
+        navigator.vibrate?.(10);
+        setGlowId(id);
+        setTimeout(
+          () => setGlowId((prev) => (prev === id ? null : prev)),
+          800,
+        );
+      }
       setChecklist((previous) =>
-        previous.map((item) => {
-          if (item.id !== id) return item;
-          const checked = !item.checked;
-          if (checked) {
-            navigator.vibrate?.(10);
-            setGlowId(id);
-            setTimeout(() => setGlowId(null), 800);
-          }
-          return { ...item, checked };
-        }),
+        previous.map((item) =>
+          item.id === id ? { ...item, checked: !item.checked } : item,
+        ),
       );
     };
 
@@ -176,6 +178,9 @@ const ChecklistCard = memo(
     };
 
     const completedCount = checklist.filter((item) => item.checked).length;
+    const completionRate = checklist.length
+      ? Math.round((completedCount / checklist.length) * 100)
+      : 0;
     const groups = Object.entries(categories)
       .map(([id, label]) => {
         const items = checklist.filter(
@@ -219,8 +224,13 @@ const ChecklistCard = memo(
               role="status"
               className={`mt-1 text-xs tabular-nums ${theme.textSec}`}
             >
-              已完成 {completedCount}／{checklist.length} 項
+              已完成 {completedCount}／{checklist.length} 項 · {completionRate}%
             </p>
+            {checklist.length > 0 && (
+              <div className="journal-checklist-progress" aria-hidden="true">
+                <span style={{ width: `${completionRate}%` }} />
+              </div>
+            )}
           </div>
           <div className="journal-checklist-actions">
             <JournalSticker kind="passport" />
@@ -281,7 +291,11 @@ const ChecklistCard = memo(
         )}
         {groups.length > 0 ? (
           groups.map((group) => (
-            <div key={group.id} className="journal-checklist-group">
+            <div
+              key={group.id}
+              className="journal-checklist-group"
+              data-checklist-category={group.id}
+            >
               <h4>
                 {group.label}
                 <span>

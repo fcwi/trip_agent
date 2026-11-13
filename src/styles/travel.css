@@ -778,7 +778,9 @@
 }
 
 .travel-event-category {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin: 4px 0 8px;
   padding: 2px 6px;
   border-radius: 4px;
