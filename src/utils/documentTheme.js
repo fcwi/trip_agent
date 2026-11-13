@@ -7,6 +7,13 @@ export function getSavedAppearance() {
   }
 }
 
+export function resolveDarkMode() {
+  const preference = getSavedAppearance();
+  if (preference) return preference === "dark";
+  const hour = new Date().getHours();
+  return hour >= 17 || hour < 6;
+}
+
 export function applyDocumentTheme(isDarkMode) {
   const color = isDarkMode ? "#1a1614" : "#faf6e9";
   document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";

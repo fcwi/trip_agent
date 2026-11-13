@@ -1,20 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useThemeConfig } from "../config/ThemeConfig.jsx";
-import { applyDocumentTheme, getSavedAppearance } from "../utils/documentTheme.js";
-
-const initialDarkMode = () => {
-  const preference = getSavedAppearance();
-  if (preference) return preference === "dark";
-  const hour = new Date().getHours();
-  return hour >= 17 || hour < 6;
-};
+import { applyDocumentTheme, resolveDarkMode } from "../utils/documentTheme.js";
 
 /**
  * Dark/light mode, theme-color meta, and semantic color tokens for the trip shell.
  * Behavior-equivalent extraction from AuthenticatedTripApp.
  */
 export const useTripShellTheme = () => {
-  const [isDarkMode, setIsDarkMode] = useState(initialDarkMode);
+  const [isDarkMode, setIsDarkMode] = useState(resolveDarkMode);
 
   useEffect(() => {
     applyDocumentTheme(isDarkMode);
