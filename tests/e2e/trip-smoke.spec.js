@@ -110,17 +110,32 @@ test.afterEach(async ({ page }) => {
 test("keeps authenticated application code behind the lock screen", async ({
   page,
 }) => {
+  let finishSessionCheck;
+  const sessionCheck = new Promise((resolve) => {
+    finishSessionCheck = resolve;
+  });
+  await page.route("**/api/session", async (route) => {
+    await sessionCheck;
+    await route.continue();
+  });
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "行程表已鎖定" }),
-  ).toBeVisible();
-
-  const loadedResources = await page.evaluate(() =>
-    performance.getEntriesByType("resource").map(({ name }) => name),
-  );
-  expect(
-    loadedResources.some((url) => url.includes("AuthenticatedTripApp")),
-  ).toBe(false);
+  const unlock = page.getByRole("button", { name: "解鎖行程" });
+  try {
+    await expect(page.getByRole("heading", { name: "行程表已鎖定" })).toBeVisible();
+    await page.getByLabel("通關密碼").fill(TEST_PASSWORD);
+    await expect(unlock).toBeDisabled();
+    const loadedResources = await page.evaluate(() =>
+      performance.getEntriesByType("resource").map(({ name }) => name),
+    );
+    expect(
+      loadedResources.some((url) => url.includes("AuthenticatedTripApp")),
+    ).toBe(false);
+  } finally {
+    finishSessionCheck();
+  }
+  await expect(unlock).toBeEnabled();
+  await unlock.click();
+  await expect(page.locator(".travel-shell")).toBeVisible();
 });
 
 test("reports a wrong password and unlocks with the test credential", async ({

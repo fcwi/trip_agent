@@ -26,17 +26,13 @@ const LoadingScreen = ({ label }) => (
 
 const App = () => {
   const authentication = useTripAuthentication();
-  const { isAuthReady, isVerified } = authentication;
+  const { isVerified } = authentication;
 
   useEffect(() => {
     if (isVerified) {
       preloadAuthenticatedTripApp();
     }
   }, [isVerified]);
-
-  if (!isAuthReady) {
-    return <LoadingScreen label="確認登入狀態中…" />;
-  }
 
   if (!isVerified) {
     return (

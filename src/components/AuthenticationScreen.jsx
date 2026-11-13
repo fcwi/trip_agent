@@ -10,6 +10,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
     password,
     setPassword,
     authError,
+    isAuthReady,
     isAuthLoading,
     rememberDevice,
     setRememberDevice,
@@ -17,6 +18,8 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
   } = authentication;
 
   const submitUnlock = (event) => {
+    event.preventDefault();
+    if (!isAuthReady || isAuthLoading || !password) return;
     onUnlockIntent();
     handleAuthSubmit(event);
   };
@@ -119,7 +122,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
           </label>
           <button
             type="submit"
-            disabled={isAuthLoading || !password}
+            disabled={!isAuthReady || isAuthLoading || !password}
             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 px-4 py-3.5 font-bold text-white shadow-lg transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isAuthLoading ? (
@@ -130,6 +133,11 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
               </>
             )}
           </button>
+          {!isAuthReady && (
+            <p role="status" className="text-center text-xs text-[#6b6054] dark:text-[#c4b7a7]">
+              正在確認登入狀態，可先輸入密碼。
+            </p>
+          )}
           {authError ? (
             <div
               id="authentication-error"
