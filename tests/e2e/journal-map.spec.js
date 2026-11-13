@@ -182,7 +182,17 @@ test("map markers retain itinerary numbers and selection/reset work", async ({
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.clock.install();
-  await mount(page);
+  await mount(page, {
+    userLocation: { lon: 121.5, lat: 25 },
+    otherUsersLocations: [
+      {
+        lon: 127,
+        lat: 37.5,
+        timestamp: new Date().toISOString(),
+        user: { name: "旅伴" },
+      },
+    ],
+  });
   await expect(page.locator(".journal-map-canvas")).toHaveAttribute(
     "data-map-status",
     "ready",
@@ -195,7 +205,17 @@ test("map markers retain itinerary numbers and selection/reset work", async ({
   );
   await expect(
     dialog.getByRole("button", { name: "地點 3：山形站", exact: true }),
-  ).toBeVisible();
+  ).toBeInViewport();
+  const myLocation = dialog.locator(
+    '.journal-map-person[aria-label="目前位置"]',
+  );
+  const companion = dialog.locator('.journal-map-person[aria-label="旅伴"]');
+  await expect(myLocation).toHaveCount(1);
+  await expect(companion).toHaveCount(1);
+  await expect(myLocation).not.toBeInViewport();
+  await expect(companion).not.toBeInViewport();
+  await dialog.getByRole("button", { name: "將地圖移到目前位置" }).click();
+  await expect(myLocation).toBeInViewport();
   await expect(
     dialog.getByRole("button", { name: "定位第2站：尚未確定的午餐地點" }),
   ).toBeDisabled();
@@ -207,6 +227,10 @@ test("map markers retain itinerary numbers and selection/reset work", async ({
   await expect(dialog.locator(".journal-map-popup")).toContainText("山形站");
   await dialog.getByRole("button", { name: "重置地圖視野" }).click();
   await expect(select).toHaveAttribute("aria-pressed", "false");
+  await expect(myLocation).not.toBeInViewport();
+  await expect(
+    dialog.getByRole("button", { name: "地點 3：山形站", exact: true }),
+  ).toBeInViewport();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(

@@ -1225,16 +1225,66 @@ export const tripConfig = {
 // 6. 行前檢查清單 (Pre-departure checklist)
 // ============================================================================
 export const checklistData = [
-  { id: 1, text: "護照 (效期6個月以上)", checked: false },
-  { id: 2, text: "核對電子入境卡、K-ETA／簽證與適用檢疫申報", checked: false },
-  { id: 3, text: "E-SIM / 網卡開通", checked: false },
-  { id: 4, text: "WOWPASS / T-money 交通卡", checked: false },
-  { id: 5, text: "轉接頭 (韓國是圓孔 Type C/F)", checked: false },
-  { id: 6, text: "韓幣現金 (少量) & 信用卡 (確認海外開通)", checked: false },
-  { id: 7, text: "旅遊保險 (包含不便險/醫療)", checked: false },
-  { id: 8, text: "Naver Map / Kakao T App 下載與註冊", checked: false },
-  { id: 9, text: "常備藥物 (胃藥、感冒、OK繃)", checked: false },
-  { id: 10, text: "各類充電器 & 行動電源", checked: false },
-  { id: 11, text: "Visit Busan Pass 憑證 (若有買)", checked: false },
-  { id: 12, text: "Sky Capsule 預約憑證", checked: false },
+  {
+    id: 1,
+    category: "documents",
+    text: "護照 (效期6個月以上)",
+    checked: false,
+  },
+  {
+    id: 2,
+    category: "documents",
+    text: "核對電子入境卡、K-ETA／簽證與適用檢疫申報",
+    checked: false,
+  },
+  { id: 3, category: "other", text: "E-SIM / 網卡開通", checked: false },
+  {
+    id: 4,
+    category: "carry",
+    text: "WOWPASS / T-money 交通卡",
+    checked: false,
+  },
+  {
+    id: 5,
+    category: "carry",
+    text: "轉接頭 (韓國是圓孔 Type C/F)",
+    checked: false,
+  },
+  {
+    id: 6,
+    category: "carry",
+    text: "韓幣現金 (少量) & 信用卡 (確認海外開通)",
+    checked: false,
+  },
+  {
+    id: 7,
+    category: "documents",
+    text: "旅遊保險 (包含不便險/醫療)",
+    checked: false,
+  },
+  {
+    id: 8,
+    category: "other",
+    text: "Naver Map / Kakao T App 下載與註冊",
+    checked: false,
+  },
+  {
+    id: 9,
+    category: "carry",
+    text: "常備藥物 (胃藥、感冒、OK繃)",
+    checked: false,
+  },
+  { id: 10, category: "carry", text: "各類充電器 & 行動電源", checked: false },
+  {
+    id: 11,
+    category: "documents",
+    text: "Visit Busan Pass 憑證 (若有買)",
+    checked: false,
+  },
+  {
+    id: 12,
+    category: "documents",
+    text: "Sky Capsule 預約憑證",
+    checked: false,
+  },
 ];

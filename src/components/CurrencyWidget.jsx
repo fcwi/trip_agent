@@ -23,6 +23,7 @@ const CurrencyWidget = ({ isDarkMode, rateData, isOnline, tripConfig }) => {
   };
 
   const loading = safeRateData.loading && !safeRateData.error && isOnline;
+  const hasRate = Number.isFinite(safeRateData.current) && safeRateData.current > 0;
 
   const formatRate = (val) => (val ? val.toFixed(3) : "--");
   const queryUrl = `https://www.google.com/search?q=1+${code.toUpperCase()}+to+${target.toUpperCase()}`;
@@ -33,12 +34,12 @@ const CurrencyWidget = ({ isDarkMode, rateData, isOnline, tripConfig }) => {
       : "border-stone-200/60 bg-white/80 text-stone-700 ring-1 ring-black/5"
   }`;
 
-  const content = !isOnline ? (
+  const content = !hasRate && !isOnline ? (
     <div className="flex items-center gap-2">
       <WifiOff aria-hidden="true" className="h-3.5 w-3.5 text-amber-500" />
-      <span className="font-bold">離線，保留上次匯率</span>
+      <span className="font-bold">離線，尚無匯率資料</span>
     </div>
-  ) : loading ? (
+  ) : !hasRate && loading ? (
     <div className="flex items-center gap-2" role="status" aria-live="polite">
       <span className="font-medium">匯率更新中…</span>
       <RefreshCw
@@ -46,7 +47,7 @@ const CurrencyWidget = ({ isDarkMode, rateData, isOnline, tripConfig }) => {
         className="h-3.5 w-3.5 animate-spin opacity-70"
       />
     </div>
-  ) : safeRateData.error ? (
+  ) : !hasRate ? (
     <div className="flex items-center gap-2 font-bold">
       <RefreshCw aria-hidden="true" className="h-3.5 w-3.5" />
       <span>暫時無法更新，點擊查詢</span>
@@ -61,6 +62,9 @@ const CurrencyWidget = ({ isDarkMode, rateData, isOnline, tripConfig }) => {
         <span className="font-bold opacity-75">{target}</span>
       </div>
 
+      {(!isOnline || safeRateData.source === "cache") && (
+        <span className="text-[0.65rem] opacity-75">上次匯率</span>
+      )}
       <div aria-hidden="true" className="h-3 w-px bg-current opacity-20" />
 
       <div

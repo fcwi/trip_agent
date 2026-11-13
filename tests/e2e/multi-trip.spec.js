@@ -161,7 +161,7 @@ test("switches three itineraries without logging out and keeps custom checklists
       .click();
   }
   await switchTo(page, trips[0]);
-  await page.getByRole("button", { name: /顯示全部/ }).click();
+  await expect(page.getByRole("button", { name: "收合清單" })).toBeVisible();
   await expect(
     page.getByRole("checkbox", { name: "東北專用清單項目" }),
   ).toBeVisible();

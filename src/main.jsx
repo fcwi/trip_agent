@@ -13,13 +13,16 @@ import "./styles/notebook.css";
 import App from "./App.jsx";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 import PwaUpdatePrompt from "./components/PwaUpdatePrompt.jsx";
+import { applyDocumentTheme, getSavedAppearance } from "./utils/documentTheme.js";
 
 // Match the device appearance on the lock screen; the trip theme takes over
 // after authentication and keeps all utility classes in the same mode.
-const initialDark =
-  window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-document.documentElement.classList.toggle("dark", initialDark);
-document.documentElement.style.colorScheme = initialDark ? "dark" : "light";
+const appearance = getSavedAppearance();
+applyDocumentTheme(
+  appearance
+    ? appearance === "dark"
+    : Boolean(window.matchMedia?.("(prefers-color-scheme: dark)").matches),
+);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

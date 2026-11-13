@@ -84,6 +84,7 @@ export const createTripUrl = (id, href) => {
   const url = new URL(href);
   url.searchParams.set("trip", id);
   url.searchParams.set("tab", "itinerary");
+  url.searchParams.delete("day");
   url.hash = "";
   return `${url.pathname}${url.search}`;
 };

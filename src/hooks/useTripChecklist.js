@@ -10,9 +10,13 @@ export const useTripChecklist = (initialData = []) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          return parsed.filter(
-            (item) => item && item.id != null && typeof item.text === "string",
-          );
+          const defaults = new Map(initialData.map((item) => [item.id, item]));
+          return parsed
+            .filter(
+              (item) =>
+                item && item.id != null && typeof item.text === "string",
+            )
+            .map((item) => ({ ...defaults.get(item.id), ...item }));
         }
       }
     } catch (error) {

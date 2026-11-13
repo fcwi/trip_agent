@@ -50,7 +50,7 @@ test("trip links preserve unrelated query values and reset the open tab", () => 
   assert.equal(
     createTripUrl(
       "2026_busan",
-      "https://example.test/trip_agent/?tab=finance&lang=zh#detail",
+      "https://example.test/trip_agent/?tab=finance&lang=zh&day=2#detail",
     ),
     "/trip_agent/?tab=itinerary&lang=zh&trip=2026_busan",
   );

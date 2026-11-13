@@ -11,14 +11,15 @@ import { useTripChecklist } from "../../hooks/useTripChecklist.js";
 const DayMap = lazy(() => import("../DayMap.jsx"));
 
 const DeferredDayMap = (props) => {
-  const { isDarkMode } = props;
+  const { isDarkMode, focusIndex } = props;
   const containerRef = useRef(null);
   const [shouldLoad, setShouldLoad] = useState(
     () => typeof window !== "undefined" && !("IntersectionObserver" in window),
   );
 
+  const loadMap = shouldLoad || focusIndex != null;
   useEffect(() => {
-    if (shouldLoad) return undefined;
+    if (loadMap) return undefined;
 
     const container = containerRef.current;
     if (!container || !("IntersectionObserver" in window)) return undefined;
@@ -34,7 +35,7 @@ const DeferredDayMap = (props) => {
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [shouldLoad]);
+  }, [loadMap]);
 
   const fallback = (
     <div
@@ -46,13 +47,13 @@ const DeferredDayMap = (props) => {
           : "border-stone-200 bg-white/60 text-stone-500"
       }`}
     >
-      {shouldLoad ? "地圖載入中…" : "向下捲動時載入互動地圖"}
+      {loadMap ? "地圖載入中…" : "向下捲動時載入互動地圖"}
     </div>
   );
 
   return (
     <div ref={containerRef}>
-      {shouldLoad ? (
+      {loadMap ? (
         <Suspense fallback={fallback}>
           <DayMap {...props} />
         </Suspense>
@@ -324,8 +325,9 @@ const ItineraryTab = ({
                   toggleExpand,
                   getMapLink,
                 }}
-                map={
+                renderMap={(focusIndex) => (
                   <DeferredDayMap
+                    focusIndex={focusIndex}
                     events={dayMapEvents}
                     userLocation={userWeather}
                     isDarkMode={isDarkMode}
@@ -335,7 +337,7 @@ const ItineraryTab = ({
                     currentUser={currentUser}
                     MAPTILER_KEY={maptilerKey}
                   />
-                }
+                )}
               />
             </motion.div>
           )}

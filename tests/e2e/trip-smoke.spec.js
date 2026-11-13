@@ -416,21 +416,19 @@ test("expands timeline events with the keyboard and keeps transport readable", a
   await unlockTrip(page);
   await page.locator('button[aria-label^="查看Day"]').first().click();
   const event = page.locator(".travel-timeline-event").first();
-  const expand = event.getByRole("button");
+  const expand = event.locator("h3 button");
   await expand.focus();
   await page.keyboard.press("Enter");
   await expect(expand).toHaveAttribute("aria-expanded", "true");
   await expect(event.locator(".travel-event-details")).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(event.locator(".travel-event-details")).toBeHidden();
-  const mapLink = event.getByRole("link", { name: /^在地圖查看/ });
-  await expect(mapLink).toBeVisible();
-  expect(
-    await mapLink.evaluate((link) => link.closest("button") === null),
-  ).toBe(true);
+  const mapButton = event.getByRole("button", { name: /^在地圖查看/ });
+  await expect(mapButton).toBeVisible();
+  await expect(expand.locator(".journal-event-map-link")).toHaveCount(0);
   const transport = page.locator(".travel-timeline-event--transport").first();
   await expect(transport.locator(".travel-transport-summary")).toBeVisible();
-  await transport.getByRole("button").click();
+  await transport.locator("h3 button").click();
   await expect(
     transport.getByRole("heading", { name: "交通說明" }),
   ).toBeVisible();
@@ -525,11 +523,11 @@ test("centers selected dates, names icon controls, and renders offline currency 
 
   await context.setOffline(true);
   const offlineStatus = page.getByRole("status").filter({
-    hasText: "離線，保留上次匯率",
+    hasText: "離線，尚無匯率資料",
   });
   await expect(offlineStatus).toBeVisible();
   await expect(
-    page.locator("a").filter({ hasText: "離線，保留上次匯率" }),
+    page.locator("a").filter({ hasText: "離線，尚無匯率資料" }),
   ).toHaveCount(0);
 });
 

@@ -19,12 +19,17 @@ export function SceneFrame({ id, children }) {
     >
       <SketchTexture id={textureId} />
       <defs>
-        <linearGradient id={washId} x1="0" y1="0" x2=".85" y2="1">
+        <linearGradient id={washId} x1="0" y1="0" x2=".9" y2="1">
           <stop stopColor="var(--journal-blue)" stopOpacity=".16" />
           <stop
-            offset=".55"
+            offset=".48"
             stopColor="var(--journal-yellow)"
-            stopOpacity=".035"
+            stopOpacity=".05"
+          />
+          <stop
+            offset=".82"
+            stopColor="var(--journal-pink)"
+            stopOpacity=".05"
           />
           <stop offset="1" stopColor="var(--travel-surface)" stopOpacity="0" />
         </linearGradient>
@@ -32,6 +37,14 @@ export function SceneFrame({ id, children }) {
       <path
         d="M32-8h576v312H32Z"
         fill={night ? "var(--journal-sky)" : `url(#${washId})`}
+      />
+      <path
+        d="M42 2q278-3 556 1 2 146-1 292-278 3-555-1-2-146 0-292Z"
+        stroke="var(--journal-art-ink, var(--journal-ink))"
+        strokeWidth=".75"
+        strokeDasharray="18 6 42 5"
+        opacity=".16"
+        strokeLinecap="round"
       />
       <g
         mask={`url(#${textureId})`}

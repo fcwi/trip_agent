@@ -11,22 +11,14 @@ import {
   X,
 } from "lucide-react";
 
-const EmptyState = ({ icon: Icon, label, isDarkMode, theme }) => (
-  <div
-    className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-12 backdrop-blur-md ${
-      isDarkMode
-        ? "border-neutral-700/60 bg-neutral-800/15 ring-1 ring-white/5"
-        : "border-stone-200/60 bg-stone-50/70 ring-1 ring-black/5"
-    }`}
-  >
+const EmptyState = ({ icon: Icon, label, theme }) => (
+  <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--travel-line)] bg-[var(--travel-subtle)] py-12">
     {createElement(Icon, {
       "aria-hidden": true,
-      className: `mb-3 h-12 w-12 opacity-40 ${isDarkMode ? "text-neutral-500" : "text-stone-400"}`,
+      className: "mb-3 h-12 w-12 text-[var(--travel-muted)] opacity-50",
     })}
     <p className={`text-sm font-medium ${theme.textSec}`}>{label}</p>
-    <p
-      className={`mt-1 text-xs ${isDarkMode ? "text-neutral-600" : "text-stone-400"}`}
-    >
+    <p className="mt-1 text-xs text-[var(--travel-muted)]">
       敬請期待更多內容
     </p>
   </div>
@@ -81,7 +73,7 @@ const GuidesTab = ({
     }));
   };
 
-  const sectionClasses = `journal-panel rounded-[2rem] border p-5 backdrop-blur-2xl ${theme.cardShadow} ${componentStyles.itineraryCard}`;
+  const sectionClasses = `journal-panel rounded-[2rem] border p-5 ${theme.cardShadow} ${componentStyles.itineraryCard}`;
 
   return (
     <section

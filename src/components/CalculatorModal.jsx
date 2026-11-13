@@ -39,10 +39,7 @@ const CalculatorModal = ({
   const [currentUnit, setCurrentUnit] = useState(base);
 
   const rateReady =
-    rateData &&
-    !rateData.loading &&
-    !rateData.error &&
-    Number.isFinite(rateData.current) &&
+    Number.isFinite(rateData?.current) &&
     rateData.current > 0;
 
   // Reset state when modal opens
@@ -239,6 +236,16 @@ const CalculatorModal = ({
           {rateHint && (
             <div className="calc-hint" role="status" aria-live="polite">
               {rateHint}
+              {(!online || rateData.source === "cache") && rateData.updatedAt && (
+                <div>
+                  上次匯率 · {new Date(rateData.updatedAt).toLocaleString("zh-TW", {
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              )}
             </div>
           )}
 

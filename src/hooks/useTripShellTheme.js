@@ -1,14 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useThemeConfig } from "../config/ThemeConfig.jsx";
+import { applyDocumentTheme, getSavedAppearance } from "../utils/documentTheme.js";
 
 const initialDarkMode = () => {
-  try {
-    const preference = localStorage.getItem("trip_agent:appearance");
-    if (preference === "dark" || preference === "light")
-      return preference === "dark";
-  } catch {
-    /* Use the time-based default when browser storage is unavailable. */
-  }
+  const preference = getSavedAppearance();
+  if (preference) return preference === "dark";
   const hour = new Date().getHours();
   return hour >= 17 || hour < 6;
 };
@@ -21,19 +17,7 @@ export const useTripShellTheme = () => {
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode);
 
   useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const color = isDarkMode ? "#1a1614" : "#faf6e9";
-    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
-    document.documentElement.classList.toggle("dark", isDarkMode);
-
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute("content", color);
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "theme-color";
-      meta.content = color;
-      document.head.appendChild(meta);
-    }
+    applyDocumentTheme(isDarkMode);
   }, [isDarkMode]);
 
   const setDarkModeStable = useCallback((value) => {

@@ -1,6 +1,8 @@
 import {
   forwardRef,
+  useCallback,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -39,6 +41,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     isDarkMode,
     interactive = false,
     onReady,
+    focusIndex = null,
   },
   ref,
 ) {
@@ -85,8 +88,8 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
     [otherUsersLocations, now],
   );
   const points = useMemo(
-    () => getMapPoints(validEvents, routeCoords, userLocation, recentOthers),
-    [validEvents, routeCoords, userLocation, recentOthers],
+    () => getMapPoints(validEvents, routeCoords),
+    [validEvents, routeCoords],
   );
   const visibleStatus = !validEvents.length
     ? "empty"
@@ -111,26 +114,21 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
       window.removeEventListener("offline", update);
     };
   }, []);
-  const reset = () => {
+  const reset = useCallback(() => {
     if (!mapRef.current || !points.length) return;
     popups.current.forEach((popup) => popup.remove());
     const bounds = new engineRef.current.LngLatBounds();
     points.forEach((point) => bounds.extend(point));
     mapRef.current.fitBounds(bounds, { padding: 48, maxZoom: 15, duration: 0 });
-  };
-  useImperativeHandle(ref, () => ({
-    reset,
-    locate: () => {
-      if (isValidLngLat(userLocation?.lon, userLocation?.lat))
-        mapRef.current?.flyTo({
-          center: [userLocation.lon, userLocation.lat],
-          zoom: 15,
-          duration: 0,
-        });
-    },
-    focus: (index) => {
+  }, [points]);
+  const focus = useCallback(
+    (index) => {
       const event = events[index];
-      if (!isValidLngLat(event?.lon, event?.lat) || !mapRef.current) return;
+      if (!isValidLngLat(event?.lon, event?.lat)) {
+        reset();
+        return;
+      }
+      if (!mapRef.current) return;
       mapRef.current.flyTo({
         center: [event.lon, event.lat],
         zoom: 15,
@@ -142,6 +140,27 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
         ?.setLngLat([event.lon, event.lat])
         .addTo(mapRef.current);
     },
+    [events, reset],
+  );
+  const applyInitialFocus = useEffectEvent(() => {
+    if (focusIndex != null) focus(focusIndex);
+  });
+  useEffect(() => {
+    if (visibleStatus !== "ready") return;
+    if (focusIndex == null) reset();
+    else focus(focusIndex);
+  }, [focusIndex, visibleStatus, reset, focus]);
+  useImperativeHandle(ref, () => ({
+    reset,
+    locate: () => {
+      if (isValidLngLat(userLocation?.lon, userLocation?.lat))
+        mapRef.current?.flyTo({
+          center: [userLocation.lon, userLocation.lat],
+          zoom: 15,
+          duration: 0,
+        });
+    },
+    focus,
   }));
   useEffect(() => {
     if (!MAPTILER_KEY || !online || !validEvents.length) return;
@@ -373,6 +392,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
             maxZoom: 15,
             duration: 0,
           });
+          applyInitialFocus();
         });
         // Transform the downloaded style before any tile expressions are evaluated.
         currentMap.setStyle(

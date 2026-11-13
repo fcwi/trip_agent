@@ -111,8 +111,9 @@ test("boarding passes and the daily trail keep content and controls intact", asy
   const event = page.locator(".travel-timeline-event__heading button").first();
   await event.click();
   await expect(event).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("button", { name: /在地圖查看/ }).first().click();
   await expect(
-    page.getByRole("link", { name: /在地圖查看/ }).first(),
+    page.getByRole("link", { name: /在 Google Maps 開啟此站/ }),
   ).toHaveAttribute("href", /google/);
   await page.getByRole("button", { name: "開啟旅程工具" }).click();
   await expect(

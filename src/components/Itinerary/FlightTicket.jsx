@@ -31,6 +31,28 @@ export default function FlightTicket({ flight, label, returnFlight = false }) {
         <strong>{label}</strong>
         <span>{flight.code}</span>
       </div>
+      <svg
+        aria-hidden="true"
+        className="journal-ticket-postmark"
+        viewBox="0 0 64 40"
+        fill="none"
+      >
+        <circle
+          cx="44"
+          cy="20"
+          r="14"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeDasharray="3 2.5"
+        />
+        <circle cx="44" cy="20" r="9" stroke="currentColor" strokeWidth="1" />
+        <path
+          d="M4 15q10-4 20 0M4 20q10-4 20 0M4 25q10-4 20 0"
+          stroke="currentColor"
+          strokeWidth="1.1"
+          strokeLinecap="round"
+        />
+      </svg>
       {schedule ? (
         <>
           <div className="journal-flight-ticket__route">

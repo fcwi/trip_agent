@@ -11,25 +11,20 @@ import {
   Store,
 } from "lucide-react";
 
-const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
-  const tones = {
-    amber: isDarkMode
-      ? "border-amber-800/40 bg-amber-900/15 ring-1 ring-amber-700/20 hover:bg-amber-900/25"
-      : "border-amber-100/60 bg-[#FFF8E1]/70 ring-1 ring-amber-100/30 hover:bg-[#FFF8E1]/90",
-    rose: isDarkMode
-      ? "border-rose-800/40 bg-rose-900/15 ring-1 ring-rose-700/20 hover:bg-rose-900/25"
-      : "border-rose-100/60 bg-[#FFF0F5]/80 ring-1 ring-rose-100/30 hover:bg-[#FFF0F5]",
-  };
-  const accent = tone === "rose" ? "text-rose-400" : "text-amber-500";
+const ShopLink = ({ shop, querySuffix, getMapLink, tone }) => {
+  const accent =
+    tone === "rose"
+      ? "text-rose-500 dark:text-rose-300"
+      : "text-amber-600 dark:text-amber-300";
 
   return (
     <article
       data-journal-tone={tone}
-      className={`journal-place-card group flex min-h-11 items-center gap-3 rounded-xl border p-3 backdrop-blur-md ${tones[tone]}`}
+      className="journal-place-card group flex min-h-11 items-center gap-3 rounded-xl border border-[var(--travel-line)] bg-[var(--travel-surface)] p-3"
     >
       <MapPin
         aria-hidden="true"
-        className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-125 ${accent}`}
+        className={`h-4 w-4 shrink-0 transition-transform group-hover:scale-110 ${accent}`}
       />
       <div className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
@@ -41,17 +36,11 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${shop.name}｜${shop.officialUrl ? shop.sourceLabel || "官方店鋪資訊" : "Google Maps 搜尋"}`}
-            className={`text-base font-bold ${isDarkMode ? "text-neutral-200" : "text-[#37474F]"}`}
+            className="text-base font-bold text-[var(--travel-text)]"
           >
             {shop.name}
           </a>
-          <span
-            className={`rounded-xl border px-1.5 py-0.5 text-xs shadow-sm ${
-              isDarkMode
-                ? "border-neutral-700 bg-neutral-800 text-neutral-400"
-                : "border-stone-200 bg-white text-stone-500"
-            }`}
-          >
+          <span className="rounded-md border border-[var(--travel-line)] bg-[var(--travel-subtle)] px-1.5 py-0.5 text-xs text-[var(--travel-muted)]">
             {shop.tag}
           </span>
         </span>
@@ -61,9 +50,7 @@ const ShopLink = ({ shop, querySuffix, getMapLink, isDarkMode, tone }) => {
         {shop.hours && (
           <p className="journal-shop-hours">參考營業時間：{shop.hours}</p>
         )}
-        <span
-          className={`mt-1 block text-sm leading-relaxed ${isDarkMode ? "text-neutral-400" : "text-stone-500"}`}
-        >
+        <span className="mt-1 block text-sm leading-relaxed text-[var(--travel-muted)]">
           {shop.note}
         </span>
         <nav className="journal-shop-links" aria-label={`${shop.name}相關連結`}>

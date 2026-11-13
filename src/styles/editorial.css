@@ -367,6 +367,11 @@
   --auth-paper: #fffdf6;
   --auth-ink: #352e29;
   --auth-accent: #3d574b;
+  background-color: var(--auth-page);
+  background-image: url("/artwork/notebook-paper.svg");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  color: var(--auth-ink);
   font-family:
     "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
     sans-serif;
@@ -376,13 +381,26 @@
   --auth-paper: #25201d;
   --auth-ink: #f1e8dc;
   --auth-accent: #c8d7bf;
-  background: var(--auth-page);
+  background-color: var(--auth-page);
+  background-image: none;
   color: var(--auth-ink);
 }
 .journal-auth .journal-auth-card {
-  border: 0;
-  border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--auth-ink) 12%, transparent);
+  border-radius: 6px;
+  background: var(--auth-paper);
   box-shadow: none;
+}
+.journal-auth-postmark {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 68px;
+  height: 68px;
+  color: var(--auth-accent);
+  opacity: 0.24;
+  transform: rotate(-12deg);
+  pointer-events: none;
 }
 .journal-auth h1 {
   font-family: Georgia, "Noto Serif TC", "Songti TC", "PMingLiU", serif;
@@ -624,6 +642,41 @@
   width: 56px;
   height: 16px;
 }
+.journal-ticket-postmark {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 52px;
+  height: 32px;
+  color: var(--travel-accent);
+  opacity: 0.28;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
+  .journal-flight-ticket__heading {
+  padding-bottom: 8px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-ink) 18%, transparent);
+}
+
+/* Subtle washi-tape corner accents give notebook illustrations a hand-taped feel. */
+.travel-shell[data-aesthetic="editorial"] .travel-cover__drawing,
+.travel-shell[data-aesthetic="editorial"] .journal-day-picture {
+  position: relative;
+}
+.travel-shell[data-aesthetic="editorial"] .travel-cover__drawing::before,
+.travel-shell[data-aesthetic="editorial"] .journal-day-picture::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 16px;
+  z-index: 2;
+  width: 48px;
+  height: 13px;
+  background: color-mix(in srgb, var(--journal-yellow) 46%, transparent);
+  transform: rotate(-5deg);
+  pointer-events: none;
+}
 
 /* Latest brief opts into glass on the fixed navigation only. Opaque fallback
    preserves contrast when backdrop filtering/transparency is unavailable. */
@@ -631,6 +684,10 @@
   background: var(--travel-surface);
   border: 0;
   box-shadow: 0 -2px 20px rgb(0 0 0 / 4%);
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease,
+    background-color 200ms ease;
 }
 @supports (backdrop-filter: blur(16px)) {
   .travel-shell[data-aesthetic="editorial"] .travel-dock {
@@ -654,6 +711,9 @@
 @media (max-width: 767px) {
   .travel-shell[data-aesthetic="editorial"] .travel-timeline {
     --timeline-axis: 50px;
+  }
+  .travel-shell[data-aesthetic="editorial"] :is(#panel-shops, #panel-guides) {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
 }
 @media (max-width: 374px) {

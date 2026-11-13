@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronDown, MapPin, Clock3 } from "lucide-react";
 import { SceneArtwork } from "./artwork/DailyArtwork.jsx";
 import JournalSticker from "./JournalSticker.jsx";
+import { eventMapUrl } from "../../utils/journalMap.js";
 
 const CATEGORY_LABELS = {
   transport: "交通",
@@ -18,7 +19,7 @@ export default function TimelineEvent({
   eventIndex,
   isOpen,
   toggleExpand,
-  getMapLink,
+  onPreviewMap,
 }) {
   const isTransport =
     event.category === "transport" ||
@@ -87,10 +88,20 @@ export default function TimelineEvent({
               <Clock3 aria-hidden="true" />
               地點待出發通知
             </span>
+          ) : onPreviewMap ? (
+            <button
+              type="button"
+              className="travel-icon-button journal-event-map-link"
+              onClick={onPreviewMap}
+              aria-label={`在地圖查看${event.title}`}
+            >
+              <MapPin aria-hidden="true" className="h-4 w-4" />
+              <span aria-hidden="true">地圖</span>
+            </button>
           ) : (
             <a
               className="travel-icon-button journal-event-map-link"
-              href={getMapLink(event.mapQuery || event.title)}
+              href={eventMapUrl(event)}
               target="_blank"
               rel="noopener noreferrer"
               title="在 Google Maps 查看"

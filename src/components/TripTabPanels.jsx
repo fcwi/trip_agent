@@ -92,6 +92,7 @@ export default function TripTabPanels({
   selectedImage,
   clearImage,
   handleSendMessage,
+  handleRetryMessage,
   rateData,
   gasUrl,
   gasToken,
@@ -228,6 +229,7 @@ export default function TripTabPanels({
           selectedImage={selectedImage}
           clearImage={clearImage}
           handleSendMessage={handleSendMessage}
+          handleRetryMessage={handleRetryMessage}
         />
       </Suspense>
     )}

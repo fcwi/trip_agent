@@ -5,11 +5,11 @@ import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 import { isValidLngLat } from "../utils/mapHelpers.js";
 import { eventMapUrl } from "../utils/journalMap.js";
 
-export default function MapModal({ isOpen, onClose, ...props }) {
+export default function MapModal({ isOpen, onClose, focusIndex, ...props }) {
   const dialogRef = useModalAccessibility(isOpen, onClose);
   const canvas = useRef(null);
   const [ready, setReady] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(focusIndex ?? null);
   return (
     <div
       className="journal-map-modal travel-shell"
@@ -51,6 +51,7 @@ export default function MapModal({ isOpen, onClose, ...props }) {
               {...props}
               interactive
               onReady={setReady}
+              focusIndex={selected}
             />
             <div className="journal-map-actions">
               <button
@@ -96,7 +97,7 @@ export default function MapModal({ isOpen, onClose, ...props }) {
                     aria-label={`定位第${index + 1}站：${event.title}`}
                     onClick={() => {
                       setSelected(index);
-                      canvas.current?.focus(index);
+                      if (selected === index) canvas.current?.focus(index);
                     }}
                   >
                     <span>{index + 1}</span>

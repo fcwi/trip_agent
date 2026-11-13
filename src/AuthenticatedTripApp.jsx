@@ -161,6 +161,13 @@ const debugLog = (...args) => logger.debug(...args);
 const debugGroup = (...args) => logger.group(...args);
 const debugGroupEnd = (...args) => logger.groupEnd(...args);
 
+const hasDailyForecast = (daily) =>
+  Array.isArray(daily?.time) &&
+  daily.time.length > 0 &&
+  Array.isArray(daily.temperature_2m_max) &&
+  Array.isArray(daily.temperature_2m_min) &&
+  Array.isArray(daily.weathercode);
+
 const ItineraryApp = ({ authentication }) => {
   const {
     isVerified,
@@ -543,6 +550,7 @@ const ItineraryApp = ({ authentication }) => {
     onTouchStart,
     onTouchEnd,
     changeDay,
+    showCurrentDay,
   } = useItineraryDayPager({
     itineraryLength: itineraryData.length,
     scrollContainerRef,
@@ -556,6 +564,7 @@ const ItineraryApp = ({ authentication }) => {
     ...Object.fromEntries(tripConfig.locations.map(({ key }) => [key, null])),
     loading: true,
   }));
+  const savedForecastRef = useRef({});
 
   const weatherDialogRef = useModalAccessibility(
     showWeatherDetail,
@@ -692,6 +701,7 @@ const ItineraryApp = ({ authentication }) => {
 
   const [aiMode, setAiMode] = useState("translate");
   const aiRequestIdRef = useRef(0);
+  const pendingAiRequestRef = useRef(null);
   // 初始訊息設為空陣列，等待 IndexedDB 載入後再決定
   const [messages, setMessages] = useState([]);
   const isAiChatLoadedRef = useRef(false); // 追蹤初始載入是否完成
@@ -1024,8 +1034,8 @@ const ItineraryApp = ({ authentication }) => {
     if (didAutoFocusTripDayRef.current) return;
     if (tripStatus !== "during" || currentTripDayIndex < 0) return;
     didAutoFocusTripDayRef.current = true;
-    changeDay(currentTripDayIndex);
-  }, [changeDay, currentTripDayIndex, tripStatus]);
+    showCurrentDay(currentTripDayIndex);
+  }, [showCurrentDay, currentTripDayIndex, tripStatus]);
 
   // 🆕 使用者狀態 (用於後台定位記錄)
   const [currentUser, setCurrentUser] = useState(null);
@@ -1877,7 +1887,7 @@ const ItineraryApp = ({ authentication }) => {
 
   const fetchWeatherForecast = React.useCallback(
     async ({ showLoading = false } = {}) => {
-      if (!isVerified) return false;
+      if (!isVerified) return "failed";
 
       forecastAbortControllerRef.current?.abort();
       const controller = new AbortController();
@@ -1894,49 +1904,58 @@ const ItineraryApp = ({ authentication }) => {
       try {
         const params = `hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weathercode,uv_index,uv_index_clear_sky,wind_speed_10m,wind_gusts_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,uv_index_clear_sky_max,wind_speed_10m_max,wind_gusts_10m_max,precipitation_probability_max,sunrise,sunset&forecast_days=7&timezone=auto`;
 
-        const results = [];
+        const forecasts = {};
+        let retryAt = 0;
         // Stop the remaining locations as soon as the service asks us to wait.
         for (const loc of tripConfig.locations) {
-          if (controller.signal.aborted) return false;
+          if (controller.signal.aborted) return "cancelled";
           const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&${params}`;
-          const data = await weatherClient.request(url, {
-            signal: controller.signal,
-          });
-
-          if (data.timezone) setAutoTimeZone(data.timezone);
-          results.push({
-            key: loc.key,
-            data: { ...data.daily, hourly: data.hourly },
-            updatedAt: weatherClient.updatedAt(url),
-          });
+          try {
+            const data = await weatherClient.request(url, {
+              signal: controller.signal,
+            });
+            if (controller.signal.aborted) return "cancelled";
+            if (!hasDailyForecast(data.daily)) {
+              throw new Error("Weather API returned no daily forecast");
+            }
+            if (data.timezone) setAutoTimeZone(data.timezone);
+            forecasts[loc.key] = {
+              ...data.daily,
+              hourly: data.hourly,
+              updatedAt: weatherClient.updatedAt(url),
+            };
+          } catch (error) {
+            if (controller.signal.aborted) return "cancelled";
+            console.error("Failed to fetch weather:", error);
+            if (error.retryAt) {
+              retryAt = error.retryAt;
+              break;
+            }
+          }
         }
 
-        if (controller.signal.aborted) return false;
-
-        const updatedAt = Math.min(
-          ...results.map((result) => result.updatedAt),
-        );
-        const newForecast = Object.fromEntries(
-          results.map(({ key, data }) => [key, data]),
-        );
-        const nextForecast = { ...newForecast, loading: false, updatedAt };
-
-        tripStorage.setItem(
-          "weather-forecast",
-          JSON.stringify({ ...newForecast, updatedAt }),
-        );
-        setWeatherForecast(nextForecast);
-        return true;
-      } catch (error) {
-        if (error?.name === "AbortError") return false;
-        console.error("Failed to fetch weather:", error);
-        setWeatherForecast((prev) => ({
-          ...prev,
+        if (controller.signal.aborted) return "cancelled";
+        const failedLocations = tripConfig.locations
+          .filter(({ key }) => !Object.hasOwn(forecasts, key))
+          .map(({ key }) => key);
+        const hasUpdates = Object.keys(forecasts).length > 0;
+        const saved = { ...savedForecastRef.current, ...forecasts };
+        savedForecastRef.current = saved;
+        if (hasUpdates) {
+          try {
+            tripStorage.setItem("weather-forecast", JSON.stringify(saved));
+          } catch (error) {
+            console.warn("無法保存天氣預報快取", error);
+          }
+        }
+        setWeatherForecast({
+          ...saved,
           loading: false,
-          error: true,
-          retryAt: error.retryAt || 0,
-        }));
-        return false;
+          failedLocations,
+          retryAt,
+        });
+        if (!failedLocations.length) return "updated";
+        return hasUpdates ? "partial" : "failed";
       } finally {
         if (forecastAbortControllerRef.current === controller) {
           forecastAbortControllerRef.current = null;
@@ -1956,7 +1975,13 @@ const ItineraryApp = ({ authentication }) => {
         ]);
         if (cached) {
           const parsed = JSON.parse(cached);
-          setWeatherForecast({ ...parsed, loading: false });
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
+          const saved = { updatedAt: parsed.updatedAt };
+          for (const { key } of tripConfig.locations) {
+            if (hasDailyForecast(parsed[key])) saved[key] = parsed[key];
+          }
+          savedForecastRef.current = saved;
+          setWeatherForecast({ ...saved, loading: false });
           debugLog("📦 已載入 Day1~6 天氣快取");
         }
       } catch (e) {
@@ -2231,14 +2256,9 @@ const ItineraryApp = ({ authentication }) => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (
-      isLoading ||
-      !isAiChatLoadedRef.current ||
-      (!inputMessage.trim() && !selectedImage)
-    )
-      return;
+  const sendAiRequest = async ({ history, userMsg, failedMessageId }) => {
     const requestId = ++aiRequestIdRef.current;
+    pendingAiRequestRef.current = requestId;
 
     const tz = autoTimeZone || tripConfig.timeZone || "Asia/Taipei";
     const displayTime = isTestMode ? testDateTime : new Date();
@@ -2250,33 +2270,23 @@ const ItineraryApp = ({ authentication }) => {
     // 根據模式設定隨機的 Loading 提示，增加互動感
     setLoadingText(getNextAiLoadingText(aiMode));
 
-    // 🔧 【重要】先清空輸入框，避免語音識別的異步更新覆蓋
-    const messageText = inputMessage;
-    const messageImage = selectedImage
-      ? {
-          data: selectedImage,
-          filename: `image_${Date.now()}.jpg`,
-        }
-      : null;
-    setInputMessage("");
-    setSelectedImage(null);
-
-    const userMsg = {
-      id: `user_${Date.now()}`,
-      role: "user",
-      text: messageText,
-      image: messageImage,
+    const showReply = (reply) => {
+      setMessages((previous) =>
+        failedMessageId
+          ? previous.map((message) =>
+              message.id === failedMessageId ? reply : message,
+            )
+          : [...previous, reply],
+      );
     };
-
-    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     try {
       const payload = buildAiChatPayload({
         aiMode,
-        messages,
+        messages: history,
         userMsg,
-        messageText,
+        messageText: userMsg.text,
         tripConfig,
         itineraryData,
         itineraryFlat,
@@ -2293,34 +2303,75 @@ const ItineraryApp = ({ authentication }) => {
       const data = await callGeminiSafe(payload);
       if (requestId !== aiRequestIdRef.current) return;
       const aiText = extractAiReplyText(data);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `model_${Date.now()}`,
-          role: "model",
-          text: aiText,
-          ...(aiMode === "guide"
-            ? { grounding: extractAiGrounding(data) }
-            : {}),
-        },
-      ]);
+      showReply({
+        id: `model_${userMsg.id}`,
+        role: "model",
+        text: aiText,
+        ...(aiMode === "guide" ? { grounding: extractAiGrounding(data) } : {}),
+      });
     } catch (error) {
       if (requestId !== aiRequestIdRef.current || error.name === "AbortError")
         return;
       console.error("AI Error:", error);
       const errMsg = getAiErrorText(error);
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `model_error_${Date.now()}`,
-          role: "model",
-          text: errMsg,
-        },
-      ]);
+      showReply({
+        id: `model_error_${userMsg.id}`,
+        role: "model",
+        text: errMsg,
+        retryUserMessageId: userMsg.id,
+      });
     } finally {
-      if (requestId === aiRequestIdRef.current) setIsLoading(false);
+      if (requestId === aiRequestIdRef.current) {
+        pendingAiRequestRef.current = null;
+        setIsLoading(false);
+      }
     }
+  };
+
+  const handleSendMessage = () => {
+    if (
+      pendingAiRequestRef.current === aiRequestIdRef.current ||
+      !isAiChatLoadedRef.current ||
+      (!inputMessage.trim() && !selectedImage)
+    ) return;
+
+    const userMsg = {
+      id: `user_${crypto.randomUUID()}`,
+      role: "user",
+      text: inputMessage,
+      image: selectedImage
+        ? { data: selectedImage, filename: `image_${Date.now()}.jpg` }
+        : null,
+    };
+    setInputMessage("");
+    setSelectedImage(null);
+    setMessages((previous) => [...previous, userMsg]);
+    return sendAiRequest({ history: messages, userMsg });
+  };
+
+  const handleRetryMessage = (failedMessageId) => {
+    if (
+      pendingAiRequestRef.current === aiRequestIdRef.current ||
+      !isAiChatLoadedRef.current
+    ) return;
+
+    const failedMessage = messages.find((message) => message.id === failedMessageId);
+    const userIndex = messages.findIndex(
+      (message) => message.role === "user" && message.id === failedMessage?.retryUserMessageId,
+    );
+    if (userIndex < 0) return;
+
+    const userMsg = messages[userIndex];
+    if (userMsg.image && !userMsg.image.data) {
+      showToast("無法讀取原圖片，請重新附上圖片再送出", "error");
+      return;
+    }
+    return sendAiRequest({
+      history: messages.slice(0, userIndex),
+      userMsg,
+      failedMessageId,
+    });
   };
 
   // --- 天氣狀態判定 ---
@@ -2491,6 +2542,7 @@ const ItineraryApp = ({ authentication }) => {
 
     const locKey = getDailyLocationKey(activeDay, itineraryData, tripConfig);
     const forecast = weatherForecast[locKey];
+    const forecastError = weatherForecast.failedLocations?.includes(locKey);
     if (!forecast)
       return {
         temp: null,
@@ -2498,7 +2550,7 @@ const ItineraryApp = ({ authentication }) => {
           tripConfig.locations.find((loc) => loc.key === locKey)?.name ||
           locKey,
         loading: weatherForecast.loading,
-        error: weatherForecast.error,
+        error: forecastError,
         retryAt: weatherForecast.retryAt,
       };
 
@@ -2518,8 +2570,8 @@ const ItineraryApp = ({ authentication }) => {
       hourly: forecast.hourly,
       daily: forecast,
       loading: weatherForecast.loading,
-      updatedAt: weatherForecast.updatedAt,
-      error: weatherForecast.error,
+      updatedAt: forecast.updatedAt ?? weatherForecast.updatedAt,
+      error: forecastError,
       retryAt: weatherForecast.retryAt,
     };
   }, [activeDay, userWeather, weatherForecast]);
@@ -2758,6 +2810,7 @@ const ItineraryApp = ({ authentication }) => {
             selectedImage={selectedImage}
             clearImage={clearImage}
             handleSendMessage={handleSendMessage}
+            handleRetryMessage={handleRetryMessage}
             rateData={rateData}
             gasUrl={gasUrl}
             gasToken={gasToken}
@@ -3180,12 +3233,13 @@ const ItineraryApp = ({ authentication }) => {
                           const refreshed = await fetchWeatherForecast({
                             showLoading: true,
                           });
-                          showToast(
-                            refreshed
-                              ? "天氣預報已更新"
-                              : "無法更新天氣預報，已保留原有資料",
-                            refreshed ? "success" : "error",
-                          );
+                          if (refreshed === "updated") {
+                            showToast("天氣預報已更新", "success");
+                          } else if (refreshed === "partial") {
+                            showToast("部分地點已更新，其餘保留既有預報", "info");
+                          } else if (refreshed === "failed") {
+                            showToast("無法更新天氣預報，已保留原有資料", "error");
+                          }
                         }
                       }}
                       advice={(() => {

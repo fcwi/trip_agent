@@ -17,6 +17,7 @@ const ChatMessageList = ({
   renderMessage,
   handleSpeak,
   isLoading,
+  onRetry,
   loadingText,
   chatEndRef,
   setFullPreviewImage,
@@ -151,6 +152,16 @@ const ChatMessageList = ({
                     </div>
                     {msg.role === "model" && (
                       <GroundingSources grounding={msg.grounding} />
+                    )}
+                    {msg.retryUserMessageId && onRetry && (
+                      <button
+                        type="button"
+                        onClick={() => onRetry(msg.id)}
+                        disabled={isLoading}
+                        className="journal-chat-expand mt-2 min-h-11 rounded-lg border border-current px-3 text-xs font-medium focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-50"
+                      >
+                        重試
+                      </button>
                     )}
                     {isLongMessage && (
                       <button

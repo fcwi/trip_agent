@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { activeTripId } from "../utils/activeTrip.js";
+
+const readDay = (itineraryLength) => {
+  const value = new URLSearchParams(window.location.search).get("day");
+  if (value === null || !/^\d+$/.test(value)) return -1;
+  const day = Number(value);
+  return day < itineraryLength ? day : -1;
+};
 
 /**
  * Itinerary day pager: active day, slide direction, swipe, pull-to-refresh.
@@ -18,7 +26,22 @@ export const useItineraryDayPager = ({
 }) => {
   const toast = (message, type) => depsRef.current?.showToast?.(message, type);
 
-  const [activeDay, setActiveDay] = useState(-1);
+  const [[activeDay, direction], setPage] = useState(() => [
+    readDay(itineraryLength),
+    0,
+  ]);
+  const hasSelectedDayRef = useRef(false);
+  const selectDay = useCallback((day) => {
+    setPage((previous) =>
+      previous[0] === day ? previous : [day, day > previous[0] ? 1 : -1],
+    );
+  }, []);
+
+  useEffect(() => {
+    const restoreDay = () => selectDay(readDay(itineraryLength));
+    window.addEventListener("popstate", restoreDay);
+    return () => window.removeEventListener("popstate", restoreDay);
+  }, [itineraryLength, selectDay]);
   const navContainerRef = useRef(null);
   const navItemsRef = useRef({});
 
@@ -91,8 +114,6 @@ export const useItineraryDayPager = ({
     startYRef.current = 0;
   };
 
-  const [[, direction], setPage] = useState([activeDay, 0]);
-
   const slideVariants = {
     enter: {
       x: 0,
@@ -132,12 +153,28 @@ export const useItineraryDayPager = ({
     },
   };
 
-  const changeDay = (newDay) => {
-    if (newDay === activeDay) return;
-    const newDirection = newDay > activeDay ? 1 : -1;
-    setPage([newDay, newDirection]);
-    setActiveDay(newDay);
-  };
+  const changeDay = useCallback((day) => {
+    if (!Number.isInteger(day) || day < -1 || day >= itineraryLength) return;
+    hasSelectedDayRef.current = true;
+    selectDay(day);
+
+    const url = new URL(window.location.href);
+    if (day === -1) {
+      url.searchParams.delete("day");
+    } else {
+      url.searchParams.set("trip", activeTripId);
+      url.searchParams.set("day", String(day));
+    }
+    if (url.href !== window.location.href) {
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, [itineraryLength, selectDay]);
+
+  const showCurrentDay = useCallback((day) => {
+    if (!hasSelectedDayRef.current && readDay(itineraryLength) === -1) {
+      selectDay(day);
+    }
+  }, [itineraryLength, selectDay]);
 
   const onTouchStart = (e) => {
     setTouchStart({
@@ -187,7 +224,6 @@ export const useItineraryDayPager = ({
 
   return {
     activeDay,
-    setActiveDay,
     navContainerRef,
     navItemsRef,
     pullDistance,
@@ -200,5 +236,6 @@ export const useItineraryDayPager = ({
     onTouchStart,
     onTouchEnd,
     changeDay,
+    showCurrentDay,
   };
 };

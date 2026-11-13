@@ -1,9 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, Hotel, ListOrdered, Navigation } from "lucide-react";
 import { JournalTurn } from "./JournalMarks.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 import TimelineEvent from "./TimelineEvent.jsx";
 import { DayStamp } from "./JournalIllustration.jsx";
+import { eventMapUrl } from "../../utils/journalMap.js";
+import { isValidLngLat } from "../../utils/mapHelpers.js";
 
 export default function DayItinerary({
   day,
@@ -15,10 +17,11 @@ export default function DayItinerary({
   expandedItems,
   toggleExpand,
   getMapLink,
-  map,
+  renderMap,
 }) {
   const timelineHeadingRef = useRef(null);
   const routeHeadingRef = useRef(null);
+  const [mapStop, setMapStop] = useState(null);
   const jumpTo = (headingRef) => {
     const heading = headingRef.current;
     if (!heading) return;
@@ -31,12 +34,14 @@ export default function DayItinerary({
     });
   };
   if (!day) return null;
+  const selectedEvent = mapStop === null ? null : day.events[mapStop];
+  const showMap = Boolean(day.routeInfo || day.events.length);
   const locationName =
     tripConfig.locations.find((location) => location.key === currentLocation)
       ?.name || "當地";
   return (
     <div
-      className={`travel-day-layout ${day.routeInfo ? "travel-day-layout--with-route" : ""}`}
+      className={`travel-day-layout ${showMap ? "travel-day-layout--with-route" : ""}`}
     >
       <div className="travel-day-main">
         <header
@@ -81,8 +86,14 @@ export default function DayItinerary({
             當日安排
             <JournalTurn aria-hidden="true" />
           </button>
-          {day.routeInfo && (
-            <button type="button" onClick={() => jumpTo(routeHeadingRef)}>
+          {showMap && (
+            <button
+              type="button"
+              onClick={() => {
+                setMapStop(null);
+                jumpTo(routeHeadingRef);
+              }}
+            >
               <Navigation aria-hidden="true" />
               當日路線
               <JournalTurn aria-hidden="true" />
@@ -149,13 +160,20 @@ export default function DayItinerary({
                 eventIndex={index}
                 isOpen={expandedItems[`${activeDay}-${index}`]}
                 toggleExpand={toggleExpand}
-                getMapLink={getMapLink}
+                onPreviewMap={
+                  showMap
+                    ? () => {
+                        setMapStop(index);
+                        jumpTo(routeHeadingRef);
+                      }
+                    : undefined
+                }
               />
             ))}
           </ol>
         </section>
       </div>
-      {day.routeInfo && (
+      {showMap && (
         <aside
           className="travel-panel travel-day-route"
           aria-labelledby="day-route-heading"
@@ -165,16 +183,58 @@ export default function DayItinerary({
               當日路線
             </h2>
           </div>
-          <p className="travel-muted">{day.routeInfo.summary}</p>
+          {day.routeInfo?.summary && (
+            <p className="travel-muted">{day.routeInfo.summary}</p>
+          )}
+          {selectedEvent && (
+            <div
+              className="journal-map-selection"
+              role="group"
+              aria-label="目前選擇的地點"
+            >
+              <p role="status">
+                <strong>
+                  第 {mapStop + 1} 站 · {selectedEvent.title}
+                </strong>
+                {!isValidLngLat(selectedEvent.lon, selectedEvent.lat) && (
+                  <span className="block travel-muted">
+                    此站尚無座標，可使用地名搜尋。
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="journal-view-toggle"
+                  onClick={() => {
+                    jumpTo(routeHeadingRef);
+                    setMapStop(null);
+                  }}
+                >
+                  看全天路線
+                </button>
+                <a
+                  className="journal-view-toggle"
+                  href={eventMapUrl(selectedEvent)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {isValidLngLat(selectedEvent.lon, selectedEvent.lat)
+                    ? "在 Google Maps 開啟此站"
+                    : "在 Google Maps 搜尋此站"}
+                </a>
+              </div>
+            </div>
+          )}
           <div
             className="travel-day-route__map"
             onTouchStart={(event) => event.stopPropagation()}
             onTouchMove={(event) => event.stopPropagation()}
             onTouchEnd={(event) => event.stopPropagation()}
           >
-            {map}
+            {renderMap(mapStop)}
           </div>
-          {day.routeInfo.mapUrl && (
+          {day.routeInfo?.mapUrl && (
             <a
               className="travel-primary-button"
               href={day.routeInfo.mapUrl}

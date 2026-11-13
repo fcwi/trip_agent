@@ -22,6 +22,11 @@ export default function SketchTexture({ id }) {
             strokeWidth=".45"
             opacity=".24"
           />
+          <path
+            d="M4 9l1.5 1.2M16 5l1.2 1.5M20 17l-1.5 1.2M6 21l1.2-1.4"
+            strokeWidth=".4"
+            opacity=".14"
+          />
         </g>
       </pattern>
       <mask

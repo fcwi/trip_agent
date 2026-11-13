@@ -39,6 +39,34 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
       </div>
 
       <div className="journal-auth-card relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl shadow-stone-300/30 backdrop-blur-xl ring-1 ring-black/5 dark:border-white/10 dark:bg-neutral-900/75 dark:shadow-black/30 dark:ring-white/5">
+        <svg
+          aria-hidden="true"
+          className="journal-auth-postmark"
+          viewBox="0 0 84 84"
+          fill="none"
+        >
+          <circle
+            cx="42"
+            cy="42"
+            r="33"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeDasharray="4 3"
+          />
+          <circle
+            cx="42"
+            cy="42"
+            r="25"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <path
+            d="M14 38q14-4 28 0t28 0M14 46q14-4 28 0t28 0"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+          />
+        </svg>
         <div className="mb-8 text-center">
           <p className="journal-auth-eyebrow">Trip Agent · 旅行手帳</p>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/60 bg-white/90 text-sky-600 shadow-lg dark:border-white/10 dark:bg-neutral-800 dark:text-sky-300">
@@ -49,7 +77,7 @@ const AuthenticationScreen = ({ authentication, onUnlockIntent }) => {
             )}
           </div>
           <h1 className="mb-2 text-2xl font-bold">行程表已鎖定</h1>
-          <p className="text-sm text-stone-500 dark:text-neutral-400">
+          <p className="text-sm text-[#6b6054] dark:text-[#c4b7a7]">
             請輸入通關密語以解鎖旅程設定
           </p>
         </div>

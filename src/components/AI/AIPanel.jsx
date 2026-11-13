@@ -54,6 +54,7 @@ const AIPanel = ({
   selectedImage,
   clearImage,
   handleSendMessage,
+  handleRetryMessage,
 }) => {
   const panelRef = useRef(null);
   usePanelViewport(panelRef, "--chat-viewport-height", "chatKeyboard");
@@ -374,6 +375,7 @@ const AIPanel = ({
             renderMessage={renderMessage}
             handleSpeak={handleSpeak}
             isLoading={isLoading}
+            onRetry={handleRetryMessage}
             loadingText={loadingText}
             chatEndRef={chatEndRef}
             setFullPreviewImage={setFullPreviewImage}
@@ -400,6 +402,7 @@ const AIPanel = ({
               key={i}
               onClick={() => {
                 setInputMessage(q);
+                document.getElementById("chatMessageInput")?.focus();
               }}
               className={`min-h-11 flex-shrink-0 snap-start rounded-full border px-3 py-2 text-xs backdrop-blur-md transition-[background-color,color,box-shadow,transform] duration-300 hover:scale-105 active:scale-95 ${isDarkMode ? "bg-neutral-700/60 hover:bg-neutral-600/80 text-neutral-300 hover:text-sky-200 border-white/10 ring-1 ring-white/5 shadow-md" : "bg-white/80 hover:bg-white/95 text-stone-600 hover:text-[#556B2F] border-white/40 ring-1 ring-black/5 shadow-sm hover:shadow-md"}`}
             >
