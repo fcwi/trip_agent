@@ -3,8 +3,8 @@ import { MapPin, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { supplyEmptyRoadShield } from "../utils/mapStyleRepair.js";
-import { isPlaceNameLayer } from "../utils/journalMap.js";
+import { repairMapStyle, supplyEmptyRoadShield } from "../utils/mapStyleRepair.js";
+import { classifyMapFailure, getMapStyleUrl, isPlaceNameLayer, MAP_FAILURE_MESSAGES, MAP_MESSAGES } from "../utils/journalMap.js";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -24,7 +24,10 @@ const MapPicker = ({
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const isInternalUpdateRef = useRef(false);
+  const activeStyleRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
+  const styleUrl = getMapStyleUrl(maptilerKey, isDarkMode);
 
   // 更新地圖語言 (繁體中文優先)
   const setMapLanguage = useCallback((map) => {
@@ -78,13 +81,8 @@ const MapPicker = ({
     if (!mapContainerRef.current || !maptilerKey || mapInstanceRef.current)
       return;
 
-    const styleUrl = isDarkMode
-      ? `https://api.maptiler.com/maps/ch-swisstopo-lbm-dark/style.json?key=${maptilerKey}`
-      : `https://api.maptiler.com/maps/ch-swisstopo-lbm-light/style.json?key=${maptilerKey}`;
-
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: styleUrl,
       center: [longitude, latitude],
       zoom: 13,
       attributionControl: false,
@@ -94,11 +92,14 @@ const MapPicker = ({
 
     map.on("load", () => {
       setMapLoaded(true);
-      setMapLanguage(map);
     });
 
     map.on("style.load", () => {
+      setMapError(null);
       setMapLanguage(map);
+    });
+    map.on("error", ({ error }) => {
+      if (!map.getStyle()?.layers?.length) setMapError(classifyMapFailure(error));
     });
 
     map.on("click", (e) => {
@@ -115,19 +116,21 @@ const MapPicker = ({
     return () => {
       map.remove();
       mapInstanceRef.current = null;
+      markerRef.current = null;
+      activeStyleRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maptilerKey]);
 
   // 監聽主題變化 (使用 setStyle 避免重新初始化)
   useEffect(() => {
-    if (!mapInstanceRef.current || !mapLoaded) return;
-    const styleUrl = isDarkMode
-      ? `https://api.maptiler.com/maps/ch-swisstopo-lbm-dark/style.json?key=${maptilerKey}`
-      : `https://api.maptiler.com/maps/ch-swisstopo-lbm-light/style.json?key=${maptilerKey}`;
-
-    mapInstanceRef.current.setStyle(styleUrl);
-  }, [isDarkMode, mapLoaded, maptilerKey]);
+    const map = mapInstanceRef.current;
+    if (!map || activeStyleRef.current === styleUrl) return;
+    activeStyleRef.current = styleUrl;
+    map.setStyle(styleUrl, {
+      transformStyle: (_previous, next) => repairMapStyle(next, { isDarkMode }),
+    });
+  }, [isDarkMode, styleUrl]);
 
   // 監聽外部經緯度變化以同步標記
   useEffect(() => {
@@ -186,6 +189,11 @@ const MapPicker = ({
       <h3 className={`text-sm font-bold flex items-center gap-2 ${theme.text}`}>
         <MapPin className="w-4 h-4" /> 互動式地圖選擇 (MapLibre)
       </h3>
+      {mapError && (
+        <p role="status" className="text-sm">
+          {(MAP_FAILURE_MESSAGES[mapError] || MAP_MESSAGES.error)[0]}，可直接輸入經緯度。
+        </p>
+      )}
 
       <div className="relative group isolate">
         <div

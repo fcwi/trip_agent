@@ -23,6 +23,7 @@ import {
 import {
   classifyMapFailure,
   getMapPoints,
+  getMapStyleUrl,
   isPlaceNameLayer,
   MAP_FAILURE_MESSAGES,
   MAP_MESSAGES,
@@ -396,7 +397,7 @@ const JournalMapCanvas = forwardRef(function JournalMapCanvas(
         });
         // Transform the downloaded style before any tile expressions are evaluated.
         currentMap.setStyle(
-          `https://api.maptiler.com/maps/${isDarkMode ? "streets-v4-dark" : "streets-v4-pastel"}/style.json?key=${encodeURIComponent(MAPTILER_KEY)}`,
+          getMapStyleUrl(MAPTILER_KEY, isDarkMode),
           {
             transformStyle: (_previous, next) =>
               repairMapStyle(next, { isDarkMode }),

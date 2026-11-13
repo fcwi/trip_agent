@@ -532,6 +532,24 @@ test("centers selected dates, names icon controls, and renders offline currency 
 });
 
 test("gives map icon controls accessible names", async ({ page }) => {
+  const styles = [];
+  await page.route("**/api/login", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), maptilerKey: "e2e-map-key" },
+    });
+  });
+  await page.route("https://api.maptiler.com/maps/**/style.json?*", (route) => {
+    styles.push(new URL(route.request().url()).pathname);
+    return route.fulfill({
+      json: {
+        version: 8,
+        sources: {},
+        layers: [{ id: "background", type: "background", paint: { "background-color": "#ece8df" } }],
+      },
+    });
+  });
   await page.goto("/");
   await unlockTrip(page);
   const title = page.getByRole("button", {
@@ -546,6 +564,9 @@ test("gives map icon controls accessible names", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: "重置選擇的位置" }),
   ).toBeVisible();
+  await expect(page.locator(".maplibregl-marker.custom-marker")).toBeVisible();
+  expect(styles).toHaveLength(1);
+  expect(styles[0]).toMatch(/^\/maps\/streets-v4-(dark|pastel)\/style\.json$/);
 });
 
 test("offers common avatars first and exposes an accessible selected state", async ({

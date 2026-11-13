@@ -1,5 +1,10 @@
 import { isValidLngLat } from "./mapHelpers.js";
 
+export function getMapStyleUrl(key, isDarkMode) {
+  const style = isDarkMode ? "streets-v4-dark" : "streets-v4-pastel";
+  return `https://api.maptiler.com/maps/${style}/style.json?key=${encodeURIComponent(key)}`;
+}
+
 // Preserve road refs, shields and composite labels supplied by the basemap.
 export function isPlaceNameLayer(layer) {
   if (layer.type !== "symbol") return false;

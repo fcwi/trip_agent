@@ -13,8 +13,14 @@ import {
 import MapPicker from "./MapPicker.jsx";
 import { useModalAccessibility } from "../hooks/useModalAccessibility.js";
 
-// 🆕 讀取構建版本號
-const BUILD_VERSION = import.meta.env.VITE_BUILD_VERSION || "開發模式";
+const buildVersion = import.meta.env.VITE_BUILD_VERSION;
+const buildLabel = buildVersion
+  ? `${new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Asia/Taipei",
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(buildVersion))}（台灣時間）`
+  : "開發模式";
 
 /**
  * TestModePanel Component
@@ -489,7 +495,7 @@ const TestModePanel = ({
             className={`px-3 py-2 rounded-lg text-xs flex items-center gap-2 ${isDarkMode ? "bg-neutral-800/40 text-neutral-400" : "bg-white/40 text-stone-500"}`}
           >
             <Info className="w-3.5 h-3.5" />
-            <span>構建版本：{BUILD_VERSION}</span>
+            <span>建置時間：{buildLabel}</span>
           </div>
 
           {/* 🆕 底部按鈕組：儲存 + 凍結 + 退出 */}

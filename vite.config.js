@@ -49,17 +49,6 @@ const normalizeBasePath = (value = "/") => {
     : `${withLeadingSlash}/`;
 };
 
-// 🆕 生成構建版本號（使用當前時間）
-const generateBuildVersion = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-};
-
 // 🔧 從行程檔案讀取 Meta 設定 (不依賴 Node.js 執行環境轉譯 JSX)
 const loadTripMeta = (filePath) => {
   try {
@@ -139,7 +128,7 @@ export default defineConfig(({ mode }) => {
     // 🆕 定義環境變數
     define: {
       "import.meta.env.VITE_BUILD_VERSION": JSON.stringify(
-        generateBuildVersion(),
+        new Date().toISOString(),
       ),
       "import.meta.env.VITE_TRIP_ID": JSON.stringify(tripId),
     },
