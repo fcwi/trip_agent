@@ -2568,3 +2568,438 @@
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   Daily Weather Strip, Outfit Advice, QR Pass Vault, Transit & Nearby Tools
+   ========================================================================== */
+
+.journal-day-index-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--travel-subtle);
+  border: 1px solid var(--travel-line);
+  color: var(--travel-text);
+  flex-shrink: 0;
+}
+
+.journal-day-index-weather svg {
+  width: 14px;
+  height: 14px;
+}
+
+.journal-weather-outfit {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--travel-line);
+  color: var(--travel-text);
+  line-height: 1.5;
+}
+
+.journal-weather-strip {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--travel-subtle);
+  border: 1px solid var(--travel-line);
+}
+
+.journal-weather-strip__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--travel-text);
+}
+
+.journal-weather-strip__header small {
+  font-weight: 500;
+  color: var(--travel-muted);
+}
+
+.journal-weather-strip__list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.journal-weather-strip__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 78px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-paper);
+  color: var(--travel-text);
+  text-align: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.journal-weather-strip__item:hover {
+  transform: translateY(-1px);
+}
+
+.journal-weather-strip__item.is-active {
+  border-color: var(--travel-accent);
+  box-shadow: 0 0 0 1px var(--travel-accent);
+}
+
+.journal-weather-strip__day {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.journal-weather-strip__loc {
+  font-size: 11px;
+  color: var(--travel-muted);
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-weather-strip__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.journal-weather-strip__item strong {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Travel Pass Vault (Boarding Passes & Visit Japan Web QR) */
+.journal-pass-vault {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--travel-line);
+}
+
+.journal-pass-vault__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.journal-pass-vault__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--travel-text);
+}
+
+.journal-pass-vault__title small {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.journal-pass-vault__hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--travel-muted);
+}
+
+.journal-pass-vault__form {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--travel-subtle);
+  border: 1px solid var(--travel-line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.journal-pass-vault__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.journal-pass-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-paper);
+  color: var(--travel-text);
+}
+
+.journal-pass-chip.is-active {
+  border-color: var(--travel-accent);
+  background: var(--travel-accent);
+  color: #fff;
+}
+
+.journal-pass-vault__input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--travel-line);
+  font-size: 13px;
+}
+
+.journal-pass-vault__list {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.journal-pass-card {
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-subtle);
+  overflow: hidden;
+}
+
+.journal-pass-card__preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 34px 8px 8px;
+  text-align: left;
+  color: var(--travel-text);
+}
+
+.journal-pass-card__preview img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.journal-pass-card__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.journal-pass-card__meta strong {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-pass-card__meta small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--travel-muted);
+}
+
+.journal-pass-card__delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--travel-muted);
+}
+
+.journal-pass-card__delete:hover {
+  color: #dc2626;
+}
+
+.journal-pass-lightbox {
+  max-width: min(94vw, 460px);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #1c1917;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.journal-pass-lightbox::backdrop {
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.journal-pass-lightbox__sheet {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.journal-pass-lightbox__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journal-pass-lightbox__bar h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.journal-pass-lightbox__image-wrap {
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.journal-pass-lightbox__image-wrap img {
+  max-height: 65vh;
+  width: auto;
+  object-fit: contain;
+}
+
+.journal-pass-lightbox__tip {
+  font-size: 12px;
+  color: #57534e;
+  text-align: center;
+  margin: 0;
+}
+
+/* Timeline Attention Badges & Inter-stop Transit Connectors */
+.journal-attention-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.journal-attention-badge--confirm {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.journal-attention-badge--notice {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.travel-shell[data-theme="dark"] .journal-attention-badge--confirm {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fcd34d;
+}
+
+.travel-shell[data-theme="dark"] .journal-attention-badge--notice {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+.journal-transit-connector {
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--travel-muted);
+  background: var(--travel-subtle);
+  border: 1px dashed var(--travel-line);
+}
+
+/* Nearby Quick Search Grid & Tonight's Hotel Card */
+.journal-nearby-panel,
+.journal-tonight-hotel {
+  margin-top: 16px;
+}
+
+.journal-nearby-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .journal-nearby-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.journal-nearby-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.journal-nearby-chip:hover {
+  border-color: var(--travel-accent);
+  transform: translateY(-1px);
+}
+
+.journal-tonight-hotel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.journal-tonight-hotel__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  margin: 0;
+}
+
+.journal-tonight-hotel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}

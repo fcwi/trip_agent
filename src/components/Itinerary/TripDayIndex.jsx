@@ -1,6 +1,7 @@
 import { useTripViewToggle } from "../../hooks/useTripViewToggle.js";
 import { JournalTurn } from "./JournalMarks.jsx";
 import { DayStamp } from "./JournalIllustration.jsx";
+import { getDayForecastSummary } from "../../utils/itineraryWeather.js";
 
 export default function TripDayIndex({
   itineraryData,
@@ -8,6 +9,8 @@ export default function TripDayIndex({
   changeDay,
   currentTripDayIndex,
   tripStatus,
+  weatherForecast,
+  getWeatherInfo,
 }) {
   const [showSummary, setShowSummary] = useTripViewToggle("day-summary-view");
 
@@ -34,6 +37,15 @@ export default function TripDayIndex({
         {itineraryData.map((day, index) => {
           const first = day.events[0];
           const last = day.events.at(-1);
+          const dayWeather = getDayForecastSummary({
+            dayIndex: index,
+            itineraryData,
+            tripConfig,
+            weatherForecast,
+            tripStatus,
+            currentTripDayIndex,
+            getWeatherInfo,
+          });
           return (
             <li key={day.day}>
               <button
@@ -93,6 +105,17 @@ export default function TripDayIndex({
                     </small>
                   )}
                 </span>
+                {dayWeather.hasForecast && (
+                  <span
+                    className="journal-day-index-weather"
+                    aria-label={`${dayWeather.locationName}預報 ${dayWeather.desc} ${dayWeather.tempText}`}
+                  >
+                    {dayWeather.icon && (
+                      <span aria-hidden="true">{dayWeather.icon}</span>
+                    )}
+                    <span>{dayWeather.tempText}</span>
+                  </span>
+                )}
                 {tripStatus === "during" && currentTripDayIndex === index && (
                   <span className="travel-badge">今天</span>
                 )}

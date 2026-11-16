@@ -16,6 +16,7 @@ import {
   EVENT_CATEGORY_LABELS,
   resolveEventCategory,
 } from "../../utils/itineraryHelpers.js";
+import { getEventAttentionBadge } from "../../utils/itineraryWeather.js";
 
 const TRANSPORT_ICON_MATCHERS = [
   [/飛機|航班|航空|機場/, Plane],
@@ -43,6 +44,7 @@ export default function TimelineEvent({
   const TransportIcon = isTransport
     ? getTransportIcon(event.transport?.mode)
     : null;
+  const attentionBadge = getEventAttentionBadge(event);
   const detailsId = `event-details-${dayIndex}-${eventIndex}`;
   return (
     <li
@@ -100,6 +102,13 @@ export default function TimelineEvent({
             <span className="journal-transport-duration">
               <Clock3 aria-hidden="true" className="h-4 w-4" />
               {event.transport.duration}
+            </span>
+          )}
+          {attentionBadge && (
+            <span
+              className={`journal-attention-badge journal-attention-badge--${attentionBadge.kind}`}
+            >
+              {attentionBadge.label}
             </span>
           )}
           {event.locationPending ? (
@@ -196,6 +205,11 @@ export default function TimelineEvent({
           )}
         </div>
       </article>
+      {event.nextTransit && (
+        <div className="journal-transit-connector" aria-label="前往下一站交通">
+          <span>{event.nextTransit}</span>
+        </div>
+      )}
     </li>
   );
 }

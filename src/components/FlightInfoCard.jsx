@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import FlightTicket from "./Itinerary/FlightTicket.jsx";
+import TravelPassVault from "./TravelPassVault.jsx";
 import {
   Plane,
   Phone,
@@ -56,14 +57,17 @@ const FlightInfoCard = memo(
         </h2>
 
         {editorial && (
-          <div className="journal-flight-tickets">
-            <FlightTicket flight={tripConfig.flights.outbound} label="去程" />
-            <FlightTicket
-              flight={tripConfig.flights.inbound}
-              label="回程"
-              returnFlight
-            />
-          </div>
+          <>
+            <div className="journal-flight-tickets">
+              <FlightTicket flight={tripConfig.flights.outbound} label="去程" />
+              <FlightTicket
+                flight={tripConfig.flights.inbound}
+                label="回程"
+                returnFlight
+              />
+            </div>
+            <TravelPassVault isDarkMode={isDarkMode} />
+          </>
         )}
 
         {isFlightInfoExpanded && (

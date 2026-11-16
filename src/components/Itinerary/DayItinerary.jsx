@@ -1,5 +1,13 @@
 import { useRef, useState } from "react";
-import { AlertCircle, Hotel, ListOrdered, Navigation } from "lucide-react";
+import {
+  AlertCircle,
+  Compass,
+  Hotel,
+  ListOrdered,
+  Navigation,
+  Phone,
+  Shirt,
+} from "lucide-react";
 import { JournalTurn } from "./JournalMarks.jsx";
 import JournalSticker from "./JournalSticker.jsx";
 import TimelineEvent from "./TimelineEvent.jsx";
@@ -7,6 +15,12 @@ import {
   EVENT_CATEGORY_LABELS,
   resolveEventCategory,
 } from "../../utils/itineraryHelpers.js";
+import {
+  NEARBY_SEARCH_CATEGORIES,
+  buildNearbyMapSearchUrl,
+  findDayHotelDetails,
+  getDayForecastSummary,
+} from "../../utils/itineraryWeather.js";
 import { DayStamp } from "./JournalIllustration.jsx";
 import { eventMapUrl } from "../../utils/journalMap.js";
 import { isValidLngLat } from "../../utils/mapHelpers.js";
@@ -14,9 +28,15 @@ import { isValidLngLat } from "../../utils/mapHelpers.js";
 export default function DayItinerary({
   day,
   activeDay,
+  changeDay,
+  itineraryData,
   tripConfig,
+  tripStatus,
+  currentTripDayIndex,
   currentLocation,
+  weatherForecast,
   displayWeather,
+  getWeatherInfo,
   handleWeatherDetailOpen,
   expandedItems,
   toggleExpand,
@@ -46,6 +66,35 @@ export default function DayItinerary({
   const locationName =
     tripConfig.locations.find((location) => location.key === currentLocation)
       ?.name || "當地";
+  const dayWeather = getDayForecastSummary({
+    dayIndex: activeDay,
+    itineraryData,
+    tripConfig,
+    weatherForecast,
+    tripStatus,
+    currentTripDayIndex,
+    getWeatherInfo,
+  });
+  const multiDayForecasts = (itineraryData || [])
+    .map((item, idx) => ({
+      day: item,
+      index: idx,
+      weather: getDayForecastSummary({
+        dayIndex: idx,
+        itineraryData,
+        tripConfig,
+        weatherForecast,
+        tripStatus,
+        currentTripDayIndex,
+        getWeatherInfo,
+      }),
+    }))
+    .filter(({ weather }) => weather.hasForecast);
+  const hotelDetails = findDayHotelDetails(day, tripConfig);
+  const nearbySearchHint =
+    hotelDetails && !hotelDetails.pending
+      ? hotelDetails.name.split("(")[0].trim()
+      : locationName;
   return (
     <div
       className={`travel-day-layout ${showMap ? "travel-day-layout--with-route" : ""}`}
@@ -130,9 +179,56 @@ export default function DayItinerary({
               {displayWeather.temp} · {displayWeather.desc}
             </strong>
             <small>{displayWeather.advice}</small>
+            {dayWeather.hasForecast && (
+              <small className="journal-weather-outfit">
+                <Shirt aria-hidden="true" className="h-3.5 w-3.5 flex-none" />
+                <span>穿搭建議：{dayWeather.clothingAdvice}</span>
+              </small>
+            )}
           </span>
           <JournalTurn className="h-4 w-4 flex-none" />
         </button>
+        {multiDayForecasts.length > 1 && (
+          <section
+            className="journal-weather-strip"
+            aria-label="接下來各日天氣與穿衣參考"
+          >
+            <div className="journal-weather-strip__header">
+              <span>各日氣溫預覽（高溫／低溫）</span>
+              <small>點擊可切換天數</small>
+            </div>
+            <div className="journal-weather-strip__list">
+              {multiDayForecasts.map(({ day: item, index, weather }) => {
+                const isCurrent = index === activeDay;
+                return (
+                  <button
+                    key={item.day || index}
+                    type="button"
+                    aria-current={isCurrent ? "true" : undefined}
+                    className={`journal-weather-strip__item ${isCurrent ? "is-active" : ""}`}
+                    onClick={() => changeDay?.(index)}
+                  >
+                    <span className="journal-weather-strip__day">
+                      {item.day}
+                    </span>
+                    <span className="journal-weather-strip__loc">
+                      {weather.locationName}
+                    </span>
+                    {weather.icon && (
+                      <span
+                        className="journal-weather-strip__icon"
+                        aria-hidden="true"
+                      >
+                        {weather.icon}
+                      </span>
+                    )}
+                    <strong>{weather.tempText}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
         {day.notice && (
           <aside
             className={`travel-day-notice ${day.notice.type === "alert" ? "travel-day-notice--alert" : ""}`}
@@ -189,6 +285,85 @@ export default function DayItinerary({
             ))}
           </ol>
         </section>
+        <section
+          className="travel-panel journal-nearby-panel"
+          aria-labelledby="nearby-search-heading"
+        >
+          <div className="travel-section-heading">
+            <h2 id="nearby-search-heading">找我附近的</h2>
+            <span>Google Maps 搜尋（{nearbySearchHint}）</span>
+          </div>
+          <div className="journal-nearby-grid">
+            {NEARBY_SEARCH_CATEGORIES.map((category) => (
+              <a
+                key={category.id}
+                className="journal-nearby-chip"
+                href={buildNearbyMapSearchUrl(category.query, nearbySearchHint)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`在 Google Maps 搜尋${nearbySearchHint}附近的${category.label}`}
+              >
+                <Compass aria-hidden="true" className="h-4 w-4" />
+                <span>{category.label}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+        {hotelDetails && (
+          <section
+            className="travel-panel journal-tonight-hotel"
+            aria-labelledby="tonight-hotel-heading"
+          >
+            <div className="travel-section-heading">
+              <h2 id="tonight-hotel-heading">今晚住宿</h2>
+              {hotelDetails.pending && (
+                <span className="journal-attention-badge journal-attention-badge--confirm">
+                  飯店待確認
+                </span>
+              )}
+            </div>
+            <div className="journal-tonight-hotel__body">
+              <p className="journal-tonight-hotel__name">
+                <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
+                <strong>{hotelDetails.name}</strong>
+              </p>
+              {(hotelDetails.checkIn || hotelDetails.checkOut) && (
+                <p className="travel-muted text-sm">
+                  {hotelDetails.checkIn ? `入住 ${hotelDetails.checkIn}` : ""}
+                  {hotelDetails.checkIn && hotelDetails.checkOut ? " · " : ""}
+                  {hotelDetails.checkOut ? `退房 ${hotelDetails.checkOut}` : ""}
+                </p>
+              )}
+              {hotelDetails.address && (
+                <p className="travel-muted text-sm">{hotelDetails.address}</p>
+              )}
+              <div className="journal-tonight-hotel__actions">
+                {hotelDetails.telHref ? (
+                  <a
+                    className="journal-view-toggle"
+                    href={hotelDetails.telHref}
+                  >
+                    <Phone aria-hidden="true" className="h-4 w-4" />
+                    撥打飯店電話
+                  </a>
+                ) : (
+                  <span className="travel-muted text-xs">
+                    電話請依出發通知
+                  </span>
+                )}
+                <a
+                  className="travel-primary-button"
+                  href={getMapLink(hotelDetails.mapQuery)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Navigation aria-hidden="true" className="h-4 w-4" />
+                  在 Google Maps 搜尋住宿
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
       {showMap && (
         <aside
