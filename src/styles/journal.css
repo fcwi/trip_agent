@@ -2993,51 +2993,79 @@
   border: 1px dashed var(--travel-line);
 }
 
-/* Nearby Quick Search Grid & Tonight's Hotel Card */
-.journal-nearby-panel,
+/* Tools Menu Nearby Search Grid & Tonight's Hotel Card */
+.travel-tools-panel {
+  width: min(260px, calc(100vw - 24px));
+  max-height: calc(100dvh - 116px);
+  overflow-y: auto;
+}
+
+@media (max-width: 1279px) {
+  .travel-dock .travel-tools-panel {
+    margin-bottom: 20px;
+  }
+}
+
+.journal-tools-nearby {
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--travel-line);
+}
+
+.journal-tools-nearby__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+  padding-inline: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--travel-text);
+}
+
+.journal-tools-nearby__header small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--travel-muted);
+}
+
+.journal-tools-nearby-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.journal-tools-nearby-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.journal-tools-nearby-chip:hover {
+  border-color: var(--travel-accent);
+}
+
 .journal-tonight-hotel {
   margin-top: 16px;
 }
 
-.journal-nearby-panel .travel-section-heading,
 .journal-tonight-hotel .travel-section-heading {
   flex-wrap: wrap;
   gap: 4px 12px;
-}
-
-.journal-nearby-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-@media (max-width: 480px) {
-  .journal-nearby-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.journal-nearby-chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--travel-line);
-  background: var(--travel-subtle);
-  color: var(--travel-text);
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.journal-nearby-chip:hover {
-  border-color: var(--travel-accent);
-  transform: translateY(-1px);
 }
 
 .journal-tonight-hotel__body {

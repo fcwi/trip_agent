@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import {
   AlertCircle,
-  Compass,
   Hotel,
   ListOrdered,
   Navigation,
@@ -16,8 +15,6 @@ import {
   resolveEventCategory,
 } from "../../utils/itineraryHelpers.js";
 import {
-  NEARBY_SEARCH_CATEGORIES,
-  buildNearbyMapSearchUrl,
   findDayHotelDetails,
   getDayForecastSummary,
 } from "../../utils/itineraryWeather.js";
@@ -91,10 +88,6 @@ export default function DayItinerary({
     }))
     .filter(({ weather }) => weather.hasForecast);
   const hotelDetails = findDayHotelDetails(day, tripConfig);
-  const nearbySearchHint =
-    hotelDetails && !hotelDetails.pending
-      ? hotelDetails.name.split("(")[0].trim()
-      : locationName;
   return (
     <div
       className={`travel-day-layout ${showMap ? "travel-day-layout--with-route" : ""}`}
@@ -284,30 +277,6 @@ export default function DayItinerary({
               />
             ))}
           </ol>
-        </section>
-        <section
-          className="travel-panel journal-nearby-panel"
-          aria-labelledby="nearby-search-heading"
-        >
-          <div className="travel-section-heading">
-            <h2 id="nearby-search-heading">找我附近的</h2>
-            <span>Google Maps 搜尋（{nearbySearchHint}）</span>
-          </div>
-          <div className="journal-nearby-grid">
-            {NEARBY_SEARCH_CATEGORIES.map((category) => (
-              <a
-                key={category.id}
-                className="journal-nearby-chip"
-                href={buildNearbyMapSearchUrl(category.query, nearbySearchHint)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`在 Google Maps 搜尋${nearbySearchHint}附近的${category.label}`}
-              >
-                <Compass aria-hidden="true" className="h-4 w-4" />
-                <span>{category.label}</span>
-              </a>
-            ))}
-          </div>
         </section>
         {hotelDetails && (
           <section

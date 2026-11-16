@@ -109,10 +109,15 @@ test("findDayHotelDetails matches tripConfig hotels and skips home", () => {
   assert.equal(matched?.address, "山形市本町1-7-42");
 });
 
-test("buildNearbyMapSearchUrl encodes location and category into Google Maps search", () => {
-  const url = buildNearbyMapSearchUrl("便利商店", "博多站");
+test("buildNearbyMapSearchUrl encodes pure category keyword for current GPS area search", () => {
+  const url = buildNearbyMapSearchUrl("便利商店");
   assert.equal(
     url,
-    "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E7%AB%99%20%E4%BE%BF%E5%88%A9%E5%95%86%E5%BA%97",
+    "https://www.google.com/maps/search/?api=1&query=%E4%BE%BF%E5%88%A9%E5%95%86%E5%BA%97",
+  );
+  const restroomUrl = buildNearbyMapSearchUrl("公廁 廁所");
+  assert.equal(
+    restroomUrl,
+    "https://www.google.com/maps/search/?api=1&query=%E5%85%AC%E5%BB%81%20%E5%BB%81%E6%89%80",
   );
 });

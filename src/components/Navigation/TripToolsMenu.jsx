@@ -1,5 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Calculator, LocateFixed, Loader, Wrench, X } from "lucide-react";
+import {
+  Calculator,
+  Compass,
+  LocateFixed,
+  Loader,
+  Wrench,
+  X,
+} from "lucide-react";
+import {
+  NEARBY_SEARCH_CATEGORIES,
+  buildNearbyMapSearchUrl,
+} from "../../utils/itineraryWeather.js";
 
 const locationSourceLabel = (source) => {
   if (source === "cache") return "快取位置";
@@ -114,6 +125,33 @@ export default function TripToolsMenu({
           <Calculator aria-hidden="true" className="h-5 w-5 text-amber-500" />
           開啟匯率計算機
         </button>
+
+        <div
+          className="journal-tools-nearby"
+          role="region"
+          aria-label="找我附近的設施"
+        >
+          <div className="journal-tools-nearby__header">
+            <span>找我附近的</span>
+            <small>Google Maps 搜尋</small>
+          </div>
+          <div className="journal-tools-nearby-grid">
+            {NEARBY_SEARCH_CATEGORIES.map((category) => (
+              <a
+                key={category.id}
+                href={buildNearbyMapSearchUrl(category.query)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closeMenu}
+                aria-label={`在 Google Maps 搜尋附近的${category.label}`}
+                className="journal-tools-nearby-chip"
+              >
+                <Compass aria-hidden="true" className="h-3.5 w-3.5 flex-none" />
+                <span>{category.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
 
       <button

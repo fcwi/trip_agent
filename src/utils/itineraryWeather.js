@@ -195,7 +195,7 @@ export const NEARBY_SEARCH_CATEGORIES = [
   { id: "atm", label: "ATM", query: "ATM" },
 ];
 
-export function buildNearbyMapSearchUrl(categoryQuery, locationHint = "") {
-  const query = [locationHint, categoryQuery].filter(Boolean).join(" ").trim();
+export function buildNearbyMapSearchUrl(categoryQuery) {
+  const query = String(categoryQuery || "").trim();
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
