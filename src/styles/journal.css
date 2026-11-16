@@ -1800,6 +1800,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   width: auto;
   min-height: 44px;
   padding: 6px 12px;
@@ -1828,7 +1829,7 @@
 .journal-checklist-form select {
   grid-column: 1;
   grid-row: 2;
-  justify-self: start;
+  width: 100%;
   max-width: 100%;
   min-height: 44px;
   padding: 6px 12px;
@@ -2573,6 +2574,14 @@
    Daily Weather Strip, Outfit Advice, QR Pass Vault, Transit & Nearby Tools
    ========================================================================== */
 
+.journal-day-index-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 .journal-day-index-weather {
   display: inline-flex;
   align-items: center;
@@ -2593,6 +2602,19 @@
   height: 14px;
 }
 
+.travel-day-main
+  > :is(
+    .travel-day-heading,
+    .journal-day-shortcuts,
+    .journal-day-note,
+    .travel-day-weather,
+    .travel-day-notice,
+    .journal-weather-strip
+  ) {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .journal-weather-outfit {
   display: flex;
   align-items: flex-start;
@@ -2604,7 +2626,16 @@
   line-height: 1.5;
 }
 
+.journal-weather-outfit > span {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: break-word;
+}
+
 .journal-weather-strip {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   margin-top: 10px;
   padding: 12px 14px;
   border-radius: 16px;
@@ -2614,6 +2645,7 @@
 
 .journal-weather-strip__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
@@ -2631,7 +2663,9 @@
 .journal-weather-strip__list {
   display: flex;
   gap: 8px;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 4px;
   scrollbar-width: thin;
 }
@@ -2645,7 +2679,7 @@
   padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid var(--travel-line);
-  background: var(--travel-paper);
+  background: var(--travel-surface);
   color: var(--travel-text);
   text-align: center;
   flex-shrink: 0;
@@ -2740,33 +2774,39 @@
 }
 
 .journal-pass-chip {
-  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   border: 1px solid var(--travel-line);
-  background: var(--travel-paper);
+  background: var(--travel-surface);
   color: var(--travel-text);
 }
 
 .journal-pass-chip.is-active {
   border-color: var(--travel-accent);
   background: var(--travel-accent);
-  color: #fff;
+  color: var(--travel-on-accent);
 }
 
 .journal-pass-vault__input {
   width: 100%;
+  min-height: 44px;
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid var(--travel-line);
-  font-size: 13px;
+  background: var(--travel-page);
+  color: var(--travel-text);
+  font-size: 16px;
 }
 
 .journal-pass-vault__list {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
   gap: 10px;
 }
 
@@ -2783,7 +2823,8 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 34px 8px 8px;
+  min-height: 56px;
+  padding: 8px 48px 8px 8px;
   text-align: left;
   color: var(--travel-text);
 }
@@ -2821,10 +2862,11 @@
 
 .journal-pass-card__delete {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -2837,13 +2879,20 @@
 }
 
 .journal-pass-lightbox {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   max-width: min(94vw, 460px);
   width: 100%;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   padding: 0;
   border: 0;
   border-radius: 20px;
   background: #ffffff;
   color: #1c1917;
+  --travel-text: #1c1917;
+  --travel-subtle: #f5f5f4;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 }
 
@@ -2928,6 +2977,9 @@
 }
 
 .journal-transit-connector {
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
   margin-top: 8px;
   padding: 4px 10px;
   border-radius: 999px;
@@ -2935,6 +2987,7 @@
   align-items: center;
   font-size: 12px;
   font-weight: 600;
+  overflow-wrap: break-word;
   color: var(--travel-muted);
   background: var(--travel-subtle);
   border: 1px dashed var(--travel-line);
@@ -2944,6 +2997,12 @@
 .journal-nearby-panel,
 .journal-tonight-hotel {
   margin-top: 16px;
+}
+
+.journal-nearby-panel .travel-section-heading,
+.journal-tonight-hotel .travel-section-heading {
+  flex-wrap: wrap;
+  gap: 4px 12px;
 }
 
 .journal-nearby-grid {
@@ -3002,4 +3061,94 @@
   align-items: center;
   gap: 10px;
   margin-top: 4px;
+}
+
+.journal-tonight-hotel__actions .travel-primary-button {
+  margin-top: 0;
+  flex: 1 1 180px;
+}
+
+/* Non-blocking notebook-styled iOS install prompt above the bottom dock */
+.journal-ios-install-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+  padding-inline: max(12px, env(safe-area-inset-left))
+    max(12px, env(safe-area-inset-right));
+  pointer-events: none;
+}
+
+.travel-shell:is([data-chat-keyboard="true"], [data-record-keyboard="true"])
+  .journal-ios-install-wrap {
+  display: none;
+}
+
+.journal-ios-install-banner {
+  pointer-events: auto;
+  width: min(100%, 448px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 12px;
+  border: 1.5px solid var(--journal-ink);
+  border-radius: 16px;
+  background: var(--travel-surface);
+  color: var(--travel-text);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+.journal-ios-install-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--journal-blue);
+  color: var(--journal-ink);
+}
+
+.journal-ios-install-banner__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.journal-ios-install-banner__copy strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.journal-ios-install-banner__copy p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--travel-muted);
+}
+
+.journal-ios-install-banner__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  color: var(--travel-muted);
+}
+
+.journal-ios-install-banner__close:hover {
+  background: var(--travel-subtle);
+  color: var(--travel-text);
+}
+
+@media (min-width: 1280px) {
+  .journal-ios-install-wrap {
+    bottom: 20px;
+  }
 }

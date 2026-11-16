@@ -9,7 +9,11 @@ export function usePanelViewport(panelRef, heightProperty, keyboardAttribute) {
     let focusFrame;
     const update = () => {
       const height = viewport?.height ?? window.innerHeight;
-      shell.style.setProperty(heightProperty, `${height}px`);
+      if (viewport && Math.abs(window.innerHeight - height) > 1) {
+        shell.style.setProperty(heightProperty, `${height}px`);
+      } else {
+        shell.style.removeProperty(heightProperty);
+      }
       const editing =
         panelRef.current?.contains(document.activeElement) &&
         document.activeElement?.matches(

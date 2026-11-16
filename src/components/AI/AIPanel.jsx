@@ -123,11 +123,11 @@ const AIPanel = ({
         </div>
       </div>
       <div
-        className={`journal-panel backdrop-blur-2xl border rounded-[2rem] flex-1 flex flex-col overflow-hidden max-w-full transition-all duration-300 ${isDarkMode ? "bg-slate-900/60 border-white/10 ring-1 ring-white/10 shadow-lg shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-lg shadow-black/5"} ${componentStyles.itineraryCard}`}
+        className={`journal-panel backdrop-blur-2xl border rounded-[2rem] flex-1 flex flex-col overflow-hidden max-w-full transition-colors duration-300 ${isDarkMode ? "bg-slate-900/60 border-white/10 ring-1 ring-white/10 shadow-lg shadow-black/5" : "bg-white/70 border-white/40 ring-1 ring-black/5 shadow-lg shadow-black/5"} ${componentStyles.itineraryCard}`}
       >
         {/* 對話視窗標題與模式切換 */}
         <div
-          className={`journal-ai-header shrink-0 p-3 border-b backdrop-blur-lg transition-all duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
+          className={`journal-ai-header shrink-0 p-3 border-b backdrop-blur-lg transition-colors duration-300 ${isDarkMode ? "bg-neutral-800/60 border-white/10" : "bg-white/60 border-stone-200/50"}`}
         >
           <div className="journal-ai-toolbar journal-ai-toolbar-row flex items-center justify-between gap-2">
             <div className="journal-ai-identity flex items-center gap-3">

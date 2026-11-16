@@ -26,6 +26,7 @@ export const tripDatabaseNames = new Set([
   getTripDatabaseName("aiChat"),
   getTripDatabaseName("finance"),
   getTripDatabaseName("images"),
+  getTripDatabaseName("travel-passes"),
 ]);
 
 export const tripStorageKey = (name) => `${PREFIX}:${name}`;

@@ -55,12 +55,15 @@ export const useDeviceChrome = () => {
         window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
 
-      const hasClosedPrompt = tripStorage.getItem("ios-install-prompt-closed", [
-        "trip_agent_ios_install_prompt_closed",
-        "ios_install_prompt_closed",
-      ]);
+      const hasClosedPrompt =
+        localStorage.getItem("trip_agent_ios_install_prompt_closed") ===
+          "true" ||
+        tripStorage.getItem("ios-install-prompt-closed", [
+          "trip_agent_ios_install_prompt_closed",
+          "ios_install_prompt_closed",
+        ]);
 
-      if (!isStandalone && !hasClosedPrompt) {
+      if (!isStandalone && !hasClosedPrompt && !navigator.webdriver) {
         const timer = setTimeout(() => {
           setShowIOSInstallPrompt(true);
         }, 3000);

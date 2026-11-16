@@ -3048,75 +3048,44 @@ const ItineraryApp = ({ authentication }) => {
           <AnimatePresence>
             {showIOSInstallPrompt && (
               <motion.div
-                initial={{ y: -100, opacity: 0 }}
+                role="region"
+                aria-label="安裝到主畫面提示"
+                initial={{ y: 24, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -100, opacity: 0 }}
-                transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                className="fixed top-0 left-0 right-0 z-[9999] mx-auto max-w-md"
-                style={{
-                  paddingTop: "max(1rem, env(safe-area-inset-top))",
-                  paddingLeft: "max(1rem, env(safe-area-inset-left))",
-                  paddingRight: "max(1rem, env(safe-area-inset-right))",
-                }}
+                exit={{ y: 24, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="journal-ios-install-wrap"
               >
-                <div className="mx-4 bg-gradient-to-br from-blue-600 to-blue-700 backdrop-blur-xl rounded-2xl shadow-2xl border border-blue-400/30 overflow-hidden">
-                  <div className="p-4 relative">
-                    {/* 關閉按鈕 */}
-                    <button
-                      onClick={() => {
-                        setShowIOSInstallPrompt(false);
-                        tripStorage.setItem(
-                          "ios-install-prompt-closed",
-                          "true",
-                        );
-                      }}
-                      className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-                      aria-label="關閉提示"
-                    >
-                      <X className="w-5 h-5 text-white" />
-                    </button>
-
-                    {/* 內容 */}
-                    <div className="flex items-start gap-3 pr-6">
-                      <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                        <Download className="w-7 h-7 text-blue-600" />
-                      </div>
-                      <div className="flex-1 text-white">
-                        <h3 className="font-bold text-base mb-1">
-                          安裝到主畫面
-                        </h3>
-                        <p className="text-sm text-blue-100 leading-relaxed mb-3">
-                          將此 App 加入主畫面，享受完整螢幕體驗
-                        </p>
-
-                        {/* 步驟說明 */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-xs text-blue-50 space-y-2 border border-white/20">
-                          <div className="flex items-start gap-2">
-                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                              1
-                            </span>
-                            <span>
-                              點擊底部的{" "}
-                              <Share2 className="inline w-4 h-4 mx-0.5" />{" "}
-                              分享按鈕
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                              2
-                            </span>
-                            <span>選擇「加入主畫面」</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span className="flex-shrink-0 w-5 h-5 bg-white/20 rounded-full flex items-center justify-center font-bold">
-                              3
-                            </span>
-                            <span>點擊右上角「新增」完成</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div className="journal-ios-install-banner">
+                  <span
+                    aria-hidden="true"
+                    className="journal-ios-install-banner__icon"
+                  >
+                    <Download className="h-4 w-4" />
+                  </span>
+                  <div className="journal-ios-install-banner__copy">
+                    <strong>安裝到主畫面</strong>
+                    <p>
+                      點底部{" "}
+                      <Share2 aria-hidden="true" className="inline h-3.5 w-3.5" />{" "}
+                      分享按鈕 →「加入主畫面」
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowIOSInstallPrompt(false);
+                      localStorage.setItem(
+                        "trip_agent_ios_install_prompt_closed",
+                        "true",
+                      );
+                      tripStorage.setItem("ios-install-prompt-closed", "true");
+                    }}
+                    className="journal-ios-install-banner__close"
+                    aria-label="關閉安裝提示"
+                  >
+                    <X aria-hidden="true" className="h-5 w-5" />
+                  </button>
                 </div>
               </motion.div>
             )}

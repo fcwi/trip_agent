@@ -104,21 +104,28 @@ export default function TripDayIndex({
                         "地點待確認"}
                     </small>
                   )}
+                  {(dayWeather.hasForecast ||
+                    (tripStatus === "during" &&
+                      currentTripDayIndex === index)) && (
+                    <span className="journal-day-index-badges">
+                      {dayWeather.hasForecast && (
+                        <span
+                          className="journal-day-index-weather"
+                          aria-label={`${dayWeather.locationName}預報 ${dayWeather.desc} ${dayWeather.tempText}`}
+                        >
+                          {dayWeather.icon && (
+                            <span aria-hidden="true">{dayWeather.icon}</span>
+                          )}
+                          <span>{dayWeather.tempText}</span>
+                        </span>
+                      )}
+                      {tripStatus === "during" &&
+                        currentTripDayIndex === index && (
+                          <span className="travel-badge">今天</span>
+                        )}
+                    </span>
+                  )}
                 </span>
-                {dayWeather.hasForecast && (
-                  <span
-                    className="journal-day-index-weather"
-                    aria-label={`${dayWeather.locationName}預報 ${dayWeather.desc} ${dayWeather.tempText}`}
-                  >
-                    {dayWeather.icon && (
-                      <span aria-hidden="true">{dayWeather.icon}</span>
-                    )}
-                    <span>{dayWeather.tempText}</span>
-                  </span>
-                )}
-                {tripStatus === "during" && currentTripDayIndex === index && (
-                  <span className="travel-badge">今天</span>
-                )}
                 <JournalTurn className="h-4 w-4 flex-none" />
               </button>
             </li>

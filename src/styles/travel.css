@@ -188,6 +188,7 @@
 .travel-overview__main,
 .travel-overview__aside {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: 24px;
 }
@@ -610,6 +611,7 @@
 .travel-day-layout,
 .travel-day-main {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: 24px;
   align-items: start;
