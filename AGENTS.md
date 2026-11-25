@@ -14,3 +14,5 @@ The user finalized the visual direction on 2026-10-23. See
   Use actual branch names and authoritative sources; label map searches as searches.
 - New explicit user requests take precedence over this baseline. Do not deploy unless
   deployment is requested or already authorized for the current changes.
+- Deployments must target Render via `main` (`render.yaml` `autoDeploy: true`).
+  Never deploy or push to `gh-pages` or GitHub Pages.

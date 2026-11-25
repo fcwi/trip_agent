@@ -67,14 +67,33 @@ export function createProductionServer(env = process.env, fetchImpl = fetch) {
     try {
       const info = await stat(file);
       if (!info.isFile()) throw new Error("Not a file");
-      res.writeHead(200, {
-        "Content-Type": types[extname(file)] || "application/octet-stream",
+      const ext = extname(file);
+      const headers = {
+        "Content-Type": types[ext] || "application/octet-stream",
         "Content-Length": info.size,
         "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(self), geolocation=(self)",
         "Cache-Control": pathname.startsWith("/assets/")
           ? "public, max-age=31536000, immutable"
           : "no-cache",
-      });
+      };
+      if (ext === ".html") {
+        headers["Content-Security-Policy"] = [
+          "default-src 'self'",
+          "script-src 'self'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: blob: https:",
+          "font-src 'self' data:",
+          "connect-src 'self' https:",
+          "worker-src 'self' blob:",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "frame-ancestors 'none'",
+        ].join("; ");
+      }
+      res.writeHead(200, headers);
       if (req.method === "HEAD") {
         res.end();
         return;
