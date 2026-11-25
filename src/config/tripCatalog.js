@@ -10,19 +10,6 @@ export const tripCatalog = Object.freeze([
     artwork: { id: "tohoku-snow", season: "winter", label: "雪山・溫泉・樹冰" },
   },
   {
-    id: "2026_karuizawa",
-    label: "東京・輕井澤",
-    title: "2026 東京輕井澤六日",
-    startDate: "2026-01-24",
-    endDate: "2026-01-29",
-    timeZone: "Asia/Tokyo",
-    artwork: {
-      id: "karuizawa-snow",
-      season: "winter",
-      label: "雪林・列車・山間小屋",
-    },
-  },
-  {
     id: "2026_busan",
     label: "韓國・釜山",
     title: "2026 釜山親子五日",
@@ -33,6 +20,19 @@ export const tripCatalog = Object.freeze([
       id: "busan-coast",
       season: "summer",
       label: "海灣・彩色街屋・海岸列車",
+    },
+  },
+  {
+    id: "2026_karuizawa",
+    label: "東京・輕井澤",
+    title: "2026 東京輕井澤六日",
+    startDate: "2026-01-24",
+    endDate: "2026-01-29",
+    timeZone: "Asia/Tokyo",
+    artwork: {
+      id: "karuizawa-snow",
+      season: "winter",
+      label: "雪林・列車・山間小屋",
     },
   },
 ]);

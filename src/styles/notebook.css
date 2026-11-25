@@ -1389,3 +1389,53 @@ html:has(.travel-shell) {
     animation: none;
   }
 }
+
+/* TripSwitcher modal: Japanese editorial 2px frame & watercolor covers */
+.journal-trip-chooser {
+  font-family:
+    "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
+    sans-serif;
+  --travel-page: #f6f5f0;
+  --travel-surface: #fdfcf9;
+  --travel-text: #1f1d1b;
+  --travel-muted: #5c5750;
+  --travel-line: #dad6cc;
+  --travel-accent: #1f568d;
+  border-radius: 2px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-page);
+  color: var(--travel-text);
+}
+.dark .journal-trip-chooser {
+  --travel-page: #17181c;
+  --travel-surface: #202228;
+  --travel-text: #f0ede6;
+  --travel-muted: #b5b0a6;
+  --travel-line: #363944;
+  --travel-accent: #7cb3e0;
+}
+.journal-trip-chooser h2 {
+  font-family: Georgia, "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+.journal-trip-card {
+  border-radius: 2px;
+  border: 1px solid var(--travel-line);
+  background: var(--travel-surface);
+  font-variant-numeric: tabular-nums;
+}
+.journal-trip-card[aria-pressed="true"] {
+  outline: 2px solid var(--travel-accent);
+  outline-offset: 2px;
+}
+.journal-trip-card__art {
+  height: 120px;
+  border-bottom: 1px solid var(--travel-line);
+}
+.journal-trip-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
