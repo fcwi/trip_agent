@@ -4,6 +4,27 @@ import { TripStudies } from "./artwork/DailyArtwork.jsx";
 import { useState } from "react";
 import { useArtworkNight } from "./artwork/artworkTheme.js";
 
+const BASE =
+  (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) || "/";
+
+const TRIP_WATERCOLOR_COVERS = {
+  "2026_busan": {
+    src: `${BASE}artwork/covers/busan-day.jpg`,
+    darkSrc: `${BASE}artwork/covers/busan-night.jpg`,
+    alt: "釜山海岸、彩色街屋與廣安大橋水彩封面",
+  },
+  "2026_karuizawa": {
+    src: `${BASE}artwork/covers/karuizawa-day.jpg`,
+    darkSrc: `${BASE}artwork/covers/karuizawa-night.jpg`,
+    alt: "輕井澤雪林、木屋與山間列車水彩封面",
+  },
+  "2027_tohoku": {
+    src: `${BASE}artwork/covers/tohoku-day.jpg`,
+    darkSrc: `${BASE}artwork/covers/tohoku-night.jpg`,
+    alt: "東北雪山、樹冰與纜車水彩封面",
+  },
+};
+
 export default function TripCover({
   tripConfig,
   itineraryData,
@@ -11,10 +32,11 @@ export default function TripCover({
   daysUntilTrip,
   currentTripDayIndex,
 }) {
-  const cover = tripConfig.presentation?.cover;
+  const cover =
+    tripConfig.presentation?.cover || TRIP_WATERCOLOR_COVERS[tripConfig.id];
   const night = useArtworkNight();
   const [failedSource, setFailedSource] = useState(null);
-  const coverSource = night ? cover?.darkSrc : cover?.src;
+  const coverSource = night ? cover?.darkSrc || cover?.src : cover?.src;
   const status =
     tripStatus === "before"
       ? `距離出發 ${daysUntilTrip} 天`

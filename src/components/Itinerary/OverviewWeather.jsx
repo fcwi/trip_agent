@@ -61,7 +61,9 @@ export default function OverviewWeather({
           <small role={!hasTemperature ? "status" : undefined}>
             {hasTemperature
               ? userWeather.desc || "天氣資訊"
-              : "可更新定位，或查看目的地天氣"}
+              : tripStatus === "before"
+                ? "出發前 14 日起提供目的地即時預報"
+                : "可更新定位，或查看目的地天氣"}
           </small>
         </div>
       </div>

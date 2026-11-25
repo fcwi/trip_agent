@@ -33,7 +33,7 @@ export function JourneyCar({ className }) {
     >
       <g
         stroke="var(--journal-ink)"
-        strokeWidth="3"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -54,8 +54,8 @@ export function JourneyVehicle({ kind = "coach", className }) {
       focusable="false"
     >
       <g
-        stroke="var(--journal-art-ink, var(--journal-ink))"
-        strokeWidth="2.5"
+        stroke="var(--journal-ink)"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       >

@@ -2268,19 +2268,19 @@ const FinanceScreen = ({
                                     : "bg-white/85 backdrop-blur-lg text-stone-700 border-white/40 ring-1 ring-black/5 shadow-md"
                                 }
                                 ${record.user?.name === user.name ? "rounded-2xl rounded-tr-none" : "rounded-2xl rounded-tl-none"}
-                                ${record.type === "finance" ? "w-60" : ""}
+                                ${record.type === "finance" ? "w-full max-w-[18rem]" : ""}
                            `}
                           >
                             {/* === 記帳模式 === */}
                             {record.type === "finance" ? (
-                              <div className="flex flex-col">
+                              <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-start gap-3">
                                   <div className="flex-1 min-w-0">
                                     <MarqueeText
                                       text={record.content || "未製品項"}
                                       className={`text-sm font-bold leading-tight ${theme.text}`}
                                     />
-                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                    <div className="flex items-center gap-1.5 mt-1">
                                       <span
                                         className={`journal-record-meta ${theme.textSec}`}
                                       >
@@ -2296,21 +2296,21 @@ const FinanceScreen = ({
 
                                   <div className="text-right flex-shrink-0">
                                     <div
-                                      className={`text-base font-mono font-bold leading-tight ${isDarkMode ? "text-sky-400" : "text-[#5D737E]"}`}
+                                      className={`text-base font-mono font-bold tabular-nums leading-tight ${isDarkMode ? "text-sky-400" : "text-[#5D737E]"}`}
                                     >
                                       {formatCurrency(
                                         record.amount,
                                         sourceCurrency,
                                       )}
                                     </div>
-                                    <div
-                                      className={`journal-record-meta mt-0.5 ${theme.textSec}`}
-                                    >
-                                      {hasRecordedConversion(record)
-                                        ? `≈ ${formatCurrency(record.targetAmount ?? record.twdAmount, targetCurrency)}`
-                                        : "尚未取得匯率，未換算"}
-                                    </div>
                                   </div>
+                                </div>
+                                <div
+                                  className={`journal-record-meta text-right tabular-nums ${theme.textSec}`}
+                                >
+                                  {hasRecordedConversion(record)
+                                    ? `≈ ${formatCurrency(record.targetAmount ?? record.twdAmount, targetCurrency)}`
+                                    : "尚未取得匯率，未換算"}
                                 </div>
 
                                 {record.image && (

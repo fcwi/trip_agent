@@ -1,4 +1,4 @@
-// Original die-cut objects from the trip's real rituals, never UI controls.
+// Monochrome stationery stamps matched to each trip's accent ink.
 export default function JournalSticker({ kind = "passport", className = "" }) {
   return (
     <span
@@ -8,132 +8,117 @@ export default function JournalSticker({ kind = "passport", className = "" }) {
     >
       <svg viewBox="0 0 64 64" fill="none" focusable="false">
         <g
-          stroke="var(--journal-art-ink)"
-          strokeWidth="1.7"
+          stroke="var(--travel-accent, var(--journal-art-ink))"
+          strokeWidth="1.15"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
+          <circle
+            cx="32"
+            cy="32"
+            r="27"
+            strokeDasharray="3 2.5"
+            strokeOpacity="0.45"
+          />
           {kind === "ticket" ? (
             <>
               <path
-                d="m8 17 46-2 2 11q-7 3 .5 9L58 47 10 50 9 38q6-4-.5-8Z"
-                fill="var(--journal-snow)"
+                d="m12 22 38-2 2 8q-5 2 .5 7l1 8-38 2-1-8q5-3-.5-6Z"
+                fill="var(--travel-accent)"
+                fillOpacity="0.06"
               />
-              <path d="m39 17 2 30" strokeDasharray="2 4" />
-              <path d="m15 23 17-.7m-17 18 13-.5" strokeWidth="1" />
-              <path
-                d="m16 31 7 1 4-6 3 .5-2 7 5 3-1 2-6-1-4 4-2-1 2-5-6-2Z"
-                fill="var(--journal-blue)"
-              />
-              <path d="m45 23 5-.3m-4 5 5-.2m-4 11 5-.3" strokeWidth="1" />
+              <path d="m37 21 1.5 22" strokeDasharray="2 3" />
+              <path d="m18 28 13-.5m-13 8 10-.5" strokeWidth="0.9" />
             </>
           ) : kind === "meal" ? (
             <>
-              <ellipse
-                cx="31"
-                cy="51"
-                rx="23"
-                ry="3"
-                fill="var(--journal-snow)"
-                stroke="none"
-              />
               <path
-                d="M10 28q2 22 21 23 20-2 23-23Z"
-                fill="var(--journal-blue)"
+                d="M15 31q2 16 17 17 16-1 17-17Z"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <ellipse
-                cx="32"
-                cy="28"
-                rx="22"
-                ry="7"
-                fill="var(--journal-yellow)"
-              />
-              <path
-                d="m17 29 8-2 8 3 10-3m-28 9q16 7 35 0m-28 14v4h20v-4"
-                strokeWidth="1"
-              />
-              <path d="m39 22 14-16m-9 19L59 9" />
-              <path d="M20 19q-4-4 0-8m9 9q-4-5 0-10" strokeWidth="1" />
+              <ellipse cx="32" cy="31" rx="17" ry="5" />
+              <path d="m38 25 10-11m-6 13 11-11" />
+              <path d="M23 23q-3-3 0-6m8 7q-3-4 0-8" strokeWidth="0.9" />
             </>
           ) : kind === "onsen" ? (
             <>
               <path
-                d="M12 37q20-9 41 0l-2 14q-18 9-37 0Z"
-                fill="var(--journal-blue)"
+                d="M16 37q16-6 32 0l-1.5 10q-14 6-29 0Z"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <ellipse
-                cx="32"
-                cy="37"
-                rx="20"
-                ry="7"
-                fill="var(--journal-snow)"
-              />
+              <ellipse cx="32" cy="37" rx="16" ry="5" />
               <path
-                d="M21 28q-6-5 0-11t0-10m11 20q-6-5 0-11t0-10m11 22q-6-5 0-11t0-10"
-                strokeWidth="1.3"
+                d="M23 29q-4-4 0-8t0-7m9 14q-4-4 0-8t0-7m9 15q-4-4 0-8t0-7"
+                strokeWidth="1"
               />
-              <path d="m8 47 17-3 4 12-18 3Z" fill="var(--journal-pink)" />
-              <path d="m12 49 12-2m-11 6 12-2m8-6q8 2 14-1" strokeWidth=".8" />
             </>
           ) : kind === "shopping" ? (
             <>
               <path
-                d="m13 22 36-1 5 34q-22 3-44 0Z"
-                fill="var(--journal-pink)"
+                d="m18 25 28-1 3 23q-17 2-34 0Z"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <path d="M23 26V15q9-13 18 0v11" />
-              <path
-                d="m16 25-2 27 35 1m-9-29 3 27"
-                strokeWidth=".8"
-                opacity=".5"
-              />
-              <path d="m25 38 6-5 7 5-3 8-8-1Z" fill="var(--journal-yellow)" />
+              <path d="M25 28v-8q7-9 14 0v8" />
             </>
           ) : kind === "suitcase" ? (
             <>
-              <path d="M24 16v-5q8-6 16 0v5" />
-              <path
-                d="M16 17q-5 0-5 6v28q1 5 6 5h31q5-1 5-6V23q0-6-6-6Z"
-                fill="var(--journal-yellow)"
+              <rect
+                x="17"
+                y="22"
+                width="30"
+                height="23"
+                rx="3"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <path d="m21 18-1 36m23-36 1 36M9 30h46m-39 27v3m31-3v3" />
-              <path d="m28 33 12-3 3 12-12 3Z" fill="var(--journal-pink)" />
-              <path d="m30 24 6-1 1 5-6 1Z" fill="var(--journal-blue)" />
+              <path d="M26 22v-5h12v5M25 22v23M39 22v23" strokeWidth="1" />
+              <circle cx="23" cy="47" r="2" />
+              <circle cx="41" cy="47" r="2" />
             </>
           ) : kind === "camera" ? (
             <>
-              <path
-                d="m17 21 4-8h19l4 8m-31 1h38q6 0 6 6v22q0 5-6 5H12q-6 0-6-6V28q0-6 7-6Z"
-                fill="var(--journal-blue)"
+              <rect
+                x="15"
+                y="23"
+                width="34"
+                height="22"
+                rx="3"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <circle cx="32" cy="38" r="13" fill="var(--journal-snow)" />
-              <circle cx="32" cy="38" r="8" fill="var(--journal-pink)" />
-              <path d="M47 28h5m-40 1h7m5 9q0-6 6-8M9 20q-4-7-5-10m54 11 4-8" />
+              <path d="M24 23l3-5h10l3 5" />
+              <circle cx="32" cy="34" r="7" />
+              <circle cx="32" cy="34" r="3" strokeWidth="0.9" />
             </>
           ) : kind === "notebook" ? (
             <>
-              <path
-                d="M15 8h35q4 0 4 5v43H14q-5 0-5-6V14q0-6 6-6Z"
-                fill="var(--journal-pink)"
+              <rect
+                x="18"
+                y="17"
+                width="28"
+                height="30"
+                rx="2"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <path d="M18 8v48m-9-38h13m-13 10h13m-13 10h13m-13 10h13" />
-              <path d="m29 20 15 1-1 17-15-1Z" fill="var(--journal-snow)" />
-              <path d="m30 31 4-6 4 5 3-2m-13 19 18 1" />
+              <path d="M24 17v30M29 25h11M29 32h11M29 39h8" strokeWidth="1" />
             </>
           ) : (
             <>
-              <path
-                d="m14 7 34 3q5 0 4 6l-3 41-37-3q-5 0-4-6l3-36q0-5 3-5Z"
-                fill="var(--journal-green)"
+              <rect
+                x="19"
+                y="16"
+                width="26"
+                height="32"
+                rx="2.5"
+                fill="var(--travel-accent)"
+                fillOpacity="0.07"
               />
-              <ellipse
-                cx="30"
-                cy="29"
-                rx="11"
-                ry="12"
-                fill="var(--journal-snow)"
-              />
-              <path d="m19 28 22 2m-11-13q-7 10-2 24m3-24q8 12 0 24m-13 7 25 2m-32-4 3-30" />
+              <circle cx="32" cy="29" r="6" />
+              <path d="M25 40h14" strokeWidth="1" />
             </>
           )}
         </g>

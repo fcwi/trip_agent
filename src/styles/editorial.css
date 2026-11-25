@@ -1,27 +1,28 @@
-/* Illustrated storybook: latest user brief explicitly opts into three type roles,
-   warm paper, floating glass navigation, and restrained dark surface shadows. */
+/* Trip-aware editorial sketchbook: crisp cold-press paper, watercolor covers,
+   monochrome stationery stamps, and 1px hairline section rhythm. */
 .travel-shell[data-editorial="true"][data-aesthetic="editorial"] {
-  --travel-page: #faf6e9;
-  --travel-surface: #fffdf6;
-  --travel-subtle: #f1ead8;
-  --travel-text: #352e29;
-  --travel-muted: #6b6054;
-  --travel-line: #e2d9c7;
-  --travel-accent: #3d574b;
-  --travel-on-accent: #fffdf6;
-  --journal-ink: #433a32;
-  --journal-art-ink: #39302b;
-  --journal-rule: #e2d9c7;
-  --journal-pink: #e5b9ac;
-  --journal-blue: #b5cdd4;
-  --journal-yellow: #e9c875;
-  --journal-green: #bdcbb2;
-  --journal-snow: #fffdf6;
-  --journal-window: #f3d58d;
-  --journal-sky: #dce8e9;
+  --travel-page: #f6f5f0;
+  --travel-surface: #fdfcf9;
+  --travel-subtle: #eceae2;
+  --travel-text: #1f1d1b;
+  --travel-muted: #5c5750;
+  --travel-line: #dad6cc;
+  --travel-accent: #1f568d;
+  --travel-on-accent: #fdfcf9;
+  --journal-ink: #1f1d1b;
+  --journal-art-ink: #262320;
+  --journal-rule: #dad6cc;
+  --journal-pink: rgba(218, 92, 70, 0.55);
+  --journal-blue: rgba(46, 122, 184, 0.55);
+  --journal-yellow: rgba(235, 178, 48, 0.58);
+  --journal-green: rgba(78, 146, 88, 0.52);
+  --journal-snow: #fdfcf9;
+  --journal-window: rgba(242, 196, 68, 0.68);
+  --journal-sky: rgba(145, 192, 224, 0.22);
   --font-story: Georgia, "Noto Serif TC", "Songti TC", "PMingLiU", serif;
   --font-rounded:
-    "Trip Journal", "Arial Rounded MT Bold", "Microsoft JhengHei", sans-serif;
+    "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
+    sans-serif;
   --font-data:
     "Segoe UI", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei",
     sans-serif;
@@ -30,25 +31,39 @@
   font-weight: 400;
   line-height: 1.65;
 }
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-artwork="tohoku-snow"] {
+  --travel-page: #f8f6f3;
+  --travel-accent: #b33d2e;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-artwork="karuizawa-snow"] {
+  --travel-page: #f4f6f4;
+  --travel-accent: #26534c;
+}
 .travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"] {
-  --travel-page: #1a1614;
-  --travel-surface: #25201d;
-  --travel-subtle: #302924;
-  --travel-text: #f1e8dc;
-  --travel-muted: #c4b7a7;
-  --travel-line: #40362f;
-  --travel-accent: #c8d7bf;
-  --travel-on-accent: #1a1614;
-  --journal-ink: #eadccb;
-  --journal-art-ink: #211d22;
-  --journal-rule: #40362f;
-  --journal-pink: #9f8591;
-  --journal-blue: #798caa;
-  --journal-yellow: #d6b977;
-  --journal-green: #8d9c91;
-  --journal-snow: #b4b9c6;
-  --journal-window: #f1ce7b;
-  --journal-sky: #30364e;
+  --travel-page: #17181c;
+  --travel-surface: #202228;
+  --travel-subtle: #2a2d35;
+  --travel-text: #f0ede6;
+  --travel-muted: #b5b0a6;
+  --travel-line: #363944;
+  --travel-accent: #7cb3e0;
+  --travel-on-accent: #17181c;
+  --journal-ink: #ebe7de;
+  --journal-art-ink: #1a1b20;
+  --journal-rule: #363944;
+  --journal-pink: rgba(226, 124, 108, 0.75);
+  --journal-blue: rgba(102, 168, 222, 0.75);
+  --journal-yellow: rgba(236, 194, 92, 0.78);
+  --journal-green: rgba(116, 176, 126, 0.72);
+  --journal-snow: #cfd5e2;
+  --journal-window: rgba(244, 206, 108, 0.85);
+  --journal-sky: #252b3b;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"][data-artwork="tohoku-snow"] {
+  --travel-accent: #e58879;
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"][data-theme="dark"][data-artwork="karuizawa-snow"] {
+  --travel-accent: #7ec4b6;
 }
 .travel-shell[data-aesthetic="editorial"][data-editorial="true"]
   :is(
@@ -75,9 +90,21 @@
   background-image: none;
   backdrop-filter: none;
 }
-.travel-shell[data-aesthetic="editorial"][data-editorial="true"]
-  :is(.travel-panel, .journal-panel, .travel-cover) {
-  padding: 24px;
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.travel-panel, .journal-panel) {
+  padding: 20px 0;
+  background: transparent;
+  border-top: 1px solid var(--travel-line);
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  :is(.travel-today, .travel-cover) {
+  padding: 20px;
+  background: var(--travel-surface);
+  border: 1px solid var(--travel-line);
+}
+.travel-shell[data-editorial="true"][data-aesthetic="editorial"]
+  .journal-flight-ticket {
+  border: 1px solid var(--travel-line);
   background: var(--travel-surface);
 }
 .travel-shell[data-aesthetic="editorial"][data-editorial="true"]

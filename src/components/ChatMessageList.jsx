@@ -1,10 +1,12 @@
 import GroundingSources from "./AI/GroundingSources.jsx";
-import React from "react";
+import JournalSticker from "./Itinerary/JournalSticker.jsx";
+import React, { useState } from "react";
 import {
-  Bot,
   User,
   Loader,
+  Maximize2,
   Volume2,
+  X,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -25,6 +27,7 @@ const ChatMessageList = ({
   toggleMessageExpand,
   messageRefs = { current: [] },
 }) => {
+  const [bigDisplayText, setBigDisplayText] = useState("");
   // 根據主題配置定義聊天氣泡顏色
   const chatColors = currentTheme?.chatColors || {
     userBubble: {
@@ -71,23 +74,42 @@ const ChatMessageList = ({
               {msg.role === "user" ? (
                 <User className="w-5 h-5" />
               ) : (
-                <Bot className="w-5 h-5" />
+                <JournalSticker kind="passport" className="w-7 h-7" />
               )}
             </div>
 
-            {/* 朗讀按鈕：僅在 AI 回覆時顯示 */}
+            {/* 朗讀與放大顯示按鈕：僅在 AI 回覆時顯示 */}
             {msg.role === "model" && (
-              <button
-                onClick={() => handleSpeak(msg.text)}
-                className={`p-1 rounded-full transition-all ${
-                  isDarkMode
-                    ? "text-sky-300 hover:bg-neutral-700"
-                    : "text-[#5D737E] hover:bg-stone-200"
-                }`}
-                title="朗讀訊息"
-              >
-                <Volume2 className="w-3.5 h-3.5" />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleSpeak(msg.text)}
+                  className={`p-1 rounded-full transition-all ${
+                    isDarkMode
+                      ? "text-sky-300 hover:bg-neutral-700"
+                      : "text-[#5D737E] hover:bg-stone-200"
+                  }`}
+                  title="朗讀訊息"
+                  aria-label="朗讀訊息"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                </button>
+                {msg.text && (
+                  <button
+                    type="button"
+                    onClick={() => setBigDisplayText(msg.text)}
+                    className={`p-1 rounded-full transition-all ${
+                      isDarkMode
+                        ? "text-sky-300 hover:bg-neutral-700"
+                        : "text-[#5D737E] hover:bg-stone-200"
+                    }`}
+                    title="放大給對方看"
+                    aria-label="放大給對方看"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -205,9 +227,7 @@ const ChatMessageList = ({
                 : "bg-white border-stone-200"
             }`}
           >
-            <Bot
-              className={`w-5 h-5 ${isDarkMode ? "text-sky-300" : "text-[#5D737E]"}`}
-            />
+            <JournalSticker kind="passport" className="w-7 h-7" />
           </div>
           <div
             data-message-role="model"
@@ -228,6 +248,39 @@ const ChatMessageList = ({
         </div>
       )}
       <div ref={chatEndRef} />
+      {bigDisplayText && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="放大顯示翻譯內容"
+          className="fixed inset-0 z-[220] flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+          onClick={() => setBigDisplayText("")}
+        >
+          <div
+            className={`relative max-h-[80vh] w-full max-w-lg overflow-y-auto border p-6 shadow-2xl ${
+              isDarkMode
+                ? "border-neutral-700 bg-[#202228] text-[#f0ede6]"
+                : "border-[#dad6cc] bg-[#fdfcf9] text-[#1f1d1b]"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setBigDisplayText("")}
+              aria-label="關閉放大顯示"
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center border border-current/20"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <p className="mb-3 text-xs tracking-widest opacity-60">
+              SHOW TO STAFF / DRIVER
+            </p>
+            <div className="pr-8 text-2xl font-medium leading-relaxed whitespace-pre-wrap break-words">
+              {bigDisplayText}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

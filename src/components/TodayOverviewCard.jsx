@@ -51,12 +51,32 @@ export default function TodayOverviewCard({
       </p>
       {overview.status === "before" && (
         <div className="travel-preparation">
-          <p>
-            準備進度{" "}
-            <strong>
-              {completedCount}／{checklistData.length}
-            </strong>
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p>
+              準備進度{" "}
+              <strong>
+                {completedCount}／{checklistData.length}
+              </strong>
+            </p>
+            <button
+              type="button"
+              className="journal-copy-chip"
+              onClick={() => {
+                const target = document.getElementById("checklist-heading");
+                if (!target) return;
+                target.scrollIntoView({
+                  block: "start",
+                  behavior: window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                  ).matches
+                    ? "instant"
+                    : "smooth",
+                });
+              }}
+            >
+              前往清單 ↓
+            </button>
+          </div>
           <progress
             aria-label="行前準備完成進度"
             value={completedCount}

@@ -71,7 +71,9 @@ export default function TimelineEvent({
               <span className="journal-event-heading-copy">
                 <span>{event.title}</span>
                 <span className="journal-event-disclosure" aria-hidden="true">
-                  {isOpen ? "收合詳情" : "查看詳情"}
+                  <span className="sr-only">
+                    {isOpen ? "收合詳情" : "查看詳情"}
+                  </span>
                   <ChevronDown className="journal-event-chevron" />
                 </span>
               </span>
@@ -88,16 +90,16 @@ export default function TimelineEvent({
           )}
         </div>
         <div className="travel-timeline-event__meta">
-          <span className="travel-event-category">
-            {TransportIcon &&
-              React.createElement(TransportIcon, {
-                "aria-hidden": true,
-                className: "h-3.5 w-3.5",
-              })}
-            {isTransport && event.transport?.mode
-              ? event.transport.mode
-              : EVENT_CATEGORY_LABELS[category]}
-          </span>
+          {isTransport && (
+            <span className="travel-event-category">
+              {TransportIcon &&
+                React.createElement(TransportIcon, {
+                  "aria-hidden": true,
+                  className: "h-3.5 w-3.5",
+                })}
+              {event.transport?.mode || EVENT_CATEGORY_LABELS[category]}
+            </span>
+          )}
           {isTransport && event.transport?.duration && (
             <span className="journal-transport-duration">
               <Clock3 aria-hidden="true" className="h-4 w-4" />
@@ -122,9 +124,9 @@ export default function TimelineEvent({
               className="travel-icon-button journal-event-map-link"
               onClick={onPreviewMap}
               aria-label={`在地圖查看${event.title}`}
+              title="在地圖查看"
             >
               <MapPin aria-hidden="true" className="h-4 w-4" />
-              <span aria-hidden="true">地圖</span>
             </button>
           ) : (
             <a

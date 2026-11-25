@@ -1,6 +1,5 @@
 import { useTripViewToggle } from "../../hooks/useTripViewToggle.js";
 import { JournalTurn } from "./JournalMarks.jsx";
-import { DayStamp } from "./JournalIllustration.jsx";
 import { getDayForecastSummary } from "../../utils/itineraryWeather.js";
 
 export default function TripDayIndex({
@@ -57,8 +56,8 @@ export default function TripDayIndex({
                 }
               >
                 <span className="travel-day-index__number">
-                  <span className="journal-index-picture" aria-hidden="true">
-                    <DayStamp tripId={tripConfig.id} dayIndex={index} />
+                  <span className="journal-day-ordinal" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   {day.day}
                   <small>{day.date}</small>

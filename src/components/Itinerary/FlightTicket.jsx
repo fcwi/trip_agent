@@ -1,8 +1,18 @@
-import { Plane } from "lucide-react";
-import { useId } from "react";
+import { Check, Copy, Plane } from "lucide-react";
+import { useId, useState } from "react";
 
 export default function FlightTicket({ flight, label, returnFlight = false }) {
   const clipId = useId();
+  const [copied, setCopied] = useState(false);
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard?.writeText(flight.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // Ignore clipboard failures in restricted environments
+    }
+  };
   // Keep any qualification following the scheduled times visible.
   const schedule = flight.time.match(
     /^(\d{1,2}:\d{2})\s+([A-Z]{3})\s*[➝→]\s*(\d{1,2}:\d{2})\s+([A-Z]{3})(.*)$/, // taste-skill-ignore: Parses flight-data separators, never renders an emoji icon.
@@ -29,7 +39,19 @@ export default function FlightTicket({ flight, label, returnFlight = false }) {
       </svg>
       <div className="journal-flight-ticket__heading">
         <strong>{label}</strong>
-        <span>{flight.code}</span>
+        <button
+          type="button"
+          className="journal-copy-chip"
+          onClick={handleCopyCode}
+          aria-label={`複製${label}班號 ${flight.code}`}
+        >
+          <span>{flight.code}</span>
+          {copied ? (
+            <Check aria-hidden="true" className="h-3 w-3" />
+          ) : (
+            <Copy aria-hidden="true" className="h-3 w-3" />
+          )}
+        </button>
       </div>
       <svg
         aria-hidden="true"

@@ -1,6 +1,10 @@
 import { useRef, useState } from "react";
 import {
   AlertCircle,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
   Hotel,
   ListOrdered,
   Navigation,
@@ -43,6 +47,17 @@ export default function DayItinerary({
   const timelineHeadingRef = useRef(null);
   const routeHeadingRef = useRef(null);
   const [mapStop, setMapStop] = useState(null);
+  const [copiedStay, setCopiedStay] = useState(false);
+  const handleCopyStay = async (text) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard?.writeText(text);
+      setCopiedStay(true);
+      setTimeout(() => setCopiedStay(false), 1600);
+    } catch {
+      // Ignore clipboard failures
+    }
+  };
   const jumpTo = (headingRef) => {
     const heading = headingRef.current;
     if (!heading) return;
@@ -88,6 +103,16 @@ export default function DayItinerary({
     }))
     .filter(({ weather }) => weather.hasForecast);
   const hotelDetails = findDayHotelDetails(day, tripConfig);
+  const isProvisionalStay = Boolean(
+    day.stayPending || /暫定/.test(day.stay || ""),
+  );
+  const cleanStayCopyTarget =
+    hotelDetails?.address ||
+    (day.stay || "").replace(/（暫定）|\(暫定\)/g, "").trim();
+  const showUpcomingForecastHint =
+    tripStatus === "before" &&
+    !dayWeather.hasForecast &&
+    displayWeather.desc === "無資料";
   return (
     <div
       className={`travel-day-layout ${showMap ? "travel-day-layout--with-route" : ""}`}
@@ -113,19 +138,46 @@ export default function DayItinerary({
                   住宿區域：{day.stay}（飯店待確認）
                 </p>
               ) : (
-                <a
-                  className="travel-text-button"
-                  href={getMapLink(day.stayMapQuery || day.stay.split("(")[0])}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
-                  {day.stay}
-                  <JournalTurn
-                    aria-hidden="true"
-                    className="h-4 w-4 flex-none"
-                  />
-                </a>
+                <div className="journal-stay-row">
+                  <a
+                    className="travel-text-button"
+                    href={getMapLink(day.stayMapQuery || day.stay.split("(")[0])}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Hotel aria-hidden="true" className="h-4 w-4 flex-none" />
+                    {day.stay}
+                    <JournalTurn
+                      aria-hidden="true"
+                      className="h-4 w-4 flex-none"
+                    />
+                  </a>
+                  {isProvisionalStay && (
+                    <span className="travel-badge">暫定規劃・待出發通知</span>
+                  )}
+                  <button
+                    type="button"
+                    className="journal-copy-chip"
+                    onClick={() => handleCopyStay(cleanStayCopyTarget)}
+                    aria-label={
+                      hotelDetails?.address
+                        ? `複製住宿日文地址 ${hotelDetails.address}`
+                        : `複製住宿名稱 ${cleanStayCopyTarget}`
+                    }
+                  >
+                    {copiedStay ? (
+                      <>
+                        <Check aria-hidden="true" className="h-3 w-3" />
+                        <span>已複製</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy aria-hidden="true" className="h-3 w-3" />
+                        <span>{hotelDetails?.address ? "複製日文地址" : "複製"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               ))}
           </div>
         </header>
@@ -169,9 +221,17 @@ export default function DayItinerary({
           </span>
           <span>
             <strong>
-              {displayWeather.temp} · {displayWeather.desc}
+              {showUpcomingForecastHint
+                ? "出發前 14 日起提供即時預報"
+                : `${displayWeather.temp} · ${displayWeather.desc}`}
             </strong>
-            <small>{displayWeather.advice}</small>
+            <small>
+              {showUpcomingForecastHint
+                ? tripConfig.artwork?.season === "winter"
+                  ? "冬季參考氣溫約 -6°C ～ 3°C，建議防風保暖與防水鞋靴"
+                  : "接近出發日時將自動更新當地預報"
+                : displayWeather.advice}
+            </small>
             {dayWeather.hasForecast && (
               <small className="journal-weather-outfit">
                 <Shirt aria-hidden="true" className="h-3.5 w-3.5 flex-none" />
@@ -332,6 +392,34 @@ export default function DayItinerary({
               </div>
             </div>
           </section>
+        )}
+        {typeof changeDay === "function" && itineraryData?.length > 1 && (
+          <nav className="journal-day-pager" aria-label="切換前後天行程">
+            <button
+              type="button"
+              disabled={activeDay <= 0}
+              onClick={() => changeDay(activeDay - 1)}
+            >
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+              <span>
+                {activeDay > 0
+                  ? `上一天 · ${itineraryData[activeDay - 1]?.day}`
+                  : "已是首日"}
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={activeDay >= itineraryData.length - 1}
+              onClick={() => changeDay(activeDay + 1)}
+            >
+              <span>
+                {activeDay < itineraryData.length - 1
+                  ? `下一天 · ${itineraryData[activeDay + 1]?.day}`
+                  : "已是末日"}
+              </span>
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </nav>
         )}
       </div>
       {showMap && (
